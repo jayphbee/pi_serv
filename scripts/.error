@@ -1,0 +1,86 @@
+Wed Nov 08 2017 14:21:23 GMT+0800 (中国标准时间):
+[31mSyntaxError[39m in plugin '[36mgulp-babel[39m'
+Message:
+    F:/work/render/pi/.temp/temp/15101220831817384.js: Unexpected token (1085:93)F:\work\render\pi_build\dst\init.js
+Wed Nov 08 2017 14:21:24 GMT+0800 (中国标准时间):
+[31mSyntaxError[39m in plugin '[36mgulp-babel[39m'
+Message:
+    F:/work/render/pi/.temp/temp/15101220831991852.js: Unexpected token (1085:93)F:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:42:30 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:43:10 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:43:25 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:44:22 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:46:48 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Mon Nov 13 2017 14:47:08 GMT+0800 (中国标准时间):
+ReferenceError: ts2jsname is not definedf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 17:47:32 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 18:00:01 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 18:00:04 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 18:00:13 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 18:00:19 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Fri Mar 16 2018 18:00:29 GMT+0800 (中国标准时间):
+TypeError: Converting circular structure to JSONf:\work\render\pi_build\dst\init.js
+Sat Mar 17 2018 10:26:43 GMT+0800 (中国标准时间):
+Error: SyntaxError, type: if, nud: jsif, token: if, line: 119, column: 15f:\work\render\pi_build\dst\init.js
+Sat Mar 17 2018 10:26:45 GMT+0800 (中国标准时间):
+Error: SyntaxError, type: if, nud: jsif, token: if, line: 119, column: 15f:\work\render\pi_build\dst\init.js
+Sat Mar 17 2018 13:07:17 GMT+0800 (中国标准时间):
+Error: SyntaxError, type: ., led: field, token: ., line: 1, column: 45f:\work\render\pi_build\dst\init.js
+Sat Mar 17 2018 13:07:24 GMT+0800 (中国标准时间):
+Error: SyntaxError, type: ., led: field, token: ., line: 1, column: 45f:\work\render\pi_build\dst\init.js
+Sat Mar 17 2018 13:08:35 GMT+0800 (中国标准时间):
+Error: SyntaxError, type: ., led: field, token: ., line: 1, column: 45f:\work\render\pi_build\dst\init.js
+Thu Mar 22 2018 17:43:23 GMT+0800 (中国标准时间):
+ReferenceError: error is not definedf:\work\render\pi_build\dst\init.js
+Thu Mar 22 2018 17:47:46 GMT+0800 (中国标准时间):
+ReferenceError: error is not definedf:\work\render\pi_build\dst\init.js
+Thu Mar 22 2018 17:51:41 GMT+0800 (中国标准时间):
+ReferenceError: error is not definedf:\work\render\pi_build\dst\init.js
+Thu Mar 22 2018 17:52:24 GMT+0800 (中国标准时间):
+ReferenceError: error is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 13:21:43 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 13:22:17 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 13:25:53 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 13:35:38 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 13:44:22 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:23:05 GMT+0800 (中国标准时间):
+ReferenceError: gen is not definedf:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:39:51 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 151f:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:39:53 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 151f:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:39:54 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 151f:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:40:38 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token } in JSON at position 184f:\work\render\pi_build\dst\init.js
+Sat Mar 31 2018 14:41:20 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token : in JSON at position 153f:\work\render\pi_build\dst\init.js
+Mon Apr 02 2018 16:20:15 GMT+0800 (中国标准时间):
+TypeError: Cannot read property 'registerObjMap' of undefinedf:\work\render\pi_build\dst\init.js
+Mon Apr 02 2018 16:21:06 GMT+0800 (中国标准时间):
+TypeError: Cannot read property 'registerObjMap' of undefinedf:\work\render\pi_build\dst\init.js
+Tue Apr 10 2018 11:45:47 GMT+0800 (中国标准时间):
+RangeError: Maximum call stack size exceededf:\work\render\pi_build\dst\init.js
+Tue Apr 10 2018 13:16:47 GMT+0800 (中国标准时间):
+RangeError: Maximum call stack size exceededf:\work\render\pi_build\dst\init.js
+Tue Apr 10 2018 13:17:57 GMT+0800 (中国标准时间):
+RangeError: Maximum call stack size exceededf:\work\render\pi_build\dst\init.js
+Tue Apr 10 2018 13:18:24 GMT+0800 (中国标准时间):
+RangeError: Maximum call stack size exceededf:\work\render\pi_build\dst\init.js
+Tue Apr 10 2018 13:19:28 GMT+0800 (中国标准时间):
+无法构建， 缺少Option类型f:\work\render\pi_build\dst\init.js
