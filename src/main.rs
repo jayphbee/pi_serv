@@ -1,3 +1,5 @@
+#![feature(generic_associated_types)]
+
 extern crate clap;
 // extern crate pi_vm;
 use clap::{Arg, App, SubCommand};
@@ -15,6 +17,12 @@ use std::sync::{Arc, Mutex, Condvar};
 extern crate toml;
 use std::fs::File;
 use std::io::prelude::*;
+
+extern crate pi_lib;
+extern crate net;
+extern crate mqtt;
+
+mod handler;
 
 fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
@@ -49,15 +57,17 @@ fn read_config(file_path: &str) -> toml::Value {
 }
 
 fn main() {
-    let matches = args();
-    let config = matches.value_of("config").unwrap();
-    println!("Value for config: {}", config);
-    let cfg = read_config(config);
-    println!("config: {}", cfg["config"]);
-    println!("global: {}", cfg["global"]);
-    println!("local: {}", cfg["local"]);
-    println!("table: {}", cfg["table"]);
-    println!("func: {}", cfg["func"]);
+    // let matches = args();
+    // let config = matches.value_of("config").unwrap();
+    // println!("Value for config: {}", config);
+    // let cfg = read_config(config);
+    // println!("config: {}", cfg["config"]);
+    // println!("global: {}", cfg["global"]);
+    // println!("local: {}", cfg["local"]);
+    // println!("table: {}", cfg["table"]);
+    // println!("func: {}", cfg["func"]);
+
+    // handler::MsgProtocolHandler::new(Arc::from(&Vec::with_capacity(1024)[..])).uncompress();
     // start_njx();
 }
 

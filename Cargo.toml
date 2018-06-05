@@ -6,3 +6,6 @@ authors = [""]
 [dependencies]
 clap = "2.31.2"
 toml = "0.4.6"
+pi_lib = { path = "../pi_lib" }
+net = { path = "../pi_net/net" }
+mqtt = { path = "../pi_net/mqtt" }
