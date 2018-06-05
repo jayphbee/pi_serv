@@ -22,7 +22,7 @@ extern crate pi_lib;
 extern crate net;
 extern crate mqtt;
 
-mod handler;
+pub mod handler;
 
 fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
