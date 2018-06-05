@@ -22,8 +22,6 @@ extern crate pi_lib;
 extern crate net;
 extern crate mqtt;
 
-pub mod handler;
-
 fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
                           .version("1.0")
@@ -67,7 +65,7 @@ fn main() {
     // println!("table: {}", cfg["table"]);
     // println!("func: {}", cfg["func"]);
 
-    // handler::MsgProtocolHandler::new(Arc::from(&Vec::with_capacity(1024)[..])).uncompress();
+
     // start_njx();
 }
 
