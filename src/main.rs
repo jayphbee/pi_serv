@@ -18,9 +18,17 @@ extern crate toml;
 use std::fs::File;
 use std::io::prelude::*;
 
+extern crate fnv;
+extern crate string_cache;
+
 extern crate pi_lib;
+extern crate pi_db;
+extern crate pi_vm;
 extern crate net;
 extern crate mqtt;
+extern crate rpc;
+
+mod handler;
 
 fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
