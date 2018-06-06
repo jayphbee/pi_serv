@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = [""]
 
 [dependencies]
+fnv = "*"
 clap = "2.31.2"
+string_cache = "*"
 toml = "0.4.6"
 json = "0.11.13" 
 pi_lib = { path = "../pi_lib" }
@@ -16,3 +18,4 @@ pi_crypto = { path = "../pi_crypto" }
 pi_db = { path = "../pi_db" }
 net = { path = "../pi_net/net" }
 mqtt = { path = "../pi_net/mqtt" }
+rpc = { path = "../pi_net/rpc" }
