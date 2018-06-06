@@ -1,4 +1,3 @@
-#![feature(match_default_bindings)]
 #![feature(fs_read_write)]
 #![feature(splice)]
 extern crate clap;
@@ -8,19 +7,28 @@ extern crate pi_vm;
 extern crate pi_test;
 extern crate pi_math;
 extern crate pi_crypto;
+extern crate pi_db;
+extern crate pi_lib;
+extern crate core;
+
 pub mod jsloader;
 pub mod depend;
 pub mod vm;
-pub mod init_cfg;
+pub mod init_js;
+pub mod util;
 mod pi_crypto_build;
 mod pi_math_build;
 mod pi_test_build;
+mod pi_db_build;
+mod pi_lib_build;
+mod def_build;
+
+
 use clap::{Arg, App};
 use json::{JsonValue, parse};
 use depend::{FileDes, Depend};
-use init_cfg::{init_meta, init_cfg};
+use init_js::{init_js};
 use jsloader::Loader;
-use std::fs::read;
 
 
 // use pi_vm::util::now_nanosecond;
@@ -166,9 +174,13 @@ fn create_depend(sp: &[String]) -> Depend{
 
 fn main() {
     register_native_object();
-    pi_test_build::register(&mut *BON_MGR.lock().unwrap());
-    pi_crypto_build::register(&mut *BON_MGR.lock().unwrap());
-    pi_math_build::register(&mut *BON_MGR.lock().unwrap());
+    pi_test_build::register(&BON_MGR);
+    pi_crypto_build::register(&BON_MGR);
+    pi_math_build::register(&BON_MGR);
+    pi_lib_build::register(&BON_MGR);
+    pi_db_build::register(&BON_MGR);
+    def_build::register(&BON_MGR);
+
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
 	//let arg = CmdArg::from(parse(config).expect("config参数应该为一个jsonObject"));
@@ -176,10 +188,11 @@ fn main() {
 	let dirs = dirs.as_slice();
 	let depend = create_depend(dirs);
 	let file_map = Loader::load_dir_sync(dirs, &depend);
-    //init_meta(dirs, &file_map, &depend);
 
-    let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("未找到文件：./init.cfg")).unwrap();
-    init_cfg(&cfg, &file_map, &depend);
+    init_js(dirs, &file_map, &depend);
+
+    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("未找到文件：./init.cfg")).unwrap();
+    //  init_cfg(&cfg, &file_map, &depend);
 	                    
 
 	// for dir in dirs{

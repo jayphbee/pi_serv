@@ -182,6 +182,8 @@ fn un_jvalue(o: Option<JsonValue>) -> JsonValue{
 pub struct Built;
 impl Built{
 	pub fn relative_path(file_path: &str, dir: &str) -> String {
+        // println!("file_path:{}", file_path);
+        // println!("dir:{}", dir);
 		if !file_path.starts_with("./") && !file_path.starts_with("../"){
 			return String::from(file_path);
 		}
@@ -212,8 +214,11 @@ impl Built{
 			last = l.unwrap();
 			dv.push(last.as_str());
 		}
+        let x = Built::join(dv.as_slice(), "/") + "/" + Built::join(fv.as_slice(), "/").as_str();
+        //println!("pp:{}", &x);
+        
 
-		return Built::join(dv.as_slice(), "/") + "/" + Built::join(fv.as_slice(), "/").as_str();
+		return x;
 	}
 
 	fn join(v: &[&str], jstr: &str) -> String{

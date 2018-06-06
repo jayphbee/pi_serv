@@ -28,7 +28,7 @@ impl Loader {
 			let path = String::from(v.borrow().path.as_ref());
 			let r = read(Path::new(&path));
 			let data = r.expect("文件不存在！");
-			file_map.insert(String::from(path.as_str()), data);
+			file_map.insert(String::from(path.as_str()), modify_code(&path, data));
 		}
 		success(file_map);
 	}
@@ -40,7 +40,7 @@ impl Loader {
 			let path = String::from(v.borrow().path.as_ref());
 			let r = read(Path::new(&path));
 			let data = r.expect("文件不存在！");
-			file_map.insert(String::from(path.as_str()), data);
+			file_map.insert(String::from(path.as_str()), modify_code(&path, data));
 		}
 		file_map
 	}
@@ -114,4 +114,29 @@ impl Loader {
 			},
 		}
 	}
+}
+
+// 构建时，路径不包含根路径， 应该替换掉
+fn modify_code(path: &str, mut code: Vec<u8>) -> Vec<u8> {
+    if path.ends_with(".js"){
+        let point_i = path.rfind(".");
+        if code.len() > 10 {
+            if is_replace(&String::from_utf8_lossy(&code[0..9])){
+                let end = code.iter().position(|&x| {x == 44}).unwrap() - 1;
+                let p = &path[0..point_i.unwrap()];
+                code.splice(10..end, p.as_bytes().iter().cloned());
+                return code;
+            }
+        }
+        
+    }
+    code
+}
+
+fn is_replace(s: &str) -> bool{
+    if s == "_$define("{
+        return true;
+    }else{
+        return false;
+    }
 }
