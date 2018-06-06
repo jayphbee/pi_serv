@@ -3,13 +3,14 @@ use std::sync::atomic::{Ordering, AtomicUsize};
 use std::io::{Read, Write, Result};
 
 use fnv::FnvHashMap;
-use string_cache::DefaultAtom as Atom;
-use rpc::handler::TopicHandle;
-use rpc::rpc_server::Session;
+use string_cache::DefaultAtom;
+use mqtt::handler::TopicHandle;
+use mqtt::session::Session;
 
 use pi_vm::adapter::JS;
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_db::mgr::Mgr;
+use pi_lib::atom::Atom;
 
 /*
 * Topic处理器
@@ -22,17 +23,18 @@ pub struct TopicHandler {
 }
 
 impl TopicHandle for TopicHandler {
-	fn handle(&self, topic: Atom, version: u8, session: Arc<Session>, bin: Arc<Vec<u8>>) {
+	fn handle(&self, topic: DefaultAtom, version: u8, session: Arc<Session>, bin: Arc<Vec<u8>>) {
 		let (factory, mgr) = self.get(session.clone());
+        let topic_name = (*topic).to_string().clone();
 		let args = Box::new(move |vm: JS| -> JS {
-			vm.new_str((*topic).to_string());
+			vm.new_str(topic_name);
 			let array = vm.new_uint8_array(bin.len() as u32);
 			array.from_bytes(bin.as_slice());
 			vm.new_native_object(Arc::into_raw(Arc::new(mgr)) as usize);
 			vm.new_native_object(Arc::into_raw(session.clone()) as usize);
 			vm
 		});
-		factory.call(0, args, "");
+		factory.call(0, args, Atom::from((*topic).to_string() + " rpc task"));
 	}
 }
 
@@ -83,7 +85,7 @@ impl TopicHandler {
 
 	//获取指定的虚拟机工厂和事务管理器
 	fn get(&self, session: Arc<Session>) -> (Arc<VMFactory>, Mgr) {
-		match session.get_attr(Atom::from("_$gray")) {
+		match session.get_attr(DefaultAtom::from("_$gray")) {
 			Some(vec) => {
                 let gray = usize::from_le(unsafe { *(vec[..].as_ptr() as *mut usize) });
 				match self.get_gray(gray) {
