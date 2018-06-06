@@ -14,3 +14,5 @@ pi_test = { path = "../pi_test" }
 pi_math = { path = "../pi_math" }
 pi_crypto = { path = "../pi_crypto" }
 pi_db = { path = "../pi_db" }
+net = { path = "../pi_net/net" }
+mqtt = { path = "../pi_net/mqtt" }

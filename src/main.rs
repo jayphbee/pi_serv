@@ -1,5 +1,6 @@
 #![feature(fs_read_write)]
 #![feature(splice)]
+#![feature(generic_associated_types)]
 extern crate clap;
 extern crate json;
 extern crate toml;
@@ -42,43 +43,9 @@ use std::fs::{File};
 use std::path::Path;
 use std::io::prelude::*;
 
-// pub struct CmdArg{
-// 	pub dirs:Vec<String>,
-// 	pub initjs: String, // init.jsè·¯å¾„
-// }
-
-// impl CmdArg {
-// 	pub fn from(jv: JsonValue) -> CmdArg{
-// 		let mut obj = match jv {
-// 			JsonValue::Object(v) => {v},
-// 			_ => {panic!("Jsonä¸æ˜¯ä¸€ä¸ªObjectï¼Œæ— æ³•è½¬æ¢ä¸ºCmdArg")},
-// 		};
-
-// 		let dirs = match obj.remove("dirs").unwrap(){
-// 			JsonValue::Array(v) => {
-// 				let mut vec = Vec::new();
-// 				for dir in v.iter(){
-// 					match dir{
-// 						JsonValue::Short(v) => {vec.push(String::from(v.as_str()));}
-// 						_ =>{panic!("ç›®å½•åº”è¯¥æ˜¯String")}
-// 					}
-// 				}
-// 				vec
-// 			},
-// 			_ => {panic!("pathä¸æ˜¯ä¸€ä¸ªStringï¼Œæ— æ³•è½¬æ¢ä¸ºFileDes.path")},
-// 		};
-
-// 		let initjs = match obj.remove("initjs").unwrap(){
-// 			JsonValue::Short(v) => {String::from(v.as_str())},
-// 			_ => {panic!("initjsåº”è¯¥æ˜¯String");},
-// 		};
-
-// 		CmdArg{
-// 			initjs, dirs
-// 		}
-		
-// 	}
-// }
+extern crate pi_lib;
+extern crate net;
+extern crate mqtt;
 
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
@@ -133,7 +100,7 @@ fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
 }
 
 fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect("æ— æ³•å°†å­—ç¬¦ä¸²è§£æä¸ºjson");
+	let r = parse(s).expect("ÎŞ·¨½«×Ö·û´®½âÎöÎªjson");
 	match r {
 		JsonValue::Array(mut v) => {
 			let mut arr = Vec::new();
@@ -142,12 +109,12 @@ fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
 			}
 			arr
 		},
-		_ => {panic!("ä¸æ˜¯ä¸€ä¸ªarrayï¼Œæ— æ³•è§£æä¸ºVec<FileDes>");},
+		_ => {panic!("²»ÊÇÒ»¸öarray£¬ÎŞ·¨½âÎöÎªVec<FileDes>");},
 	}
 
 }
 
-//æ ¹æ®ç›®å½•åˆ›å»ºä¾èµ–è¡¨
+//¸ù¾İÄ¿Â¼´´½¨ÒÀÀµ±í
 fn create_depend(sp: &[String]) -> Depend{
 	let mut vec: Vec<FileDes> = Vec::new();
 	let mut root = "";
@@ -183,7 +150,7 @@ fn main() {
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
-	//let arg = CmdArg::from(parse(config).expect("configå‚æ•°åº”è¯¥ä¸ºä¸€ä¸ªjsonObject"));
+	//let arg = CmdArg::from(parse(config).expect("config²ÎÊıÓ¦¸ÃÎªÒ»¸öjsonObject"));
 	let dirs: Vec<String> = config.split(",").map(|e| {String::from(e)}).collect();
 	let dirs = dirs.as_slice();
 	let depend = create_depend(dirs);
@@ -191,7 +158,7 @@ fn main() {
 
     init_js(dirs, &file_map, &depend);
 
-    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("æœªæ‰¾åˆ°æ–‡ä»¶ï¼š./init.cfg")).unwrap();
+    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("Î´ÕÒµ½ÎÄ¼ş£º./init.cfg")).unwrap();
     //  init_cfg(&cfg, &file_map, &depend);
 	                    
 
