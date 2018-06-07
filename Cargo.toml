@@ -6,7 +6,6 @@ authors = [""]
 [dependencies]
 fnv = "*"
 clap = "2.31.2"
-string_cache = "*"
 toml = "0.4.6"
 pi_lib = { path = "../pi_lib" }
 pi_db = { path = "../pi_db" }
