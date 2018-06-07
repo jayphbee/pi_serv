@@ -19,7 +19,6 @@ use std::fs::File;
 use std::io::prelude::*;
 
 extern crate fnv;
-extern crate string_cache;
 
 extern crate pi_lib;
 extern crate pi_db;
