@@ -45,7 +45,6 @@ use std::path::Path;
 use std::io::prelude::*;
 
 extern crate fnv;
-extern crate string_cache;
 extern crate net;
 extern crate mqtt;
 extern crate rpc;
@@ -105,7 +104,7 @@ fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
 }
 
 fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect("�޷����ַ�������Ϊjson");
+	let r = parse(s).expect("???????????????json");
 	match r {
 		JsonValue::Array(mut v) => {
 			let mut arr = Vec::new();
@@ -114,12 +113,12 @@ fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
 			}
 			arr
 		},
-		_ => {panic!("����һ��array���޷�����ΪVec<FileDes>");},
+		_ => {panic!("???????array??????????Vec<FileDes>");},
 	}
 
 }
 
-//����Ŀ¼����������
+//????????????????
 fn create_depend(sp: &[String]) -> Depend{
 	let mut vec: Vec<FileDes> = Vec::new();
 	let mut root = "";
@@ -155,7 +154,7 @@ fn main() {
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
-	//let arg = CmdArg::from(parse(config).expect("config����Ӧ��Ϊһ��jsonObject"));
+	//let arg = CmdArg::from(parse(config).expect("config???????????jsonObject"));
 	let dirs: Vec<String> = config.split(",").map(|e| {String::from(e)}).collect();
 	let dirs = dirs.as_slice();
 	let depend = create_depend(dirs);
@@ -163,7 +162,7 @@ fn main() {
 
     init_js(dirs, &file_map, &depend);
 
-    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("δ�ҵ��ļ���./init.cfg")).unwrap();
+    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("��????????./init.cfg")).unwrap();
     //  init_cfg(&cfg, &file_map, &depend);
 	                    
 
