@@ -17,6 +17,7 @@ pub mod depend;
 pub mod vm;
 pub mod init_js;
 pub mod util;
+pub mod js_call;
 mod pi_crypto_build;
 mod pi_math_build;
 mod pi_test_build;
@@ -45,15 +46,11 @@ use std::io::prelude::*;
 
 extern crate fnv;
 extern crate string_cache;
-
-extern crate pi_lib;
-extern crate pi_db;
-extern crate pi_vm;
 extern crate net;
 extern crate mqtt;
 extern crate rpc;
 
-mod handler;
+pub mod handler;
 
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
@@ -108,7 +105,7 @@ fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
 }
 
 fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect("ÎÞ·¨½«×Ö·û´®½âÎöÎªjson");
+	let r = parse(s).expect("ï¿½Þ·ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªjson");
 	match r {
 		JsonValue::Array(mut v) => {
 			let mut arr = Vec::new();
@@ -117,12 +114,12 @@ fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
 			}
 			arr
 		},
-		_ => {panic!("²»ÊÇÒ»¸öarray£¬ÎÞ·¨½âÎöÎªVec<FileDes>");},
+		_ => {panic!("ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½arrayï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ÎªVec<FileDes>");},
 	}
 
 }
 
-//¸ù¾ÝÄ¿Â¼´´½¨ÒÀÀµ±í
+//ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 fn create_depend(sp: &[String]) -> Depend{
 	let mut vec: Vec<FileDes> = Vec::new();
 	let mut root = "";
@@ -158,7 +155,7 @@ fn main() {
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
-	//let arg = CmdArg::from(parse(config).expect("config²ÎÊýÓ¦¸ÃÎªÒ»¸öjsonObject"));
+	//let arg = CmdArg::from(parse(config).expect("configï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ÎªÒ»ï¿½ï¿½jsonObject"));
 	let dirs: Vec<String> = config.split(",").map(|e| {String::from(e)}).collect();
 	let dirs = dirs.as_slice();
 	let depend = create_depend(dirs);
@@ -166,7 +163,7 @@ fn main() {
 
     init_js(dirs, &file_map, &depend);
 
-    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("Î´ÕÒµ½ÎÄ¼þ£º./init.cfg")).unwrap();
+    //  let cfg = String::from_utf8(read(Path::new("./init.cfg")).expect("Î´ï¿½Òµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½./init.cfg")).unwrap();
     //  init_cfg(&cfg, &file_map, &depend);
 	                    
 
