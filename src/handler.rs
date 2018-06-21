@@ -40,11 +40,11 @@ impl TopicHandle for TopicHandler {
 
 impl TopicHandler {
 	//构建一个处理器
-	pub fn new(len: usize, factory: VMFactory, default: Mgr) -> Self {
+	pub fn new(len: usize, factory: VMFactory, mgr: Mgr) -> Self {
 		TopicHandler {
 			len: AtomicUsize::new(len),
 			factory: Arc::new(factory),
-			mgr: default,
+			mgr: mgr,
 			gray_tab: Arc::new(RwLock::new(FnvHashMap::default())),
 		}
 	}
