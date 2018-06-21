@@ -28,7 +28,6 @@ pub mod js_call;
 pub mod handler;
 mod pi_crypto_build;
 mod pi_math_build;
-mod pi_test_build;
 mod pi_db_build;
 mod pi_lib_build;
 mod def_build;
@@ -142,7 +141,6 @@ fn main() {
     let worker_pool1 = Box::new(WorkerPool::new(3, 1024 * 1024, 1000));
     worker_pool1.run(STORE_TASK_POOL.clone());
 
-    pi_test_build::register(&BON_MGR);
     pi_crypto_build::register(&BON_MGR);
     pi_math_build::register(&BON_MGR);
     pi_lib_build::register(&BON_MGR);
