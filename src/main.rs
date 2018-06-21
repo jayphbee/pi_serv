@@ -7,7 +7,6 @@ extern crate clap;
 extern crate json;
 extern crate toml;
 extern crate pi_vm;
-extern crate pi_test;
 extern crate pi_math;
 extern crate pi_crypto;
 extern crate pi_db;
