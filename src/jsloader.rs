@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use depend::{Depend, RcFileDes};
-use vm::Factory;
 use std::path::Path;
 use std::fs::read;
 
@@ -18,7 +17,7 @@ impl Loader {
 			Loader::list_dir(f.unwrap(), &mut mod_names);
 		}
 
-		Factory::depend(&dp, mod_names.as_slice())
+		dp.depend(mod_names.as_slice())
 	}
 
 	pub fn load_dir<F>(dirs: &[String], dp: &Depend, mut success: F)where F: FnMut(HashMap<String, Vec<u8>>){

@@ -34,6 +34,54 @@ impl Depend{
 		}
 	}
 
+    pub fn depend(&self, paths: &[String]) -> Vec<RcFileDes>{
+        let mut set: Vec<RcFileDes> = Vec::new();
+        let mut temp: HashMap<String, bool> = HashMap::new();
+
+        let mut p_chain = Vec::new();
+        self.depend_temp(paths, &mut temp, &mut set, &mut p_chain);
+        set
+    }
+
+    fn depend_temp(&self, paths: &[String], temp:&mut HashMap<String, bool>, set: &mut Vec<RcFileDes>, p_chain: &mut Vec<String>){
+        let gd = |f: RcFileDes, arr: &mut Vec<RcFileDes>, temp: &mut HashMap<String, bool>|{
+            if temp.contains_key(&String::from(f.borrow().path.as_ref())){
+                return;
+            }
+            arr.push(f.clone());
+            temp.insert(String::from(f.borrow().path.as_ref()), true);
+        };
+        //println!("--------------------------");
+        for i in 0..paths.len(){
+            let path = paths[i].as_str();
+            //println!("path:{}", path);
+            if is_exist(p_chain, path){
+                continue;
+            }
+            p_chain.push(String::from(path));
+            let mut f = self.get(path);
+            if f.is_some(){
+                let f = f.unwrap().clone();
+                let f_ref = f.borrow();
+                if f_ref.depend.is_some(){
+                    let depend = f_ref.depend.as_ref().unwrap();
+                    let js_depend = depend.get("js");
+                    if js_depend.is_some(){
+                        let depend = js_depend.unwrap();
+                        let depend_path: Vec<String> = depend.iter().map(|e|{Built::relative_path(&(e.clone() + ".js"), path)}).collect();
+                        self.depend_temp(depend_path.as_slice(), temp, set, p_chain); 
+                    }
+                }
+
+                gd(f.clone(), set, temp);
+            }else{
+                panic!("依赖列表中不存在该文件{}", paths[i]);
+            }
+            let l = p_chain.len();
+            p_chain.remove(l - 1);
+        }
+    }
+
 	fn init_dir(fd: RcFileDes, map: &mut HashMap<String, RcFileDes>){
 		let path = String::from(fd.borrow().path.as_str());
 		let mut file_map = HashMap::new();
@@ -234,6 +282,15 @@ impl Built{
 	}
 
 	
+}
+
+fn is_exist(v: &Vec<String>, s: &str) -> bool{
+    for vv in v.iter(){
+        if vv == s{
+            return true
+        }
+    }
+    false
 }
 
 // impl BonCode for FileDes {

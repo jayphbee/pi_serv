@@ -158,3 +158,19 @@ Mon Jun 04 2018 13:50:33 GMT+0800 (中国标准时间):
 TypeError: Cannot read property 'type' of nullF:\work\render\pi_build\dst\init.js
 Mon Jun 04 2018 13:50:33 GMT+0800 (中国标准时间):
 TypeError: Cannot read property 'type' of nullF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\mqtt\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\net\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\rpc\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+TypeError: Cannot read property 'mod' of undefinedF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\mqtt\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\net\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+读取文件失败， 路径：..\pi_net\rpc\src\lib.rsF:\work\render\pi_build\dst\init.js
+Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
+TypeError: Cannot read property 'mod' of undefinedF:\work\render\pi_build\dst\init.js

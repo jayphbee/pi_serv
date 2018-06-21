@@ -2,7 +2,8 @@ use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResul
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
 use pi_vm::pi_vm_impl::{ block_reply, block_throw};
-use pi_vm::task::TaskType;
+use pi_base::task::TaskType;
+use pi_lib::atom::Atom;
 use pi_test;
 
 
