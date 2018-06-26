@@ -1,9 +1,10 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
-use pi_vm::pi_vm_impl::{ block_reply, block_throw};
+use pi_vm::pi_vm_impl::{ block_reply, block_throw, push_callback};
 use pi_base::task::TaskType;
 use pi_lib::atom::Atom;
+use std::mem::transmute;
 use pi_vm;
 use pi_db;
 use pi_lib;
@@ -87,7 +88,8 @@ js.set_index(&array, 0, &v_elem);
     let v_elem = v.1;
     let ptr = Box::into_raw(Box::new(v_elem)) as usize;let v_elem = ptr_jstype(objs.clone(), js.clone(), ptr,2886438122);
 
-js.set_index(&array, 1, &v_elem);    let v = array; }
+js.set_index(&array, 1, &v_elem);    let v = array;
+ }
         None => { let r = js.new_undefined(); }
     };
  }
@@ -113,7 +115,8 @@ js.set_index(&array, 0, &v_elem);
     let v_elem = v.1;
     let ptr = Box::into_raw(Box::new(v_elem)) as usize;let v_elem = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,2886438122);
 
-js.set_index(&array, 1, &v_elem);    let v = array; }
+js.set_index(&array, 1, &v_elem);    let v = array;
+ }
         None => { let r = js.new_undefined(); }
     };
  return Some(CallResult::Ok); }
@@ -434,7 +437,8 @@ fn call_1204956194(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
     let result = js_call::register_rpc_handler(jst0,jst1,jst2,jst3);
     match result{
         Ok(r) => { 
-	let array = js.new_array();    let result = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(String::from("Result is Err")));
         }
@@ -497,20 +501,133 @@ fn call_1394145511(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 }
 
 
-fn call_2244240226_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+fn call_2436018863_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in js_call";
 
 	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u64();
+    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst0 = unsafe {
+        transmute::<&[u8; 8], u64>(arr)
+    }; 
 
     let jscopy = js.clone();
     let call_back = move || {
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {js.new_undefined();}), TaskType::Sync, 10, Atom::from(""));
     };
-    js_call::js_sleep(jst0,Box::new(call_back));
+    js_call::sleep(jst0,Box::new(call_back));
 	None
+}
+
+
+fn call_3964336770_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in js_call";
+	let jst0 = &v[0];
+    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst0 = unsafe {
+        transmute::<&[u8; 8], u64>(arr)
+    }; 
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+    let call_back = move || {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {0}), Atom::from(""));
+    };
+    js_call::set_timeout(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_149836760(js: Arc<JS>, mgr: &BonMgr) -> Option<CallResult>{
+
+    let result = js_call::create_rand();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,2239088127);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_457748500(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in js_call";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_call::Rand) };
+
+
+    let result = js_call::next_u32(jst0);let result = js.new_u32(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4100963304(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in js_call";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_call::Rand) };
+
+
+    let result = js_call::next_u64(jst0);let result = js.new_u64(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3008593203(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in js_call";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_call::Rand) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = js_call::fill_bytes(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2395132060(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in js_call";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_call::Rand) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = js_call::try_fill_bytes(jst0,jst1);
+    match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,104530634);
+
+ return Some(CallResult::Ok); }
+        Err(v) => { 
+            return Some(CallResult::Err(v + "Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
 }
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
@@ -532,6 +649,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend")}, 1797798710);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>")}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("Box<FnBox>")}, 1255307008);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_call::Rand")}, 2239088127);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_2239806005), 2239806005);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3133367430), 3133367430);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3825824874_sync), 3825824874);
@@ -548,5 +666,11 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_690562975), 690562975);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1613784573), 1613784573);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1394145511), 1394145511);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2244240226_sync), 2244240226);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2436018863_sync), 2436018863);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3964336770_async), 3964336770);
+    mgr.regist_fun_meta(FnMeta::CallNobj(call_149836760), 149836760);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_457748500), 457748500);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_4100963304), 4100963304);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3008593203), 3008593203);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_2395132060), 2395132060);
 }

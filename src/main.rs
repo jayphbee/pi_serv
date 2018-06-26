@@ -18,6 +18,7 @@ extern crate net;
 extern crate mqtt;
 extern crate rpc;
 extern crate magnetic;
+extern crate rand;
 
 pub mod jsloader;
 pub mod depend;

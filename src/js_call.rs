@@ -19,6 +19,8 @@ use net::api::NetManager;
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 use mqtt::session::Session;
+use rand::rngs::OsRng;
+use rand::RngCore;
 
 use handler::TopicHandler;
 use depend::Depend;
@@ -168,6 +170,46 @@ pub fn get_depend(dp: &Depend, path: String) -> Vec<String> {
 }
 
 //休眠
-pub fn js_sleep(ms: u64, f: Box<FnBox()>){
+pub fn sleep(ms: u64, f: Box<FnBox()>){
 	TIMER.set_timeout(f, ms);
+}
+
+
+pub fn set_timeout(ms: u64, f: Box<FnBox()>){
+	TIMER.set_timeout(f, ms);
+}
+
+pub struct Rand(OsRng);
+
+//创建一个随机对象
+pub fn create_rand() -> Rand{
+	Rand(OsRng::new().expect("create_osrng fail"))
+}
+
+//取到一个随机值
+pub fn next_u32(or: &mut Rand) -> u32{
+	or.0.next_u32()
+}
+
+//取到一个随机值
+pub fn next_u64(or: &mut Rand) -> u64{
+	or.0.next_u64()
+}
+
+//取到一个随机值
+pub fn fill_bytes(or: &mut Rand, len: usize) -> Vec<u8>{
+    let mut arr = Vec::new();
+    unsafe{arr.set_len(len);};
+	or.0.fill_bytes(arr.as_mut_slice());
+    arr
+}
+
+//取到一个随机值
+pub fn try_fill_bytes(or: &mut Rand, len: usize) -> Result<Vec<u8>, String> {
+    let mut arr = Vec::new();
+    unsafe{arr.set_len(len);};
+	match or.0.try_fill_bytes(arr.as_mut_slice()) {
+        Ok(_) => Ok(arr),
+        Err(e) => Err(String::from(e.msg)),
+    }
 }

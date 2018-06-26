@@ -10,6 +10,7 @@ clap = "2.31.2"
 toml = "0.4.6"
 json = "0.11.13" 
 lazy_static = "*"
+rand = "0.5.2"
 pi_lib = { path = "../pi_lib" }
 pi_vm = { path = "../pi_vm" }
 pi_math = { path = "../pi_math" }

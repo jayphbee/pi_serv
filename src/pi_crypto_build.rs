@@ -1,6 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
+use std::mem::transmute;
 use pi_math;
 use pi_crypto;
 
@@ -48,6 +49,7 @@ js.set_index(&array, 0, &result_elem);
     let ptr = Box::into_raw(Box::new(result_elem)) as usize;let result_elem = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,526967798);
 
 js.set_index(&array, 1, &result_elem);
+
     Some(CallResult::Ok)
 }
 
@@ -119,7 +121,7 @@ fn call_1476345609(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 }
 
 
-fn call_2717525457(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_2108893530(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in pi_crypto::hash";
 
 	let jst0 = &v[0];
@@ -128,7 +130,7 @@ fn call_2717525457(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 
-    let result = pi_crypto::hash::sha256(jst0);
+    let result = pi_crypto::hash::keccak256(jst0);
     let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,526967798);
 
 
@@ -174,13 +176,19 @@ fn call_796485226(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in pi_crypto::hash";
 
 	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u64();
+    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst0 = unsafe {
+        transmute::<&[u8; 8], u64>(arr)
+    }; 
 
 
 	let jst1 = &v[1];
-	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_u64();
+    if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{&*(jst1.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst1 = unsafe {
+        transmute::<&[u8; 8], u64>(arr)
+    }; 
 
 
 	let jst2 = &v[2];
@@ -220,7 +228,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1005885597), 1005885597);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1115867356), 1115867356);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1476345609), 1476345609);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_2717525457), 2717525457);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_2108893530), 2108893530);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_842379557), 842379557);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1125159944), 1125159944);
     mgr.regist_fun_meta(FnMeta::CallArg(call_796485226), 796485226);
