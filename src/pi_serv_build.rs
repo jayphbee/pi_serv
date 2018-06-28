@@ -5,9 +5,9 @@ use pi_vm::pi_vm_impl::{ block_reply, block_throw, push_callback};
 use pi_base::task::TaskType;
 use pi_lib::atom::Atom;
 use std::mem::transmute;
-use pi_vm;
 use pi_db;
 use pi_lib;
+use pi_vm;
 use net;
 use mqtt;
 use rpc;
@@ -20,7 +20,7 @@ use js_call;
 
 
 fn call_2239806005(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in util";
+	let param_error = "param error in read_file";
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
@@ -35,35 +35,9 @@ fn call_2239806005(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 }
 
 
-fn call_3133367430(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in handler::TopicHandler";
-
-	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u32() as usize;
-
-
-	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, mgr, 730519735, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_vm::pi_vm_impl::VMFactory) };
-
-
-	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, mgr, 2976191628, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Mgr) };
-
-
-    let result = handler::TopicHandler::new(jst0,jst1,jst2);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,585492653);
-
-
-    Some(CallResult::Ok)
-}
-
-
 fn call_3825824874_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in js_call::DBIter";
+	let param_error = "param error in next";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 517878327, false, param_error).expect("");
@@ -132,7 +106,7 @@ js.set_index(&array, 1, &v_elem);    let v = array;
 
 fn call_158707721_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in js_call";
+	let param_error = "param error in iter_db";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
@@ -214,7 +188,7 @@ fn call_158707721_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
 
 
 fn call_3284237535(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in register_db";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2976191628, false, param_error).expect("");
@@ -238,7 +212,7 @@ fn call_3284237535(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_1995451612(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in create_sinfo";
 
 	let jst0 = &v[0];
 	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
@@ -255,7 +229,7 @@ fn call_1995451612(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_3189416152(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in tabkv_with_value";
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
@@ -288,7 +262,7 @@ fn call_3189416152(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_1338391149(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in tabkv_new";
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
@@ -315,7 +289,7 @@ fn call_1338391149(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_2340393156(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in tabkv_get_value";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 4000136370, false, param_error).expect("");
@@ -336,7 +310,7 @@ fn call_2340393156(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_1209559845(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in clone_vm_factory";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 730519735, false, param_error).expect("");
@@ -352,7 +326,7 @@ fn call_1209559845(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_56622988(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in mqtt_bind";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2761082466, false, param_error).expect("");
@@ -388,7 +362,7 @@ fn call_56622988(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>
 
 
 fn call_3661222231(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in mqtt_respond";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 226971089, true, param_error).expect("");
@@ -412,7 +386,7 @@ fn call_3661222231(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_1204956194(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in register_rpc_handler";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 1285687456, false, param_error).expect("");
@@ -449,7 +423,7 @@ fn call_1204956194(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_690562975(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in arc_new";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 585492653, true, param_error).expect("");
@@ -465,7 +439,7 @@ fn call_690562975(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult
 
 
 fn call_1613784573(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in arc_deref";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2886438122, false, param_error).expect("");
@@ -481,7 +455,7 @@ fn call_1613784573(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_1394145511(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in get_depend";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 1797798710, false, param_error).expect("");
@@ -503,7 +477,7 @@ fn call_1394145511(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 fn call_2436018863_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in js_call";
+	let param_error = "param error in sleep";
 
 	let jst0 = &v[0];
 	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
@@ -518,12 +492,13 @@ fn call_2436018863_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3964336770_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+fn call_3964336770_async( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
 
-    let param_error = "param error in js_call";
+    let param_error = "param error in set_timeout";
 	let jst0 = &v[0];
 	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
 	let jst0 = jst0.get_u32();
+
     let call_index = &v[1];
     if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
     let call_index = call_index.get_u32();
@@ -532,8 +507,25 @@ fn call_3964336770_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_back = move || {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {0}), Atom::from(""));
     };
-    js_call::set_timeout(jst0,Box::new(call_back));
+
+    let result = js_call::set_timeout(jst0,Box::new(call_back));
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,2761912410);
+
+
 	Some(CallResult::Ok)
+}
+
+
+fn call_1432682371(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in clear_timeout";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, mgr, 2761912410, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_call::AtomIndex) };
+
+
+    js_call::clear_timeout(jst0);
+    Some(CallResult::Ok)
 }
 
 
@@ -548,7 +540,7 @@ fn call_149836760(js: Arc<JS>, mgr: &BonMgr) -> Option<CallResult>{
 
 
 fn call_457748500(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in next_u32";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
@@ -562,7 +554,7 @@ fn call_457748500(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult
 
 
 fn call_4100963304(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in next_u64";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
@@ -576,7 +568,7 @@ fn call_4100963304(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_3008593203(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in fill_bytes";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
@@ -597,7 +589,7 @@ fn call_3008593203(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 
 
 fn call_2395132060(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in js_call";
+	let param_error = "param error in try_fill_bytes";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, mgr, 2239088127, false, param_error).expect("");
@@ -624,27 +616,27 @@ fn call_2395132060(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 }
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory")}, 730519735);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr")}, 2976191628);
-    mgr.regist_struct_meta(StructMeta{name:String::from("handler::TopicHandler")}, 585492653);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_call::DBIter")}, 517878327);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Fn>")}, 676023733);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>")}, 2886438122);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr")}, 1754972364);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr")}, 2976191628);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::MemeryDB")}, 3176709138);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_lib::sinfo::StructInfo>")}, 1721307497);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV")}, 4000136370);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory")}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("net::api::NetManager")}, 2761082466);
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode")}, 1751456239);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt::session::Session>")}, 226971089);
     mgr.regist_struct_meta(StructMeta{name:String::from("rpc::server::RPCServer")}, 1285687456);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<handler::TopicHandler>")}, 471985604);
+    mgr.regist_struct_meta(StructMeta{name:String::from("handler::TopicHandler")}, 585492653);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend")}, 1797798710);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>")}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("Box<FnBox>")}, 1255307008);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_call::AtomIndex")}, 2761912410);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_call::Rand")}, 2239088127);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_2239806005), 2239806005);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3133367430), 3133367430);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3825824874_sync), 3825824874);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_158707721_sync), 158707721);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3284237535), 3284237535);
@@ -660,7 +652,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1613784573), 1613784573);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1394145511), 1394145511);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2436018863_sync), 2436018863);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3964336770_async), 3964336770);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3964336770_async), 3964336770);
+    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1432682371), 1432682371);
     mgr.regist_fun_meta(FnMeta::CallNobj(call_149836760), 149836760);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_457748500), 457748500);
     mgr.regist_fun_meta(FnMeta::CallArgNobj(call_4100963304), 4100963304);

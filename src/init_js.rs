@@ -27,7 +27,7 @@ pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend)
     let mut list_c = Vec::new();
     //let mut list_i = Vec::new();
     for e in list.into_iter(){
-        if e.ends_with(".s.js") || e.ends_with(".c.js"){
+        if e.ends_with(".s.js") || e.ends_with(".c.js") || e.ends_with(".i.js"){
             list_c.push(e);
         }/*else if e.ends_with(".i.js"){
             list_i.push(e);

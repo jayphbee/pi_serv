@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::io::{Error};
 use std::ops::Deref;
 use std::boxed::FnBox;
+use std::sync::atomic::{AtomicIsize};
 
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_lib::atom::Atom;
@@ -174,9 +175,13 @@ pub fn sleep(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(f, ms);
 }
 
+pub struct AtomIndex(Arc<AtomicIsize>);
+pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> AtomIndex{
+	AtomIndex(TIMER.set_timeout(f, ms))
+}
 
-pub fn set_timeout(ms: u32, f: Box<FnBox()>){
-	TIMER.set_timeout(f, ms);
+pub fn clear_timeout(index: AtomIndex){
+	TIMER.cancel(index.0);
 }
 
 pub struct Rand(OsRng);
