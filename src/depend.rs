@@ -262,11 +262,16 @@ impl Built{
 			last = l.unwrap();
 			dv.push(last.as_str());
 		}
-        let x = Built::join(dv.as_slice(), "/") + "/" + Built::join(fv.as_slice(), "/").as_str();
-        //println!("pp:{}", &x);
+        if fv.len() > 0{
+            Built::join(dv.as_slice(), "/") + "/" + Built::join(fv.as_slice(), "/").as_str()
+        }else{
+            Built::join(dv.as_slice(), "/")
+        }
+        // let x = ;
+        // println!("fv:{:?}", &fv);
         
 
-		return x;
+		// return x;
 	}
 
 	fn join(v: &[&str], jstr: &str) -> String{

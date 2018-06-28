@@ -174,3 +174,15 @@ Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
 读取文件失败， 路径：..\pi_net\rpc\src\lib.rsF:\work\render\pi_build\dst\init.js
 Thu Jun 07 2018 13:40:33 GMT+0800 (中国标准时间):
 TypeError: Cannot read property 'mod' of undefinedF:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:24:57 GMT+0800 (中国标准时间):
+parserFunc[u128]不是一个方法！F:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:24:57 GMT+0800 (中国标准时间):
+parserFunc[u128]不是一个方法！F:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:24:57 GMT+0800 (中国标准时间):
+TypeError: Cannot read property 'mod' of undefinedF:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:34:12 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 290F:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:56:51 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 190F:\work\render\pi_build\dst\init.js
+Wed Jun 27 2018 10:57:09 GMT+0800 (中国标准时间):
+SyntaxError: Unexpected token , in JSON at position 207F:\work\render\pi_build\dst\init.js

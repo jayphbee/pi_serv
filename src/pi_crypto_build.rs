@@ -177,17 +177,17 @@ fn call_796485226(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
     if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let arr = unsafe{*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
     let jst0 = unsafe {
-        transmute::<&[u8; 8], u64>(arr)
+        transmute::<[u8; 8], u64>(arr)
     }; 
 
 
 	let jst1 = &v[1];
     if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{&*(jst1.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let arr = unsafe{*(jst1.to_bytes().as_ptr() as usize as *const [u8; 8])};
     let jst1 = unsafe {
-        transmute::<&[u8; 8], u64>(arr)
+        transmute::<[u8; 8], u64>(arr)
     }; 
 
 

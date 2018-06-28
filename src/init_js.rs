@@ -33,7 +33,7 @@ pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend)
             list_i.push(e);
         }*/
     }
-    list_c.push(String::from("pi/rt/init_cfg.js"));
+    list_c.push(String::from("bridge/init_cfg.js"));
     //list_c.extend_from_slice(&list_i);
     push_pre(&mut list_c);
 
@@ -44,7 +44,7 @@ pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend)
         if path.ends_with(".js"){
             let u8arr = file_map.get(&path).unwrap().as_slice();
             js.load(u8arr);
-            if path == "pi/rt/evn.js"{//如果是"pi/rt/evn.js", 表示self已经定义， 此时可以为self绑定变量
+            if path == "bridge/evn.js"{//如果是"bridge/evn.js", 表示self已经定义， 此时可以为self绑定变量
                 
                 //调用全局变量定义函数， 定义全局变量_$mgr
                 js.get_js_function("_$defineGlobal".to_string());
@@ -105,11 +105,11 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
 
 
 pub fn push_pre(list:&mut Vec<String>){
-    let evn = String::from("pi/rt/evn.js");
-	let core = String::from("pi/rt/core.js");
-	let firstjs = String::from("pi/rt/first.js");
-	let nextjs = String::from("pi/rt/next.js");
-	let lastjs = String::from("pi/rt/last.js");
+    let evn = String::from("bridge/evn.js");
+	let core = String::from("bridge/core.js");
+	let firstjs = String::from("bridge/first.js");
+	let nextjs = String::from("bridge/next.js");
+	let lastjs = String::from("bridge/last.js");
 
 	list.insert(0, nextjs);
     list.insert(0, firstjs);//初始js

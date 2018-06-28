@@ -506,11 +506,8 @@ fn call_2436018863_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in js_call";
 
 	let jst0 = &v[0];
-    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst0 = unsafe {
-        transmute::<&[u8; 8], u64>(arr)
-    }; 
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u32();
 
     let jscopy = js.clone();
     let call_back = move || {
@@ -525,12 +522,8 @@ fn call_3964336770_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let param_error = "param error in js_call";
 	let jst0 = &v[0];
-    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{&*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst0 = unsafe {
-        transmute::<&[u8; 8], u64>(arr)
-    }; 
-
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u32();
     let call_index = &v[1];
     if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
     let call_index = call_index.get_u32();

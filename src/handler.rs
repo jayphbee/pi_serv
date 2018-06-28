@@ -23,7 +23,7 @@ pub struct TopicHandler {
 impl Handler for TopicHandler {
 	type HandleResult = ();
 
-	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args) -> Self::HandleResult {
+	fn handle(&self, env: Arc<Env>, topic: Atom, args: Args) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let topic_name = topic.clone();
 		let real_args = Box::new(move |vm: Arc<JS>| {

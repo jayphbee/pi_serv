@@ -1,6 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
+use std::mem::transmute;
 use core;
 use core::convert::From;
 use pi_lib;
@@ -27,8 +28,11 @@ fn call_1469354144(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResul
 	let param_error = "param error in pi_lib::guid::GuidGen";
 
 	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u64();
+    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst0 = unsafe {
+        transmute::<[u8; 8], u64>(arr)
+    }; 
 
 
 	let jst1 = &v[1];

@@ -170,12 +170,12 @@ pub fn get_depend(dp: &Depend, path: String) -> Vec<String> {
 }
 
 //休眠
-pub fn sleep(ms: u64, f: Box<FnBox()>){
+pub fn sleep(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(f, ms);
 }
 
 
-pub fn set_timeout(ms: u64, f: Box<FnBox()>){
+pub fn set_timeout(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(f, ms);
 }
 

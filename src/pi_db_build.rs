@@ -73,7 +73,8 @@ fn call_3803008464_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -86,7 +87,8 @@ fn call_3803008464_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -114,7 +116,8 @@ fn call_1346774966_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -127,7 +130,8 @@ fn call_1346774966_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -155,7 +159,8 @@ fn call_977907218_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -168,7 +173,8 @@ fn call_977907218_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -283,7 +289,8 @@ fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -296,7 +303,8 @@ fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -345,7 +353,8 @@ fn call_3786000589_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -358,7 +367,8 @@ fn call_3786000589_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
