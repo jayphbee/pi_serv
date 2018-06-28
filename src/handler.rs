@@ -8,7 +8,7 @@ use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
 use pi_lib::atom::Atom;
-use pi_lib::handler::{Env, Handler, Args};
+use pi_lib::handler::{Env, GenType, Handler, Args};
 
 /*
 * Topic处理器
@@ -21,17 +21,28 @@ pub struct TopicHandler {
 }
 
 impl Handler for TopicHandler {
+	type A = u8;
+    type B = Arc<Vec<u8>>;
+    type C = ();
+    type D = ();
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
 	type HandleResult = ();
 
-	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args) -> Self::HandleResult {
+	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let topic_name = topic.clone();
 		let real_args = Box::new(move |vm: Arc<JS>| {
 			vm.new_str((*topic_name).to_string());
-			let _vsn: &u8 = args.get_ref(0).unwrap();
-			let bin: &Arc<Vec<u8>> = args.get_ref(1).unwrap();
-			let array = vm.new_uint8_array(bin.len() as u32);
-			array.from_bytes(bin.as_slice());
+			match args {
+				Args::TwoArgs(_, bin) => {
+					let array = vm.new_uint8_array(bin.len() as u32);
+					array.from_bytes(bin.as_slice());
+				},
+				_ => panic!("invalid topic handler args"),
+			}
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
 			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
@@ -71,7 +82,7 @@ impl TopicHandler {
 	//获取指定灰度的虚拟机工厂和事务管理器
 	pub fn get_gray(&self, gray: usize) -> Option<(Arc<VMFactory>, Mgr)> {
 		match self.gray_tab.read().unwrap().get(&gray) {
-			_ => None,
+			None => None,
 			Some((factory, mgr)) => Some((factory.clone(), mgr.clone())),
 		}
 	}
@@ -87,14 +98,18 @@ impl TopicHandler {
 	}
 
 	//获取指定的虚拟机工厂和事务管理器
-	fn get(&self, session: Arc<Env>) -> (Arc<VMFactory>, Mgr) {
+	fn get(&self, session: Arc<dyn Env>) -> (Arc<VMFactory>, Mgr) {
 		match session.get_attr(Atom::from("_$gray")) {
-			Some(any) => {
-				let vec: &Vec<u8> = any.downcast_ref().unwrap();
-                let gray = usize::from_le(unsafe { *(vec[..].as_ptr() as *mut usize) });
-				match self.get_gray(gray) {
-					None => self.get_default(),
-					Some(r) => r,
+			Some(val) => {
+				match val {
+					GenType::Bin(bin) => {
+						let gray = usize::from_le(unsafe { *(bin[..].as_ptr() as *mut usize) });
+						match self.get_gray(gray) {
+							None => self.get_default(),
+							Some(r) => r,
+						}
+					},
+					_ => self.get_default(),
 				}
 			},
 			_ => self.get_default(),
