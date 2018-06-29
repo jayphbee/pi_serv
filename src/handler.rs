@@ -3,7 +3,7 @@ use std::sync::atomic::AtomicUsize;
 
 use fnv::FnvHashMap;
 
-use pi_vm::adapter::JS;
+use pi_vm::adapter::{JS, JSType};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
@@ -75,8 +75,8 @@ impl Handler for TopicHandler {
 			vm.new_str((*topic_name).to_string());
 			match args {
 				Args::TwoArgs(_, bin) => {
-					let array = vm.new_uint8_array(bin.len() as u32);
-					array.from_bytes(bin.as_slice());
+					let buffer = vm.new_uint8_array(bin.len() as u32);
+					buffer.from_bytes(bin.as_slice());
 				},
 				_ => panic!("invalid topic handler args"),
 			}
@@ -150,8 +150,8 @@ unsafe impl Sync for AsyncRequestHandler {}
 
 impl Handler for AsyncRequestHandler {
 	type A = Arc<Vec<u8>>;
-	type B = u32;
-	type C = ();
+	type B = Vec<JSType>;
+	type C = u32;
 	type D = ();
 	type E = ();
 	type F = ();
@@ -159,25 +159,31 @@ impl Handler for AsyncRequestHandler {
 	type H = ();
 	type HandleResult = ();
 
-	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
-        let topic_name = topic.clone();
+        let copy_name = name.clone();
 		let real_args = Box::new(move |vm: Arc<JS>| {
-			vm.new_str((*topic_name).to_string());
+			vm.new_str((*copy_name).to_string());
 			match args {
-				Args::TwoArgs(bin, callback) => {
-					let array = vm.new_uint8_array(bin.len() as u32);
-					array.from_bytes(bin.as_slice());
+				Args::ThreeArgs(bin, objs, callback) => {
+					let buffer = vm.new_uint8_array(bin.len() as u32);
+					buffer.from_bytes(bin.as_slice());
+					let mut value: JSType;
+					let array = vm.new_array();
+					for i in 0..objs.len() {
+						value = vm.new_native_object(objs[i].get_native_object());
+						vm.set_index(&array, i as u32, &value);
+					}
 					vm.new_u32(callback);
 				},
-				_ => panic!("invalid topic handler args"),
+				_ => panic!("invalid async call handler args"),
 			}
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
 			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2256377725);
 		});
-		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
 }
 
