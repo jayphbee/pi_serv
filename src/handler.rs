@@ -81,9 +81,9 @@ impl Handler for TopicHandler {
 				_ => panic!("invalid topic handler args"),
 			}
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2976191628);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2256377725);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
 		});
 		factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 	}
@@ -179,9 +179,9 @@ impl Handler for AsyncRequestHandler {
 				_ => panic!("invalid async call handler args"),
 			}
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2976191628);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(BON_MGR.objs.clone(), vm.clone(), ptr, 2256377725);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
 		});
 		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
