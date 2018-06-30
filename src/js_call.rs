@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
 
-use pi_vm::pi_vm_impl::VMFactory;
+use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::StructInfo;
 use pi_lib::bon::{ReadBuffer, Decode};
@@ -24,6 +24,7 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 
 use handler::TopicHandler;
+use handler::AsyncRequestHandler;
 use depend::Depend;
 use init_js::push_pre;
 
@@ -142,6 +143,11 @@ pub fn mqtt_respond(session: Arc<Session>, topic: String, data: &[u8]) {
 //为rpc注册handler
 pub fn register_rpc_handler(serv: &mut RPCServer, topic: String, sync: bool, handler: &Arc<TopicHandler>) -> Result<(), Error> {
     serv.register(Atom::from(topic), sync, handler.clone())
+}
+
+//为sync注册handler
+pub fn register_async_handler(topic: String, handler: &Arc<AsyncRequestHandler>){
+    register_async_request(Atom::from(topic), handler.clone());
 }
 
 //new一个arc

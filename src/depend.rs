@@ -11,6 +11,11 @@ pub struct Depend{
 impl Depend{
 	pub fn new(list: Vec<FileDes>, root: &str) -> Depend{
 		let mut file_map = HashMap::new();
+        file_map.insert(String::from("bin/evn.js"), Rc::new(RefCell::new(new_path_filedes("bin/evn.js"))));
+        file_map.insert(String::from("bin/core.js"), Rc::new(RefCell::new(new_path_filedes("bin/core.js"))));
+        file_map.insert(String::from("bin/first.js"), Rc::new(RefCell::new(new_path_filedes("bin/first.js"))));
+        file_map.insert(String::from("bin/next.js"), Rc::new(RefCell::new(new_path_filedes("bin/next.js"))));
+        file_map.insert(String::from("bin/last.js"), Rc::new(RefCell::new(new_path_filedes("bin/last.js"))));
 		for fd in list.into_iter() {
 			let rc = Rc::new(RefCell::new(fd));
 			file_map.insert(String::from(rc.borrow().path.as_str()), rc.clone());
@@ -296,6 +301,17 @@ fn is_exist(v: &Vec<String>, s: &str) -> bool{
         }
     }
     false
+}
+
+fn new_path_filedes(path: &str) -> FileDes{
+    FileDes{
+        path: String::from(path),
+        sign: None,
+        time: None,
+        size: 1,
+        depend: None,
+        children:None,
+    }
 }
 
 // impl BonCode for FileDes {

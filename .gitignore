@@ -4,3 +4,4 @@
 /Cargo.lock
 .depend
 /.vscode
+/scripts/*.depend
