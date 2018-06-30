@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use pi_vm::adapter::{JS};
-use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
+use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_db::mgr::{Mgr};
 use pi_db::memery_db::{MemeryDB};
 use pi_db::db::{SResult, TabKV};
@@ -14,8 +14,12 @@ use pi_lib::bon::{WriteBuffer, Encode};
 use depend::Depend;
 use jsloader::Loader;
 
-pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend){
-    let js = JS::new(0xff).unwrap();
+pub fn init_js(dirs: &[String], dp: &Depend){
+    let mut dir_c = Vec::from(dirs);
+    push_pre(&mut dir_c);
+
+    let file_map = Loader::load_dir_sync(dir_c.as_slice(), dp);
+    let js = JS::new(0xff, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
     let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
     mgr.register(Atom::from("memory"), Arc::new(MemeryDB::new()));//注册一个内存数据库
     create_code_tab(&mgr);//创建代码表
@@ -26,14 +30,17 @@ pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend)
     let list: Vec<String> = Loader::list(dirs, dp);//列出目录下的所有文件
     let mut list_c = Vec::new();
     //let mut list_i = Vec::new();
+    let mut start_path = String::from("");
     for e in list.into_iter(){
         if e.ends_with(".s.js") || e.ends_with(".c.js"){
             list_c.push(e);
         }/*else if e.ends_with(".i.js"){
             list_i.push(e);
-        }*/
+        }*/else if e.ends_with(".st.js"){
+            start_path = e;
+        }
     }
-    list_c.push(String::from("pi/rt/init_cfg.js"));
+    list_c.push(start_path);
     //list_c.extend_from_slice(&list_i);
     push_pre(&mut list_c);
 
@@ -44,20 +51,20 @@ pub fn init_js(dirs: &[String], file_map: HashMap<String, Vec<u8>>, dp: &Depend)
         if path.ends_with(".js"){
             let u8arr = file_map.get(&path).unwrap().as_slice();
             js.load(u8arr);
-            if path == "pi/rt/evn.js"{//如果是"pi/rt/evn.js", 表示self已经定义， 此时可以为self绑定变量
+            if path == "bin/evn.js"{//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
                 
                 //调用全局变量定义函数， 定义全局变量_$mgr
                 js.get_js_function("_$defineGlobal".to_string());
                 js.new_str(String::from("_$db_mgr"));
                 let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-                ptr_jstype(BON_MGR.objs.clone(), js.clone(), ptr, 2976191628); //new native obj作为参数
+                ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
                 js.call(2);
 
                 //调用全局变量定义函数， 定义全局变量_$mgr
                 js.get_js_function("_$defineGlobal".to_string());
                 js.new_str(String::from("_$depend"));
                 let ptr = dp as *const Depend as usize;
-                ptr_jstype(BON_MGR.objs_ref.clone(), js.clone(), ptr, 1797798710); //new native obj作为参数
+                ptr_jstype(js.get_objs_ref(), js.clone(), ptr, 1797798710); //new native obj作为参数
                 js.call(2);
             }
         }
@@ -105,11 +112,11 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
 
 
 pub fn push_pre(list:&mut Vec<String>){
-    let evn = String::from("pi/rt/evn.js");
-	let core = String::from("pi/rt/core.js");
-	let firstjs = String::from("pi/rt/first.js");
-	let nextjs = String::from("pi/rt/next.js");
-	let lastjs = String::from("pi/rt/last.js");
+    let evn = String::from("bin/evn.js");
+	let core = String::from("bin/core.js");
+	let firstjs = String::from("bin/first.js");
+	let nextjs = String::from("bin/next.js");
+	let lastjs = String::from("bin/last.js");
 
 	list.insert(0, nextjs);
     list.insert(0, firstjs);//初始js

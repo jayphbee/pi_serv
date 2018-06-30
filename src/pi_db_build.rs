@@ -9,37 +9,37 @@ use pi_db;
 
 
 
-fn call_2432929176(js: Arc<JS>, mgr: &BonMgr) -> Option<CallResult>{
+fn call_2432929176(js: Arc<JS>) -> Option<CallResult>{
 
     let result = pi_db::memery_db::MemeryDB::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,3176709138);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3176709138);
 
 
     Some(CallResult::Ok)
 }
 
 
-fn call_4081023775(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in pi_db::mgr::Mgr";
+fn call_4081023775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1706731228, true, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1706731228, true, param_error).expect("");
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut pi_lib::guid::GuidGen) };
 
 
     let result = pi_db::mgr::Mgr::new(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,2976191628);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2976191628);
 
 
     Some(CallResult::Ok)
 }
 
 
-fn call_951191934(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in pi_db::mgr::Mgr";
+fn call_951191934(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in transaction";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 2976191628, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
 
 
@@ -49,31 +49,28 @@ fn call_951191934(js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult
     
 
     let result = pi_db::mgr::Mgr::transaction(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,1754972364);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1754972364);
 
 
     Some(CallResult::Ok)
 }
 
 
-fn call_3803008464_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_3803008464_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in prepare";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<(),String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -86,7 +83,8 @@ fn call_3803008464_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -97,24 +95,21 @@ fn call_3803008464_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 }
 
 
-fn call_1346774966_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_1346774966_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in commit";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<(),String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -127,7 +122,8 @@ fn call_1346774966_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -138,24 +134,21 @@ fn call_1346774966_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 }
 
 
-fn call_977907218_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_977907218_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in rollback";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<(),String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -168,7 +161,8 @@ fn call_977907218_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -179,17 +173,17 @@ fn call_977907218_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
 }
 
 
-fn call_1841891766_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_1841891766_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in query";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, mgr, 2202214327, true, param_error).expect("");
+    let ptr = jstype_ptr(&jst1, js.clone(), 2202214327, true, param_error).expect("");
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<pi_db::db::TabKV>) };
 
 
@@ -209,15 +203,11 @@ fn call_1841891766_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
     let jst3 = jst3.get_boolean();
     
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<Vec<pi_db::db::TabKV>,String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(objs.clone(), js.clone(), ptr,2202214327);
+    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
  }
         Err(v) => { 
@@ -232,7 +222,7 @@ fn call_1841891766_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(mgr.objs.clone(), js.clone(), ptr,2202214327);
+    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
  return Some(CallResult::Ok); }
         Err(v) => { 
@@ -245,17 +235,17 @@ fn call_1841891766_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
 }
 
 
-fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_685881041_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in modify";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, mgr, 2202214327, true, param_error).expect("");
+    let ptr = jstype_ptr(&jst1, js.clone(), 2202214327, true, param_error).expect("");
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<pi_db::db::TabKV>) };
 
 
@@ -275,15 +265,12 @@ fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
     let jst3 = jst3.get_boolean();
     
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<(),String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -296,7 +283,8 @@ fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -307,22 +295,22 @@ fn call_685881041_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Call
 }
 
 
-fn call_3786000589_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<CallResult>{
+fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
-	let param_error = "param error in pi_db::mgr::Tr";
+	let param_error = "param error in alter";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, mgr, 1754972364, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, mgr, 1411051473, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, false, param_error).expect("");
 	let jst1 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, mgr, 1411051473, false, param_error).expect("");
+    let ptr = jstype_ptr(&jst2, js.clone(), 1411051473, false, param_error).expect("");
 	let jst2 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
 
 
@@ -330,22 +318,19 @@ fn call_3786000589_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
     let jst3 = if jst3.is_undefined() || jst3.is_null(){
         None
     }else{
-    let ptr = jstype_ptr(&jst3, mgr, 1721307497, true, param_error).expect("");
+    let ptr = jstype_ptr(&jst3, js.clone(), 1721307497, true, param_error).expect("");
 	let jst3 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_lib::sinfo::StructInfo>)}.clone();
 
         Some(jst3)
     };
 
     let jscopy = js.clone();
-    let objs_ref = mgr.objs_ref.clone();
-    let objs = mgr.objs.clone();
 	let call_back = move |r: Result<(),String>| {
-        let objs_ref = objs_ref.clone();
-        let objs = objs.clone();
 		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; }
+	let array = js.new_array();    let r = array;
+ }
         Err(v) => { 
             block_throw(js.clone(), v.to_string() + "Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
         }
@@ -358,7 +343,8 @@ fn call_3786000589_sync( js: Arc<JS>, mgr: &BonMgr, v:Vec<JSType>) -> Option<Cal
         let r = r.unwrap();
     match r{
         Ok(r) => { 
-	let array = js.new_array();    let r = array; return Some(CallResult::Ok); }
+	let array = js.new_array();    let r = array;
+ return Some(CallResult::Ok); }
         Err(v) => { 
             return Some(CallResult::Err(v + "Result is Err"));
         }
@@ -376,13 +362,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>")}, 2202214327);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom")}, 1411051473);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_lib::sinfo::StructInfo>")}, 1721307497);
-    mgr.regist_fun_meta(FnMeta::CallNobj(call_2432929176), 2432929176);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_4081023775), 4081023775);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_951191934), 951191934);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3803008464_sync), 3803008464);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1346774966_sync), 1346774966);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_977907218_sync), 977907218);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_1841891766_sync), 1841891766);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_685881041_sync), 685881041);
-    mgr.regist_fun_meta(FnMeta::CallArgNobj(call_3786000589_sync), 3786000589);
+    mgr.regist_fun_meta(FnMeta::Call(call_2432929176), 2432929176);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4081023775), 4081023775);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_951191934), 951191934);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3803008464_sync), 3803008464);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1346774966_sync), 1346774966);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_977907218_sync), 977907218);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1841891766_sync), 1841891766);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_685881041_sync), 685881041);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3786000589_sync), 3786000589);
 }

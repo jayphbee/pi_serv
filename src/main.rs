@@ -18,6 +18,7 @@ extern crate net;
 extern crate mqtt;
 extern crate rpc;
 extern crate magnetic;
+extern crate rand;
 
 pub mod jsloader;
 pub mod depend;
@@ -25,6 +26,7 @@ pub mod init_js;
 pub mod util;
 pub mod js_call;
 pub mod handler;
+mod async_call;
 mod pi_crypto_build;
 mod pi_math_build;
 mod pi_db_build;
@@ -157,7 +159,7 @@ fn main() {
 	let dirs = dirs.as_slice();
 	let depend = create_depend(dirs);
 
-    init_js(dirs, Loader::load_dir_sync(dirs, &depend), &depend);
+    init_js(dirs, &depend);
 
     loop {
         println!("###############loop, {}", now_millisecond());
