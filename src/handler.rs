@@ -71,7 +71,7 @@ impl Handler for TopicHandler {
 	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let topic_name = topic.clone();
-		let real_args = Box::new(move |vm: Arc<JS>| {
+		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*topic_name).to_string());
 			match args {
 				Args::TwoArgs(_, bin) => {
@@ -84,6 +84,7 @@ impl Handler for TopicHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
+			4
 		});
 		factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 	}
@@ -162,7 +163,7 @@ impl Handler for AsyncRequestHandler {
 	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let copy_name = name.clone();
-		let real_args = Box::new(move |vm: Arc<JS>| {
+		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*copy_name).to_string());
 			match args {
 				Args::ThreeArgs(bin, objs, Some(index)) => {
@@ -182,6 +183,7 @@ impl Handler for AsyncRequestHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
+			6
 		});
 		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
@@ -259,7 +261,7 @@ impl Handler for AsyncBlockRequestHandler {
 	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let copy_name = name.clone();
-		let real_args = Box::new(move |vm: Arc<JS>| {
+		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*copy_name).to_string());
 			match args {
 				Args::ThreeArgs(bin, objs, None) => {
@@ -278,6 +280,7 @@ impl Handler for AsyncBlockRequestHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
+			5
 		});
 		factory.call(0, Atom::from("_$sync"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
