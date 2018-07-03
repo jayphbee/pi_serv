@@ -42,6 +42,10 @@ impl DBIter{
 
 pub struct DBWare(Arc<Ware>);
 
+pub fn clone_db_mgr(mgr: &Mgr) -> Mgr{
+    mgr.clone()
+}
+
 // 取到数据库的迭代器
 pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descending: bool, _filter: Option<String>, cb: Arc<Fn(Result<DBIter, String>)>) -> Option<Result<DBIter, String>> {
     let key = match key {
@@ -65,7 +69,7 @@ pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descendin
 }
 
 // 注册数据库
-pub fn register_db(mgr: &Mgr, prefix: String, ware: MemeryDB) -> bool {
+pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: MemeryDB) -> bool {
 	mgr.register(Atom::from(prefix), Arc::new(ware))
 }
 
@@ -145,7 +149,7 @@ pub fn register_rpc_handler(serv: &mut RPCServer, topic: String, sync: bool, han
     serv.register(Atom::from(topic), sync, handler.clone())
 }
 
-//为sync注册handler
+//为async注册handler
 pub fn register_async_handler(topic: String, handler: &Arc<AsyncRequestHandler>){
     register_async_request(Atom::from(topic), handler.clone());
 }
@@ -209,7 +213,7 @@ pub fn next_u64(or: &mut Rand) -> u64{
 
 //取到一个随机值
 pub fn fill_bytes(or: &mut Rand, len: usize) -> Vec<u8>{
-    let mut arr = Vec::new();
+    let mut arr = Vec::with_capacity(len);
     unsafe{arr.set_len(len);};
 	or.0.fill_bytes(arr.as_mut_slice());
     arr

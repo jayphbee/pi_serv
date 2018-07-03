@@ -1,19 +1,22 @@
+use std::sync::Arc;
+
 use pi_vm::bonmgr::{BonMgr, FnMeta, jstype_ptr, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::channel_map::VMChannel;
 use pi_vm::pi_vm_impl::async_request;
-use std::sync::Arc;
+use pi_lib::atom::Atom;
 
 fn async_request_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in async_request";
-
+    println!("ppppppppppppppppppppppppppppppppp");
 	let jst0 = &v[0];
 	if !jst0.is_string(){return Some(CallResult::Err(String::from(param_error))); }
     let jst0 = jst0.get_str();
+    println!("jst0-----------------------{}", &jst0);
 
     let jst1 = &v[1];
 	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst1 = jst1.to_bytes();
+    let jst1 = jst1.into_vec();
 
 	let jst2 = &v[2];
 	if !jst2.is_array(){return Some(CallResult::Err(String::from(param_error)));}
@@ -24,11 +27,16 @@ fn async_request_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     }
     
     let jst3 = &v[3];
-    if !jst3.is_number(){return Some(CallResult::Err(String::from(param_error)));}
-    let jst3 = jst3.get_u32();
-
-    //let result = async_request(js.clone(), jst0, jst1, jst2, jst3);
-    js.new_boolean(true);
+    if jst3.is_undefined() || jst3.is_none(){
+        println!("jst0:{}, jst1:{:?}", &jst0, &jst1);
+        js.new_boolean(async_request(js.clone(), Atom::from(jst0), Arc::new(jst1), arr, None));
+    }else if jst3.is_number(){
+        let jst3 = jst3.get_u32();
+        println!("jst0:{}, jst1:{:?}, jst3:{:?}", &jst0, &jst1, &jst3);
+        js.new_boolean(async_request(js.clone(), Atom::from(jst0), Arc::new(jst1), arr, Some(jst3)));
+    }else{
+        return Some(CallResult::Err(String::from(param_error)));
+    }
 
     Some(CallResult::Ok)
 }
@@ -44,7 +52,7 @@ fn async_response_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     //args
     let jst1 = &v[1];
 	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst1 = jst1.to_bytes();
+    let jst1 = jst1.into_vec();
 
     //&[nativObject]
 	let jst2 = &v[2];
@@ -57,11 +65,13 @@ fn async_response_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
     //callbackIndex
     let jst3 = &v[3];
-    if !jst3.is_number(){return Some(CallResult::Err(String::from(param_error)));}
-    let jst3 = jst3.get_u32();
-
-    //let result = jst0.response(jst3, jst1, jst2);
-    js.new_boolean(true);
+    if !jst3.is_undefined() || !jst3.is_none(){
+        js.new_boolean(jst0.response(None, Arc::new(jst1), arr));
+    }else if jst3.is_number(){
+        js.new_boolean(jst0.response(Some(jst3.get_u32()), Arc::new(jst1), arr));
+    }else{
+        return Some(CallResult::Err(String::from(param_error)));
+    }
 
     Some(CallResult::Ok)
 }

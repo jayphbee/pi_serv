@@ -47,30 +47,11 @@ fn call_1487978276(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_1350440529(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in response";
+fn call_54848988(js: Arc<JS>) -> Option<CallResult>{
 
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 3720506907, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const pi_vm::channel_map::VMChannel) };
+    let result = pi_vm::bonmgr::NativeObjsAuth::with_none();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,510245560);
 
-
-	let jst1 = &v[1];
-	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_u32();
-
-
-	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 2886438122, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>)}.clone();
-
-
-	let jst3 = &v[3];
-    let ptr = jstype_ptr(&jst3, js.clone(), 3703958710, true, param_error).expect("");
-	let jst3 = *unsafe { Box::from_raw(ptr as *mut Vec<pi_vm::adapter::JSType>) };
-
-
-    let result = pi_vm::channel_map::VMChannel::response(jst0,jst1,jst2,jst3);let result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -78,9 +59,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_vm::bonmgr::NativeObjsAuth>")}, 510245560);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory")}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>")}, 2886438122);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::channel_map::VMChannel")}, 3720506907);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_vm::adapter::JSType>")}, 3703958710);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2222376158), 2222376158);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1487978276), 1487978276);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_1350440529), 1350440529);
+    mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);
 }

@@ -152,6 +152,22 @@ js.set_index(&array, 1, &v_elem);    let v = array;
 }
 
 
+fn call_2882430941(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in clone_db_mgr";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+    let result = js_call::clone_db_mgr(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2976191628);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_158707721_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in iter_db";
@@ -231,8 +247,8 @@ fn call_158707721_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3284237535(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in register_db";
+fn call_3700434235(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_memery_db";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
@@ -249,7 +265,7 @@ fn call_3284237535(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_db::memery_db::MemeryDB) };
 
 
-    let result = js_call::register_db(jst0,jst1,jst2);let result = js.new_boolean(result);
+    let result = js_call::register_memery_db(jst0,jst1,jst2);let result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -720,8 +736,9 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3133367430), 3133367430);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1272003303), 1272003303);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3825824874_sync), 3825824874);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2882430941), 2882430941);
     mgr.regist_fun_meta(FnMeta::CallArg(call_158707721_sync), 158707721);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3284237535), 3284237535);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3700434235), 3700434235);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1995451612), 1995451612);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3189416152), 3189416152);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1338391149), 1338391149);

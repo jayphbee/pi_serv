@@ -152,6 +152,7 @@ fn main() {
     pi_net_net_build::register(&BON_MGR);
     pi_serv_build::register(&BON_MGR);
     pi_vm_build::register(&BON_MGR);
+    async_call::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
