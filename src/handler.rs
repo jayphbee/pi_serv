@@ -83,7 +83,7 @@ impl Handler for TopicHandler {
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
 			4
 		});
 		factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
@@ -166,7 +166,20 @@ impl Handler for AsyncRequestHandler {
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*copy_name).to_string());
 			match args {
+				Args::ThreeArgs(bin, objs, None) => {
+					//处理异步阻塞调用
+					let buffer = vm.new_uint8_array(bin.len() as u32);
+					buffer.from_bytes(bin.as_slice());
+					let mut value: JSType;
+					let array = vm.new_array();
+					for i in 0..objs.len() {
+						value = vm.new_native_object(objs[i].get_native_object());
+						vm.set_index(&array, i as u32, &value);
+					}
+					vm.new_null();
+				},
 				Args::ThreeArgs(bin, objs, Some(index)) => {
+					//处理异步调用
 					let buffer = vm.new_uint8_array(bin.len() as u32);
 					buffer.from_bytes(bin.as_slice());
 					let mut value: JSType;
@@ -182,7 +195,7 @@ impl Handler for AsyncRequestHandler {
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
+			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3366364668);
 			6
 		});
 		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
@@ -235,99 +248,3 @@ impl AsyncRequestHandler {
 	}
 }
 
-/*
-* 异步阻塞请求处理器
-*/
-pub struct AsyncBlockRequestHandler {
-	factory: 	Arc<VMFactory>,	//默认虚拟机工厂
-	mgr: 		Mgr,			//默认事务管理器
-	gray_tab: 	GrayTab,		//灰度表
-}
-
-unsafe impl Send for AsyncBlockRequestHandler {}
-unsafe impl Sync for AsyncBlockRequestHandler {}
-
-impl Handler for AsyncBlockRequestHandler {
-	type A = Arc<Vec<u8>>;
-	type B = Vec<JSType>;
-	type C = Option<u32>;
-	type D = ();
-	type E = ();
-	type F = ();
-	type G = ();
-	type H = ();
-	type HandleResult = ();
-
-	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-		let (factory, mgr) = self.get(env.clone());
-        let copy_name = name.clone();
-		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
-			vm.new_str((*copy_name).to_string());
-			match args {
-				Args::ThreeArgs(bin, objs, None) => {
-					let buffer = vm.new_uint8_array(bin.len() as u32);
-					buffer.from_bytes(bin.as_slice());
-					let mut value: JSType;
-					let array = vm.new_array();
-					for i in 0..objs.len() {
-						value = vm.new_native_object(objs[i].get_native_object());
-						vm.set_index(&array, i as u32, &value);
-					}
-				},
-				_ => panic!("invalid async block call handler args"),
-			}
-			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
-			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2256377725);
-			5
-		});
-		factory.call(0, Atom::from("_$sync"), real_args, Atom::from((*name).to_string() + " rpc task"));
-	}
-}
-
-impl AsyncBlockRequestHandler {
-	//构建一个处理器
-	pub fn new(len: usize, factory: VMFactory, mgr: Mgr) -> Self {
-		AsyncBlockRequestHandler {
-			factory: Arc::new(factory),
-			mgr: mgr,
-			gray_tab: GrayTab::new(),
-		}
-	}
-
-	//获取默认虚拟机工厂和事务管理器
-	pub fn get_default(&self) -> (Arc<VMFactory>, Mgr) {
-		(self.factory.clone(), self.mgr.clone())
-	}
-
-	//设置指定灰度为默认版本
-	pub fn set_default(&mut self, gray: usize) {
-		match self.gray_tab.remove(gray) {
-			None => return,
-			Some((f, m)) => {
-				self.factory = f;
-				self.mgr = m;
-			},
-		}
-	}
-
-	//获取指定的虚拟机工厂和事务管理器
-	fn get(&self, session: Arc<dyn Env>) -> (Arc<VMFactory>, Mgr) {
-		match session.get_attr(Atom::from("_$gray")) {
-			Some(val) => {
-				match val {
-					GenType::Bin(bin) => {
-						let gray = usize::from_le(unsafe { *(bin[..].as_ptr() as *mut usize) });
-						match self.gray_tab.get(gray) {
-							None => self.get_default(),
-							Some(r) => r,
-						}
-					},
-					_ => self.get_default(),
-				}
-			},
-			_ => self.get_default(),
-		}
-	}
-}

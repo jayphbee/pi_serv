@@ -130,7 +130,7 @@ fn create_depend(sp: &[String]) -> Depend{
 		vec.extend(arr.into_iter());
 	}
 	Depend::new(vec, root)
-}
+} 
 
 
 fn main() {
