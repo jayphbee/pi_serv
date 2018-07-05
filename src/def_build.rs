@@ -776,6 +776,149 @@ fn call_2704292785(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+
+fn call_1708919049(js: Arc<JS>) -> Option<CallResult>{
+
+    let result:Vec<u32> = Vec::new();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1994007224(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in with_capacity";
+
+	let jst0 = &v[0];
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u32() as usize;
+
+
+    let result:Vec<u32> = Vec::with_capacity(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2842251538(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in as_slice";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Vec<u32>) };
+
+
+    let result = Vec::as_slice(jst0);
+	let mut result_array = js.new_array();
+	for result_index in 0..result.len(){
+		let result_elem = &result[result_index];let result_elem = js.new_u32(result_elem.clone());
+js.set_index(&result_array, result_index as u32, &result_elem);
+    }
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1587209337(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in swap_remove";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = Vec::swap_remove(jst0,jst1);let result = js.new_u32(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3744706321(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in insert";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32();
+
+
+    Vec::insert(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2103362090(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = Vec::remove(jst0,jst1);let result = js.new_u32(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1420742667(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in push";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32();
+
+
+    Vec::push(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3987113084(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in pop";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1662444400, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
+
+
+    let result = Vec::pop(jst0);
+    match result{
+        Some(v) => { let v = js.new_u32(v);
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>")}, 2202214327);
@@ -784,6 +927,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>")}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<Arc<Vec<u8>>>")}, 2962204509);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>")}, 2886438122);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u32>")}, 1662444400);
     mgr.regist_fun_meta(FnMeta::Call(call_278583573), 278583573);
     mgr.regist_fun_meta(FnMeta::CallArg(call_605387716), 605387716);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3865263801), 3865263801);
@@ -827,4 +971,12 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3566885191), 3566885191);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1441496172), 1441496172);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2704292785), 2704292785);
+    mgr.regist_fun_meta(FnMeta::Call(call_1708919049), 1708919049);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1994007224), 1994007224);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2842251538), 2842251538);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1587209337), 1587209337);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3744706321), 3744706321);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2103362090), 2103362090);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1420742667), 1420742667);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3987113084), 3987113084);
 }

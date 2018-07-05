@@ -12,6 +12,7 @@ use net;
 use mqtt;
 use rpc;
 use std::io::Error;
+use pi_p2p;
 use depend;
 use util;
 use handler;
@@ -708,6 +709,32 @@ fn call_2395132060(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+
+fn call_1994863356(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in p2p_manage_new";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = &jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 1542823015, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 1662444400, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut Vec<u32>) };
+
+
+    let result = js_call::p2p_manage_new(jst0,jst1,jst2);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3035778520);
+
+
+    Some(CallResult::Ok)
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory")}, 730519735);
@@ -732,6 +759,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Box<FnBox>")}, 1255307008);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_call::AtomIndex")}, 2761912410);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_call::Rand")}, 2239088127);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u32>")}, 1662444400);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_p2p::manage::P2PManage")}, 3035778520);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2239806005), 2239806005);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3133367430), 3133367430);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1272003303), 1272003303);
@@ -760,4 +789,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_4100963304), 4100963304);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3008593203), 3008593203);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2395132060), 2395132060);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1994863356), 1994863356);
 }

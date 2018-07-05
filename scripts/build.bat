@@ -1,2 +1,2 @@
-..\..\..\..\render\pi_build\bin\node\node ..\..\..\..\render\pi_build\dst\init.js
+..\..\pi_build\bin\node\node ..\..\pi_build\dst\init.js
 pause;
