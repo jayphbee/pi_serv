@@ -20,3 +20,4 @@ pi_base = { path = "../pi_base" }
 net = { path = "../pi_net/net" }
 mqtt = { path = "../pi_net/mqtt" }
 rpc = { path = "../pi_net/rpc" }
+pi_p2p = { path = "../pi_p2p" }

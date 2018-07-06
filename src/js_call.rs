@@ -3,6 +3,8 @@ use std::io::{Error};
 use std::ops::Deref;
 use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
+use std::net::SocketAddr;
+use fnv::FnvHashMap;
 
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
 use pi_lib::atom::Atom;
@@ -22,6 +24,7 @@ use mqtt::data::Server;
 use mqtt::session::Session;
 use rand::rngs::OsRng;
 use rand::RngCore;
+use pi_p2p::manage::P2PManage;
 
 use handler::TopicHandler;
 use handler::AsyncRequestHandler;
@@ -227,4 +230,16 @@ pub fn try_fill_bytes(or: &mut Rand, len: usize) -> Result<Vec<u8>, String> {
         Ok(_) => Ok(arr),
         Err(e) => Err(String::from(e.msg)),
     }
+}
+
+//为pi_p2p封装一个P2PManage::new方法
+pub fn p2p_manage_new(addr: &str, arr1: Vec<String>, arr2: Vec<u32>) -> P2PManage {
+
+    let mut map: FnvHashMap<SocketAddr, u64> = FnvHashMap::default();
+    let mut i = 0;
+    for time in arr2 {
+        map.insert(arr1.get(i).unwrap().parse().unwrap(), time as u64);
+        i += 1;
+    }
+    P2PManage::new(addr.parse().unwrap(), map)
 }

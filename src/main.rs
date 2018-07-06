@@ -19,6 +19,7 @@ extern crate mqtt;
 extern crate rpc;
 extern crate magnetic;
 extern crate rand;
+extern crate pi_p2p;
 
 pub mod jsloader;
 pub mod depend;
@@ -37,6 +38,7 @@ mod pi_net_net_build;
 mod pi_net_rpc_build;
 mod pi_serv_build;
 mod pi_vm_build;
+mod pi_p2p_build;
 
 use std::fs::{File};
 use std::path::Path;
@@ -153,6 +155,7 @@ fn main() {
     pi_serv_build::register(&BON_MGR);
     pi_vm_build::register(&BON_MGR);
     async_call::register(&BON_MGR);
+	pi_p2p_build::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
