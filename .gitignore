@@ -1,7 +1,8 @@
 
+/scripts/*.depend
+/scripts/*.error
 /target
 **/*.rs.bk
 /Cargo.lock
 .depend
 /.vscode
-/scripts/*.depend
