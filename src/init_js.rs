@@ -106,7 +106,6 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
     tr.modify(items, None, false, Arc::new(|_r: SResult<()>|{}));
     tr.prepare(Arc::new(|_x|{}));
     tr.commit(Arc::new(|_x|{}));
-    println!("code_store----------------");
     m
 }
 
