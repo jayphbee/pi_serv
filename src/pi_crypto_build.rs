@@ -819,6 +819,60 @@ fn call_1251457612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_863200741(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_secret_key_add";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 187111440, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecretKey) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 187111440, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecretKey) };
+
+
+    pi_crypto::bls::bls_secret_key_add(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3082139465(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_public_key_add";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1617625763, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPublicKey) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 1617625763, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPublicKey) };
+
+
+    pi_crypto::bls::bls_public_key_add(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3576086575(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_signature_add";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3966088300, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSignature) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 3966088300, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSignature) };
+
+
+    pi_crypto::bls::bls_signature_add(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
 fn call_3750445483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in bls_secret_key_share";
 
@@ -881,6 +935,32 @@ fn call_3551222567(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_4217857181(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_id_from_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1875205449, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsIdVec) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = pi_crypto::bls::bls_get_id_from_vec(jst0,jst1);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3094164306);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3778283533(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in bls_add_id_to_vec";
 
@@ -895,6 +975,32 @@ fn call_3778283533(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     pi_crypto::bls::bls_add_id_to_vec(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1905417019(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_secret_key_from_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2934268916, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecKeyVec) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = pi_crypto::bls::bls_get_secret_key_from_vec(jst0,jst1);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
     Some(CallResult::Ok)
 }
 
@@ -917,6 +1023,53 @@ fn call_2172313629(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2861556416(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_secret_key_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2934268916, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecKeyVec) };
+
+
+    let result = pi_crypto::bls::bls_get_secret_key_vec(jst0);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4054179525(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_public_key_from_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3840517932, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPubKeyVec) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = pi_crypto::bls::bls_get_public_key_from_vec(jst0,jst1);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3718730423(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in bls_add_public_key_to_vec";
 
@@ -935,6 +1088,53 @@ fn call_3718730423(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2864459653(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_public_key_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3840517932, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPubKeyVec) };
+
+
+    let result = pi_crypto::bls::bls_get_public_key_vec(jst0);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_376820189(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_signature_from_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 4060246115, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSigVec) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = pi_crypto::bls::bls_get_signature_from_vec(jst0,jst1);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_263952757(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in bls_add_signature_to_vec";
 
@@ -949,6 +1149,27 @@ fn call_263952757(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     pi_crypto::bls::bls_add_signature_to_vec(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2039602097(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bls_get_signature_key_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 4060246115, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSigVec) };
+
+
+    let result = pi_crypto::bls::bls_get_signature_key_vec(jst0);
+    match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
+
+ }
+        None => { let result = js.new_undefined(); }
+    };
+
     Some(CallResult::Ok)
 }
 
@@ -1150,12 +1371,22 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1202562609), 1202562609);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1494397139), 1494397139);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1251457612), 1251457612);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_863200741), 863200741);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3082139465), 3082139465);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3576086575), 3576086575);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3750445483), 3750445483);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3551222567), 3551222567);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4217857181), 4217857181);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3778283533), 3778283533);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1905417019), 1905417019);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2172313629), 2172313629);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2861556416), 2861556416);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4054179525), 4054179525);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3718730423), 3718730423);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2864459653), 2864459653);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_376820189), 376820189);
     mgr.regist_fun_meta(FnMeta::CallArg(call_263952757), 263952757);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2039602097), 2039602097);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1087017908), 1087017908);
     mgr.regist_fun_meta(FnMeta::CallArg(call_993477813), 993477813);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3587763353), 3587763353);
