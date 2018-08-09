@@ -495,13 +495,37 @@ fn call_3340863876(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+fn drop_3974239134(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H32) };
+}
+
+fn drop_788004774(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H48) };
+}
+
+fn drop_3995272273(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H160) };
+}
+
+fn drop_526967798(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H256) };
+}
+
+fn drop_2521161042(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H512) };
+}
+
+fn drop_3787131431(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H520) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H32")}, 3974239134);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H48")}, 788004774);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H160")}, 3995272273);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H256")}, 526967798);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H512")}, 2521161042);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H520")}, 3787131431);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H32"), drop_fn: drop_3974239134}, 3974239134);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H48"), drop_fn: drop_788004774}, 788004774);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H160"), drop_fn: drop_3995272273}, 3995272273);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H256"), drop_fn: drop_526967798}, 526967798);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H512"), drop_fn: drop_2521161042}, 2521161042);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H520"), drop_fn: drop_3787131431}, 3787131431);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2798870758), 2798870758);
     mgr.regist_fun_meta(FnMeta::CallArg(call_767388297), 767388297);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1420780752), 1420780752);

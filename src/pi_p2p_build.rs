@@ -47,8 +47,12 @@ fn call_696058749(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     pi_p2p::manage::P2PManage::broadcast_addr(jst0);
     Some(CallResult::Ok)
 }
+
+fn drop_3035778520(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_p2p::manage::P2PManage) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_p2p::manage::P2PManage")}, 3035778520);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_p2p::manage::P2PManage"), drop_fn: drop_3035778520}, 3035778520);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2634481422), 2634481422);
     mgr.regist_fun_meta(FnMeta::CallArg(call_338675993), 338675993);
     mgr.regist_fun_meta(FnMeta::CallArg(call_696058749), 696058749);

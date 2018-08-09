@@ -11,13 +11,16 @@ toml = "0.4.6"
 json = "0.11.13" 
 lazy_static = "*"
 rand = "0.5.2"
+mqtt3 = { git = "https://github.com/tekjar/mqtt3" }
 pi_lib = { path = "../pi_lib" }
 pi_vm = { path = "../pi_vm" }
 pi_math = { path = "../pi_math" }
 pi_crypto = { path = "../pi_crypto" }
 pi_db = { path = "../pi_db" }
+pi_store = { path = "../pi_store" }
 pi_base = { path = "../pi_base" }
 net = { path = "../pi_net/net" }
 mqtt = { path = "../pi_net/mqtt" }
 rpc = { path = "../pi_net/rpc" }
+httpc = { path = "../pi_net/httpc" }
 pi_p2p = { path = "../pi_p2p" }
