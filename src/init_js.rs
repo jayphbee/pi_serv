@@ -4,7 +4,7 @@ use std::sync::Arc;
 use pi_vm::adapter::{JS};
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_db::mgr::{Mgr};
-use pi_db::memery_db::{MemeryDB};
+use pi_db::memery_db::DB;
 use pi_db::db::{SResult, TabKV};
 use pi_lib::guid::{GuidGen};
 use pi_lib::atom::Atom;
@@ -21,7 +21,7 @@ pub fn init_js(dirs: &[String], dp: &Depend){
     let file_map = Loader::load_dir_sync(dir_c.as_slice(), dp);
     let js = JS::new(0xff, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
     let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
-    mgr.register(Atom::from("memory"), Arc::new(MemeryDB::new()));//注册一个内存数据库
+    mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
     create_code_tab(&mgr);//创建代码表
     let global_code = bind_global(&mgr, &js);//插入全局变量定义函数的字节码
     let file_map = code_store(&mgr, file_map, &js);//插入其他所有js代码的字节码
@@ -70,12 +70,12 @@ pub fn init_js(dirs: &[String], dp: &Depend){
         }
     }
 
-    //let code_number = add_line_number(&js_code);
-    //println!("{}", &js_code);
+    // let code_number = add_line_number(&js_code);
+    // println!("{}", &js_code);
 
-    //let bytes = js.compile("init_js".to_string(), js_code).unwrap();
+    // let bytes = js.compile("init_js".to_string(), js_code).unwrap();
     
-    println!("vm:meta运行成功！");
+    println!("vm:meta运行成功！!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
 pub fn create_code_tab(mgr: &Mgr){
@@ -97,7 +97,11 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
         let mut bb = WriteBuffer::new();
         key.encode(&mut bb);
         let mut item = TabKV::new(ware.clone(), tab.clone(), Arc::new(bb.unwrap()));
-        let code = Arc::new(js.compile(key.clone(), String::from_utf8(v).unwrap()).unwrap());
+        let c = match String::from_utf8(v) {
+            Ok(v) => v,
+            Err(_) => panic!("code from_utf8 err, path: {}", key.clone()),
+        };
+        let code = Arc::new(js.compile(key.clone(), c).unwrap());
         item.value = Some(code.clone());
         items.push(item);
         m.insert(key.clone(), code.clone());

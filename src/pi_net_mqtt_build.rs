@@ -27,9 +27,21 @@ fn call_3560614167(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     mqtt::session::Session::respond(jst0,jst1,jst2);
     Some(CallResult::Ok)
 }
+
+fn drop_2256377725(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut mqtt::session::Session) };
+}
+
+fn drop_1411051473(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+}
+
+fn drop_104530634(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::session::Session")}, 2256377725);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom")}, 1411051473);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
+    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::session::Session"), drop_fn: drop_2256377725}, 2256377725);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3560614167), 3560614167);
 }

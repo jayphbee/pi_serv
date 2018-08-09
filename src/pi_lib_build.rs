@@ -67,10 +67,22 @@ fn call_748243846(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+fn drop_1411051473(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+}
+
+fn drop_1706731228(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_lib::guid::GuidGen) };
+}
+
+fn drop_3099464219(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_lib::sinfo::StructInfo) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom")}, 1411051473);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::guid::GuidGen")}, 1706731228);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::sinfo::StructInfo")}, 3099464219);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::guid::GuidGen"), drop_fn: drop_1706731228}, 1706731228);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::sinfo::StructInfo"), drop_fn: drop_3099464219}, 3099464219);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1549520222), 1549520222);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1469354144), 1469354144);
     mgr.regist_fun_meta(FnMeta::CallArg(call_748243846), 748243846);

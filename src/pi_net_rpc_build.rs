@@ -20,8 +20,16 @@ fn call_193751450(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+fn drop_1751456239(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut mqtt::server::ServerNode) };
+}
+
+fn drop_1285687456(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut rpc::server::RPCServer) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode")}, 1751456239);
-    mgr.regist_struct_meta(StructMeta{name:String::from("rpc::server::RPCServer")}, 1285687456);
+    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode"), drop_fn: drop_1751456239}, 1751456239);
+    mgr.regist_struct_meta(StructMeta{name:String::from("rpc::server::RPCServer"), drop_fn: drop_1285687456}, 1285687456);
     mgr.regist_fun_meta(FnMeta::CallArg(call_193751450), 193751450);
 }
