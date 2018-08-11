@@ -122,8 +122,8 @@ impl TopicHandler {
 		match session.get_attr(Atom::from("_$gray")) {
 			Some(val) => {
 				match val {
-					GenType::Bin(bin) => {
-						let gray = usize::from_le(unsafe { *(bin[..].as_ptr() as *mut usize) });
+					GenType::Pointer(ptr) => {
+						let gray = (Arc::from_raw(ptr as *const usize) as Arc<usize>).as_ref().clone();
 						match self.gray_tab.get(gray) {
 							None => self.get_default(),
 							Some(r) => r,
@@ -233,8 +233,7 @@ impl AsyncRequestHandler {
 		match session.get_attr(Atom::from("_$gray")) {
 			Some(val) => {
 				match val {
-					GenType::Bin(bin) => {
-						let gray = usize::from_le(unsafe { *(bin[..].as_ptr() as *mut usize) });
+					GenType::USize(gray) => {
 						match self.gray_tab.get(gray) {
 							None => self.get_default(),
 							Some(r) => r,
