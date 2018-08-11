@@ -2,6 +2,7 @@
 #![feature(splice)]
 #![feature(generic_associated_types)]
 #![feature(fnbox)]
+#![feature(unboxed_closures)]
 #[warn(dead_code)]
 extern crate clap;
 extern crate json;
@@ -10,6 +11,7 @@ extern crate pi_vm;
 extern crate pi_math;
 extern crate pi_crypto;
 extern crate pi_db;
+extern crate pi_store;
 extern crate pi_lib;
 extern crate core;
 extern crate pi_base;
@@ -20,13 +22,18 @@ extern crate rpc;
 extern crate magnetic;
 extern crate rand;
 extern crate pi_p2p;
+extern crate mqtt3;
+extern crate httpc;
 
 pub mod jsloader;
 pub mod depend;
 pub mod init_js;
 pub mod util;
-pub mod js_call;
 pub mod handler;
+pub mod js_httpc;
+pub mod js_db;
+pub mod js_net;
+pub mod js_base;
 mod async_call;
 mod pi_crypto_build;
 mod pi_math_build;
@@ -39,6 +46,8 @@ mod pi_net_rpc_build;
 mod pi_serv_build;
 mod pi_vm_build;
 mod pi_p2p_build;
+mod pi_store_build;
+mod pi_net_httpc_build;
 
 use std::fs::{File};
 use std::path::Path;
@@ -46,13 +55,14 @@ use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
 
+use pi_vm::adapter::load_lib_backtrace;
 use pi_vm::adapter::{register_native_object};
 use pi_vm::bonmgr::BON_MGR;
 use clap::{Arg, App};
 
 use pi_base::util::now_millisecond;
 use pi_base::worker_pool::WorkerPool;
-use pi_base::pi_base_impl::{JS_TASK_POOL, STORE_TASK_POOL};
+use pi_base::pi_base_impl::{JS_TASK_POOL, STORE_TASK_POOL, EXT_TASK_POOL};
 use pi_base::timer::TIMER;
 
 use json::{JsonValue, parse};
@@ -136,6 +146,7 @@ fn create_depend(sp: &[String]) -> Depend{
 
 
 fn main() {
+    load_lib_backtrace();
     TIMER.run();
     register_native_object();
     let worker_pool0 = Box::new(WorkerPool::new(3, 1024 * 1024, 1000));
@@ -143,6 +154,9 @@ fn main() {
 
     let worker_pool1 = Box::new(WorkerPool::new(3, 1024 * 1024, 1000));
     worker_pool1.run(STORE_TASK_POOL.clone());
+
+    let worker_pool = Box::new(WorkerPool::new(10, 1024 * 1024, 30000));
+    worker_pool.run(EXT_TASK_POOL.clone());
 
     pi_crypto_build::register(&BON_MGR);
     pi_math_build::register(&BON_MGR);
@@ -156,6 +170,8 @@ fn main() {
     pi_vm_build::register(&BON_MGR);
     async_call::register(&BON_MGR);
 	pi_p2p_build::register(&BON_MGR);
+    pi_store_build::register(&BON_MGR);
+    pi_net_httpc_build::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
@@ -170,3 +186,4 @@ fn main() {
         thread::sleep(Duration::from_millis(60000));
     }
 }
+

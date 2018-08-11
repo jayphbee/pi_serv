@@ -323,12 +323,11 @@ fn call_2496411899(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = jst0.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_curve_order(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_curve_order(jst0);let result = match result{
         Some(v) => { let v = js.new_str(v);
     
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -343,12 +342,11 @@ fn call_755737870(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = jst0.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_field_order(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_field_order(jst0);let result = match result{
         Some(v) => { let v = js.new_str(v);
     
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -389,13 +387,12 @@ fn call_2402380511(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = jst0.get_str();
 
 
-    let result = pi_crypto::bls::bls_id_set_dec_str(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_id_set_dec_str(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3094164306);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -410,13 +407,12 @@ fn call_2426850537(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = jst0.get_str();
 
 
-    let result = pi_crypto::bls::bls_id_set_hex_str(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_id_set_hex_str(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3094164306);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -436,12 +432,11 @@ fn call_3075954650(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsId) };
 
 
-    let result = pi_crypto::bls::bls_id_get_dec_str(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_id_get_dec_str(jst0,jst1);let result = match result{
         Some(v) => { let v = js.new_str(v);
     
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -461,12 +456,11 @@ fn call_3801863647(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsId) };
 
 
-    let result = pi_crypto::bls::bls_id_get_hex_str(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_id_get_hex_str(jst0,jst1);let result = match result{
         Some(v) => { let v = js.new_str(v);
     
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -481,13 +475,12 @@ fn call_1719604587(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 
 
-    let result = pi_crypto::bls::bls_hash_to_secret_key(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_hash_to_secret_key(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -502,13 +495,12 @@ fn call_3025531400(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecretKey) };
 
 
-    let result = pi_crypto::bls::bls_get_public_key(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_public_key(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -523,13 +515,12 @@ fn call_3723291352(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecretKey) };
 
 
-    let result = pi_crypto::bls::bls_get_pop(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_pop(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -568,13 +559,12 @@ fn call_1235807017(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsId) };
 
 
-    let result = pi_crypto::bls::bls_id_serialize(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_id_serialize(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -594,13 +584,12 @@ fn call_3671848448(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecretKey) };
 
 
-    let result = pi_crypto::bls::bls_secret_key_serialize(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_secret_key_serialize(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -620,13 +609,12 @@ fn call_1900424700(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPublicKey) };
 
 
-    let result = pi_crypto::bls::bls_public_key_serialize(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_public_key_serialize(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -646,13 +634,12 @@ fn call_2045530324(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSignature) };
 
 
-    let result = pi_crypto::bls::bls_signature_serialize(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_signature_serialize(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -667,13 +654,12 @@ fn call_298607248(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 
 
-    let result = pi_crypto::bls::bls_id_deserialize(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_id_deserialize(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3094164306);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -688,13 +674,12 @@ fn call_2029782143(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 
 
-    let result = pi_crypto::bls::bls_secret_key_deserialize(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_secret_key_deserialize(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -709,13 +694,12 @@ fn call_1922268706(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 
 
-    let result = pi_crypto::bls::bls_public_key_deserialize(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_public_key_deserialize(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -730,13 +714,12 @@ fn call_760927771(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 
 
-    let result = pi_crypto::bls::bls_signature_deserialize(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_signature_deserialize(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -891,13 +874,12 @@ fn call_3750445483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = unsafe { &*(ptr as *const pi_crypto::bls::BlsId) };
 
 
-    let result = pi_crypto::bls::bls_secret_key_share(jst0,jst1,jst2);
-    match result{
+    let result = pi_crypto::bls::bls_secret_key_share(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -922,13 +904,12 @@ fn call_3551222567(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = unsafe { &*(ptr as *const pi_crypto::bls::BlsId) };
 
 
-    let result = pi_crypto::bls::bls_public_key_share(jst0,jst1,jst2);
-    match result{
+    let result = pi_crypto::bls::bls_public_key_share(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -948,13 +929,12 @@ fn call_4217857181(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_id_from_vec(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_get_id_from_vec(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3094164306);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -992,13 +972,12 @@ fn call_1905417019(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_secret_key_from_vec(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_get_secret_key_from_vec(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1031,13 +1010,12 @@ fn call_2861556416(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSecKeyVec) };
 
 
-    let result = pi_crypto::bls::bls_get_secret_key_vec(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_secret_key_vec(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1057,13 +1035,12 @@ fn call_4054179525(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_public_key_from_vec(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_get_public_key_from_vec(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1096,13 +1073,12 @@ fn call_2864459653(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsPubKeyVec) };
 
 
-    let result = pi_crypto::bls::bls_get_public_key_vec(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_public_key_vec(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1122,13 +1098,12 @@ fn call_376820189(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_get_signature_from_vec(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_get_signature_from_vec(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1161,13 +1136,12 @@ fn call_2039602097(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_crypto::bls::BlsSigVec) };
 
 
-    let result = pi_crypto::bls::bls_get_signature_key_vec(jst0);
-    match result{
+    let result = pi_crypto::bls::bls_get_signature_key_vec(jst0);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1192,13 +1166,12 @@ fn call_1087017908(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = jst2.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_secret_key_recover(jst0,jst1,jst2);
-    match result{
+    let result = pi_crypto::bls::bls_secret_key_recover(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,187111440);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1223,13 +1196,12 @@ fn call_993477813(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = jst2.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_public_key_recover(jst0,jst1,jst2);
-    match result{
+    let result = pi_crypto::bls::bls_public_key_recover(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1617625763);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1254,13 +1226,12 @@ fn call_3587763353(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = jst2.get_u32() as usize;
 
 
-    let result = pi_crypto::bls::bls_signature_recover(jst0,jst1,jst2);
-    match result{
+    let result = pi_crypto::bls::bls_signature_recover(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1280,13 +1251,12 @@ fn call_3188209906(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>)}.clone();
 
 
-    let result = pi_crypto::bls::bls_sign(jst0,jst1);
-    match result{
+    let result = pi_crypto::bls::bls_sign(jst0,jst1);let result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3966088300);
 
- }
-        None => { let result = js.new_undefined(); }
+ v}
+        None => js.new_undefined()
     };
 
     Some(CallResult::Ok)
@@ -1315,22 +1285,82 @@ fn call_2084703123(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+fn drop_526967798(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H256) };
+}
+
+fn drop_2521161042(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H512) };
+}
+
+fn drop_3995272273(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H160) };
+}
+
+fn drop_3974239134(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H32) };
+}
+
+fn drop_1875205449(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsIdVec) };
+}
+
+fn drop_2934268916(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsSecKeyVec) };
+}
+
+fn drop_3840517932(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsPubKeyVec) };
+}
+
+fn drop_4060246115(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsSigVec) };
+}
+
+fn drop_2254569071(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::Curve) };
+}
+
+fn drop_1617625763(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsPublicKey) };
+}
+
+fn drop_3094164306(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsId) };
+}
+
+fn drop_104530634(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+}
+
+fn drop_187111440(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsSecretKey) };
+}
+
+fn drop_3966088300(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsSignature) };
+}
+
+fn drop_2886438122(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H256")}, 526967798);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H512")}, 2521161042);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H160")}, 3995272273);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H32")}, 3974239134);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsIdVec")}, 1875205449);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecKeyVec")}, 2934268916);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPubKeyVec")}, 3840517932);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSigVec")}, 4060246115);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::Curve")}, 2254569071);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPublicKey")}, 1617625763);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsId")}, 3094164306);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>")}, 104530634);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecretKey")}, 187111440);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSignature")}, 3966088300);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>")}, 2886438122);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H256"), drop_fn: drop_526967798}, 526967798);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H512"), drop_fn: drop_2521161042}, 2521161042);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H160"), drop_fn: drop_3995272273}, 3995272273);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H32"), drop_fn: drop_3974239134}, 3974239134);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsIdVec"), drop_fn: drop_1875205449}, 1875205449);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecKeyVec"), drop_fn: drop_2934268916}, 2934268916);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPubKeyVec"), drop_fn: drop_3840517932}, 3840517932);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSigVec"), drop_fn: drop_4060246115}, 4060246115);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::Curve"), drop_fn: drop_2254569071}, 2254569071);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPublicKey"), drop_fn: drop_1617625763}, 1617625763);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsId"), drop_fn: drop_3094164306}, 3094164306);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecretKey"), drop_fn: drop_187111440}, 187111440);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSignature"), drop_fn: drop_3966088300}, 3966088300);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
     mgr.regist_fun_meta(FnMeta::CallArg(call_266558349), 266558349);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2282179587), 2282179587);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1005885597), 1005885597);

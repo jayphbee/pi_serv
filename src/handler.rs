@@ -163,6 +163,7 @@ impl Handler for AsyncRequestHandler {
 	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let (factory, mgr) = self.get(env.clone());
         let copy_name = name.clone();
+        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!async call start, copy_name: {:?}", copy_name);
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*copy_name).to_string());
 			match args {

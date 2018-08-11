@@ -55,10 +55,22 @@ fn call_54848988(js: Arc<JS>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+fn drop_510245560(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>) };
+}
+
+fn drop_730519735(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_vm::pi_vm_impl::VMFactory) };
+}
+
+fn drop_2886438122(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>) };
+}
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_vm::bonmgr::NativeObjsAuth>")}, 510245560);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory")}, 730519735);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>")}, 2886438122);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_vm::bonmgr::NativeObjsAuth>"), drop_fn: drop_510245560}, 510245560);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2222376158), 2222376158);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1487978276), 1487978276);
     mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);

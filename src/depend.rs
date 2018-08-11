@@ -235,6 +235,9 @@ fn un_jvalue(o: Option<JsonValue>) -> JsonValue{
 pub struct Built;
 impl Built{
 	pub fn relative_path(file_path: &str, dir: &str) -> String {
+        // if file_path.find("vm").is_some(){
+        //     println!("file_path:{}, {}", file_path, dir);
+        // }
         // println!("file_path:{}", file_path);
         // println!("dir:{}", dir);
 		if !file_path.starts_with("./") && !file_path.starts_with("../"){
@@ -267,16 +270,20 @@ impl Built{
 			last = l.unwrap();
 			dv.push(last.as_str());
 		}
-        if fv.len() > 0{
+        let r = if fv.len() > 0{
             Built::join(dv.as_slice(), "/") + "/" + Built::join(fv.as_slice(), "/").as_str()
         }else{
             Built::join(dv.as_slice(), "/")
-        }
+        };
+
+        // if file_path.find("vm").is_some(){
+        //     println!("file_path:{}, {}, {}, {}, {}", file_path, dir, dv.len(), fv.len(), r);
+        // }
         // let x = ;
         // println!("fv:{:?}", &fv);
         
 
-		// return x;
+		return r;
 	}
 
 	fn join(v: &[&str], jstr: &str) -> String{
