@@ -123,7 +123,7 @@ impl TopicHandler {
 			Some(val) => {
 				match val {
 					GenType::Pointer(ptr) => {
-						let gray = (Arc::from_raw(ptr as *const usize) as Arc<usize>).as_ref().clone();
+						let gray = unsafe { (Arc::from_raw(ptr as *const usize) as Arc<usize>).as_ref().clone() };
 						match self.gray_tab.get(gray) {
 							None => self.get_default(),
 							Some(r) => r,
