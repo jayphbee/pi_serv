@@ -147,6 +147,7 @@ fn create_depend(sp: &[String]) -> Depend{
 
 
 fn main() {
+	#[cfg(not(unix))]
     load_lib_backtrace();
     TIMER.run();
     register_native_object();
