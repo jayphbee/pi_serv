@@ -55,6 +55,7 @@ use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
 use pi_vm::adapter::{register_native_object};
 use pi_vm::bonmgr::BON_MGR;
