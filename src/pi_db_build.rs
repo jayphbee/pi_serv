@@ -55,10 +55,10 @@ fn call_258785726(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = pi_db::mgr::Mgr::tab_info(jst0,jst1,jst2);let result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1721307497);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,4164638564);
 
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -113,18 +113,19 @@ fn call_3803008464_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-	let call_back = move |r: Result<(),String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<(),String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let r = array;
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::prepare(jst0,Arc::new(call_back));
 	if r.is_some(){
@@ -152,18 +153,19 @@ fn call_1346774966_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-	let call_back = move |r: Result<(),String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<(),String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let r = array;
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::commit(jst0,Arc::new(call_back));
 	if r.is_some(){
@@ -191,18 +193,19 @@ fn call_977907218_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
 
     let jscopy = js.clone();
-	let call_back = move |r: Result<(),String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<(),String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let r = array;
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::rollback(jst0,Arc::new(call_back));
 	if r.is_some(){
@@ -251,19 +254,20 @@ fn call_1841891766_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst3 = jst3.get_boolean();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<Vec<pi_db::db::TabKV>,String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<Vec<pi_db::db::TabKV>,String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
     let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::query(jst0,jst1,jst2,jst3,Arc::new(call_back));
 	if r.is_some(){
@@ -313,18 +317,19 @@ fn call_685881041_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst3 = jst3.get_boolean();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<(),String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<(),String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let r = array;
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::modify(jst0,jst1,jst2,jst3,Arc::new(call_back));
 	if r.is_some(){
@@ -366,25 +371,26 @@ fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst3 = if jst3.is_undefined() || jst3.is_null(){
         None
     }else{
-    let ptr = jstype_ptr(&jst3, js.clone(), 1721307497, true, param_error).expect("");
-	let jst3 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_lib::sinfo::StructInfo>)}.clone();
+    let ptr = jstype_ptr(&jst3, js.clone(), 4164638564, true, param_error).expect("");
+	let jst3 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_db::db::TabMeta>)}.clone();
 
         Some(jst3)
     };
 
     let jscopy = js.clone();
-	let call_back = move |r: Result<(),String>| {
-		block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let r = match r{
-        Ok(r) => { 
+	let call_back = move |r: Result<(),String>| {let r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let r = array;
- r }
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
         Err(v) => { 
-            block_throw(js.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
             return;
         }
     };
 
-        } ), TaskType::Sync, 10, Atom::from(""));
     };
     let r = pi_db::mgr::Tr::alter(jst0,jst1,jst2,jst3,Arc::new(call_back));
 	if r.is_some(){
@@ -418,8 +424,8 @@ fn drop_1411051473(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 }
 
-fn drop_1721307497(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<pi_lib::sinfo::StructInfo>) };
+fn drop_4164638564(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<pi_db::db::TabMeta>) };
 }
 
 fn drop_1754972364(ptr: usize){
@@ -438,7 +444,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::guid::GuidGen"), drop_fn: drop_1706731228}, 1706731228);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr"), drop_fn: drop_2976191628}, 2976191628);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_lib::sinfo::StructInfo>"), drop_fn: drop_1721307497}, 1721307497);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::mgr::Monitor>"), drop_fn: drop_1584210094}, 1584210094);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>"), drop_fn: drop_2202214327}, 2202214327);

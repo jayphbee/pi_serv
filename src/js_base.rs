@@ -4,6 +4,8 @@ use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
 
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
+use pi_vm::adapter::{JSType, JS};
+use pi_vm::bonmgr::{BON_MGR};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::StructInfo;
 use pi_lib::bon::{ReadBuffer, Decode};
@@ -115,3 +117,24 @@ pub fn try_fill_bytes(or: &mut Rand, len: usize) -> Result<Vec<u8>, String> {
     }
 }
 
+//销毁nativeobject
+pub fn drop_native_obj(t: &JSType, js: &Arc<JS>) -> Result<bool, String> {
+    if !t.is_native_object(){
+        return Err(String::from("drop_native_obj err, param is not NativeObject!"))
+    }
+
+    let ptr = t.get_native_object();
+    let objs = js.get_objs();
+    let mut objs = objs.borrow_mut();
+    let struct_metas = BON_MGR.struct_metas.lock().unwrap();
+    match objs.remove(&ptr){
+        Some(v) => {
+            let meta = struct_metas.get(&v.meta_hash).unwrap();
+            (meta.drop_fn)(ptr);
+            Ok(true)
+        },
+        None => {
+            Ok(false)
+        }
+    }
+}
