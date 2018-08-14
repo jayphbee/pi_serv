@@ -21,7 +21,7 @@ fn async_request_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let len = jst2.get_array_length();
     let mut arr = Vec::with_capacity(len);
     for i in 0..len{
-        arr.push(jst2.get_index(i as u32));
+        arr.push(jst2.get_index(i as u32).get_native_object());
     }
     let jst3 = &v[3];
     if jst3.is_undefined() || jst3.is_null(){
@@ -51,7 +51,7 @@ fn async_response_hash(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let len = jst2.get_array_length();
     let mut arr = Vec::with_capacity(len);
     for i in 0..len{
-        arr.push(jst2.get_index(i as u32));
+        arr.push(jst2.get_index(i as u32).get_native_object());
     }
 
     //callbackIndex

@@ -5,10 +5,10 @@ use pi_vm::adapter::{JS};
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_db::mgr::{Mgr};
 use pi_db::memery_db::DB;
-use pi_db::db::{SResult, TabKV};
+use pi_db::db::{SResult, TabKV, TabMeta};
 use pi_lib::guid::{GuidGen};
 use pi_lib::atom::Atom;
-use pi_lib::sinfo::StructInfo;
+use pi_lib::sinfo::{EnumType, StructInfo};
 use pi_lib::bon::{WriteBuffer, Encode};
 
 use depend::Depend;
@@ -82,7 +82,7 @@ pub fn create_code_tab(mgr: &Mgr){
     let ware = Atom::from("memory");
     let tab = Atom::from("_$code");
     let tr = mgr.transaction(true);
-    tr.alter(&ware, &tab, Some(Arc::new(StructInfo::new(tab.clone(), 111))), Arc::new(|_r: SResult<()>|{}));
+    tr.alter(&ware, &tab, Some(Arc::new(TabMeta::new(EnumType::Str, EnumType::Bin))), Arc::new(|_r: SResult<()>|{}));
     tr.prepare(Arc::new(|_x|{}));
     tr.commit(Arc::new(|_x|{}));
 }

@@ -34,6 +34,7 @@ pub mod js_httpc;
 pub mod js_db;
 pub mod js_net;
 pub mod js_base;
+mod js_util;
 mod async_call;
 mod pi_crypto_build;
 mod pi_math_build;

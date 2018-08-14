@@ -151,7 +151,7 @@ fn call_2913114375(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<u8>::pop(jst0);let result = match result{
         Some(v) => { let v = js.new_u8(v);
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -328,7 +328,7 @@ fn call_3897029640(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
 
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -470,7 +470,7 @@ fn call_802425326(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<i64>::pop(jst0);let result = match result{
         Some(v) => { let v = js.new_i64(v);
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -616,7 +616,7 @@ fn call_3830052262(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         Some(v) => { let v = js.new_str(v);
     
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -766,7 +766,7 @@ fn call_2704292785(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
@@ -908,7 +908,7 @@ fn call_3987113084(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<u32>::pop(jst0);let result = match result{
         Some(v) => { let v = js.new_u32(v);
  v}
-        None => js.new_undefined()
+        None => js.new_null()
     };
 
     Some(CallResult::Ok)
