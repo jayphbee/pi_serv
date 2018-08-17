@@ -1,57 +1,85 @@
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::AtomicUsize;
 
-use fnv::FnvHashMap;
-
 use pi_vm::adapter::{JS, JSType};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
 use pi_lib::atom::Atom;
-use pi_lib::handler::{Env, GenType, Handler, Args};
+use pi_lib::handler::{Handler, Args};
+use pi_lib::gray::{Gray, GrayVersion, GrayTab};
+use pi_lib::sbtree::{Tree};
+use pi_lib::ordmap::OrdMap;
 
-/*
-* 灰度表
-*/
-struct GrayTab {
-	tab: Arc<RwLock<FnvHashMap<usize, (Arc<VMFactory>, Mgr)>>>,
+//NativeObject, 灰度系统需要使用
+#[derive(Clone, Debug)]
+pub struct Nobj {
+    ptr: usize, //指针
+    hash: u32, //hash
+    path: Atom, //模块路径
+    name: Atom, //Object名称
 }
 
-impl GrayTab {
-	//构建一个灰度表
-	pub fn new() -> Self {
-		GrayTab {
-			tab: Arc::new(RwLock::new(FnvHashMap::default())),
-		}
-	}
-
-	//获取指定灰度的虚拟机工厂和事务管理器
-	pub fn get(&self, gray: usize) -> Option<(Arc<VMFactory>, Mgr)> {
-		match self.tab.read().unwrap().get(&gray) {
-			None => None,
-			Some((factory, mgr)) => Some((factory.clone(), mgr.clone())),
-		}
-	}
-
-	//设置指定灰度的虚拟机工厂和事务管理器
-	pub fn set(&self, gray: usize, factory: VMFactory, mgr: Mgr) {
-		self.tab.write().unwrap().insert(gray, (Arc::new(factory), mgr));
-	}
-
-	//移除指定灰度的虚拟机工厂和事务管理器
-	pub fn remove(&self, gray: usize) -> Option<(Arc<VMFactory>, Mgr)> {
-		self.tab.write().unwrap().remove(&gray)
-	}
+impl Drop for Nobj{
+    fn drop(&mut self){
+        println!("drop Nobj!");
+        let struct_metas = BON_MGR.struct_metas.lock().unwrap();
+        let meta = struct_metas.get(&self.hash).unwrap();
+        (meta.drop_fn)(self.ptr);
+    }
 }
 
+impl Nobj {
+    pub fn new(ptr: usize, hash: u32, path: Atom, name: Atom) -> Self {
+        Nobj{
+            ptr,
+            hash,
+            path,
+            name
+        }
+    }
+}
+
+//灰度
+#[derive(Clone)]
+pub struct JSGray {
+    mgr: Mgr, //数据库管理器
+    factory: Arc<VMFactory>, //虚拟机工厂
+    nobj_metas: OrdMap<Tree<Atom, Nobj>> //本地对象
+}
+
+impl JSGray {
+    pub fn new(mgr: Mgr, factory: VMFactory) -> Self{
+        JSGray{
+            mgr,
+            factory: Arc::new(factory),
+            nobj_metas: OrdMap::new(None)
+        }
+    }
+
+    //设置NativeObject， obj应该是本地对象的所有权, 如果灰度表中存在名为key的对象， 将会覆盖
+    pub fn set_obj(&mut self, key: String, obj: &JSType, path: String, name: String, js: &Arc<JS>) -> Result<bool, String> {
+        if !obj.is_native_object(){
+            return Err(String::from("obj is not NativeObject"));
+        }
+        let ptr = obj.get_native_object();
+        let objs = js.get_objs();
+        let hash = match objs.borrow_mut().remove(&ptr) {
+            Some(v) => v.meta_hash,
+            None => return Err(String::from("NativeObj is not exist, key:") + key.as_str()),
+        };
+        self.nobj_metas.insert(Atom::from(key), Nobj::new(ptr, hash, Atom::from(path) , Atom::from(name)));
+        Ok(true)
+    }
+}
+
+impl Gray for JSGray {}
 /*
 * Topic处理器
 */
 pub struct TopicHandler {
-	len: 		AtomicUsize,	//处理器消息队列最大长度
-	factory: 	Arc<VMFactory>,	//默认虚拟机工厂
-	mgr: 		Mgr,			//默认事务管理器
-	gray_tab: 	GrayTab,		//灰度表
+	//len: 		AtomicUsize,	//处理器消息队列最大长度
+	gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
 }
 
 unsafe impl Send for TopicHandler {}
@@ -68,8 +96,16 @@ impl Handler for TopicHandler {
     type H = ();
 	type HandleResult = ();
 
-	fn handle(&self, env: Arc<dyn Env>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-		let (factory, mgr) = self.get(env.clone());
+	fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let gray_tab = self.gray_tab.read().unwrap();
+        let gray = match env.get_gray() {
+            Some(v) => match gray_tab.get(v) {
+                Some(g) => g,
+                None => panic!("gray is not exist, version:{}", v),
+            },
+            None => gray_tab.get_last(),
+        };
+        let mgr = gray.mgr.clone();
         let topic_name = topic.clone();
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*topic_name).to_string());
@@ -86,53 +122,16 @@ impl Handler for TopicHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
 			4
 		});
-		factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+		gray.factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 	}
 }
 
 impl TopicHandler {
 	//构建一个处理器
-	pub fn new(len: usize, factory: VMFactory, mgr: Mgr) -> Self {
+	pub fn new(len: usize, gray: JSGray) -> Self {
 		TopicHandler {
-			len: AtomicUsize::new(len),
-			factory: Arc::new(factory),
-			mgr: mgr,
-			gray_tab: GrayTab::new(),
-		}
-	}
-
-	//获取默认虚拟机工厂和事务管理器
-	pub fn get_default(&self) -> (Arc<VMFactory>, Mgr) {
-		(self.factory.clone(), self.mgr.clone())
-	}
-
-	//设置指定灰度为默认版本
-	pub fn set_default(&mut self, gray: usize) {
-		match self.gray_tab.remove(gray) {
-			None => return,
-			Some((f, m)) => {
-				self.factory = f;
-				self.mgr = m;
-			},
-		}
-	}
-
-	//获取指定的虚拟机工厂和事务管理器
-	fn get(&self, session: Arc<dyn Env>) -> (Arc<VMFactory>, Mgr) {
-		match session.get_attr(Atom::from("_$gray")) {
-			Some(val) => {
-				match val {
-					GenType::Pointer(ptr) => {
-						let gray = unsafe { (Arc::from_raw(ptr as *const usize) as Arc<usize>).as_ref().clone() };
-						match self.gray_tab.get(gray) {
-							None => self.get_default(),
-							Some(r) => r,
-						}
-					},
-					_ => self.get_default(),
-				}
-			},
-			_ => self.get_default(),
+			//len: AtomicUsize::new(len),
+			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))) ,
 		}
 	}
 }
@@ -141,9 +140,7 @@ impl TopicHandler {
 * 异步请求处理器
 */
 pub struct AsyncRequestHandler {
-	factory: 	Arc<VMFactory>,	//默认虚拟机工厂
-	mgr: 		Mgr,			//默认事务管理器
-	gray_tab: 	GrayTab,		//灰度表
+	gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>,	//灰度表
 }
 
 unsafe impl Send for AsyncRequestHandler {}
@@ -160,8 +157,16 @@ impl Handler for AsyncRequestHandler {
 	type H = ();
 	type HandleResult = ();
 
-	fn handle(&self, env: Arc<dyn Env>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-		let (factory, mgr) = self.get(env.clone());
+	fn handle(&self, env: Arc<dyn GrayVersion>, name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+		let gray_tab = self.gray_tab.read().unwrap();
+        let gray = match env.get_gray() {
+            Some(v) => match gray_tab.get(v) {
+                Some(g) => g,
+                None => panic!("gray is not exist, version:{}", v),
+            },
+            None => gray_tab.get_last(),
+        };
+        let mgr = gray.mgr.clone();
         let copy_name = name.clone();
         println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!async call start, copy_name: {:?}", copy_name);
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
@@ -199,51 +204,15 @@ impl Handler for AsyncRequestHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3366364668);
 			6
 		});
-		factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
+		gray.factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
 }
 
 impl AsyncRequestHandler {
 	//构建一个处理器
-	pub fn new(len: usize, factory: VMFactory, mgr: Mgr) -> Self {
+	pub fn new(len: usize, gray: JSGray) -> Self {
 		AsyncRequestHandler {
-			factory: Arc::new(factory),
-			mgr: mgr,
-			gray_tab: GrayTab::new(),
-		}
-	}
-
-	//获取默认虚拟机工厂和事务管理器
-	pub fn get_default(&self) -> (Arc<VMFactory>, Mgr) {
-		(self.factory.clone(), self.mgr.clone())
-	}
-
-	//设置指定灰度为默认版本
-	pub fn set_default(&mut self, gray: usize) {
-		match self.gray_tab.remove(gray) {
-			None => return,
-			Some((f, m)) => {
-				self.factory = f;
-				self.mgr = m;
-			},
-		}
-	}
-
-	//获取指定的虚拟机工厂和事务管理器
-	fn get(&self, session: Arc<dyn Env>) -> (Arc<VMFactory>, Mgr) {
-		match session.get_attr(Atom::from("_$gray")) {
-			Some(val) => {
-				match val {
-					GenType::USize(gray) => {
-						match self.gray_tab.get(gray) {
-							None => self.get_default(),
-							Some(r) => r,
-						}
-					},
-					_ => self.get_default(),
-				}
-			},
-			_ => self.get_default(),
+			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
 		}
 	}
 }

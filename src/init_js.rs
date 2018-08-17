@@ -10,6 +10,10 @@ use pi_lib::guid::{GuidGen};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::{EnumType, StructInfo};
 use pi_lib::bon::{WriteBuffer, Encode};
+use std::thread;
+use std::time::Duration;
+
+use pi_base::util::now_millisecond;
 
 use depend::Depend;
 use jsloader::Loader;
@@ -19,7 +23,7 @@ pub fn init_js(dirs: &[String], dp: &Depend){
     push_pre(&mut dir_c);
 
     let file_map = Loader::load_dir_sync(dir_c.as_slice(), dp);
-    let js = JS::new(0xff, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
+    let js = JS::new(0x100, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
     let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
     mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
     create_code_tab(&mgr);//创建代码表
@@ -29,19 +33,19 @@ pub fn init_js(dirs: &[String], dp: &Depend){
 
     let list: Vec<String> = Loader::list(dirs, dp);//列出目录下的所有文件
     let mut list_c = Vec::new();
-    //let mut list_i = Vec::new();
-    let mut start_path = String::from("");
+    let mut list_i = Vec::new();
+    //let mut start_path = String::from("");
     for e in list.into_iter(){
         if e.ends_with(".s.js") || e.ends_with(".c.js"){
             list_c.push(e);
-        }/*else if e.ends_with(".i.js"){
+        }else if e.ends_with(".i.js"){
             list_i.push(e);
-        }*/else if e.ends_with(".st.js"){
+        }/*else if e.ends_with(".st.js"){
             start_path = e;
-        }
+        }*/
     }
-    list_c.push(start_path);
-    //list_c.extend_from_slice(&list_i);
+    //list_c.push(start_path);
+    list_c.extend_from_slice(&list_i);
     push_pre(&mut list_c);
 
     let list = Loader::list_with_depend(&list_c, dp);
@@ -162,7 +166,3 @@ pub fn add_line_number(s: &str) -> String{
     }
     s
 }
-
-
-
-

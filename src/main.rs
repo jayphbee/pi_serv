@@ -183,10 +183,14 @@ fn main() {
 	let depend = create_depend(dirs);
 
     init_js(dirs, &depend);
-
+    
     loop {
         println!("###############loop, {}", now_millisecond());
         thread::sleep(Duration::from_millis(60000));
     }
+    // loop {
+    //     println!("###############loop, {}", now_millisecond());
+    //     thread::sleep(Duration::from_millis(60000));
+    // }
 }
 
