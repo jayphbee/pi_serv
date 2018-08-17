@@ -46,6 +46,7 @@ impl DBIter{
                             let arr = js.new_array();
                             js.set_index(&arr, 0, &decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k));
                             js.set_index(&arr, 1, &decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v));
+                            js.set_global_var("_$rust_r".to_string());
                             cb(Ok(Some(arr)));
                         },
                         None => cb(Ok(None)),
@@ -164,7 +165,7 @@ pub fn alter(tr: &Tr, ware: String, tab: String, meta_buf: Option<&[u8]>, cb: Ar
 }
 
 //修改数据库数据
-pub fn modify(tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool, cb: Arc<Fn(Result<(), String>)>, js: &Arc<JS>) -> Option<Result<(), String>>{
+pub fn modify(tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool, cb: Arc<Fn(Result<(), String>)>) -> Option<Result<(), String>>{
     let param_error = String::from("param error in modify");
     if !items.is_array() {
         return Some(Err(param_error));
@@ -266,6 +267,7 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
                     let r = decode_by_tabkv(&js1, elem, &tr1.tab_info(&elem.ware, &elem.tab).unwrap());
                     js1.set_index(&arr, i as u32, &r);
                 }
+                js1.set_global_var("_$rust_r".to_string());
                 cb(Ok(arr));
             },
             Err(s) => cb(Err(s)),

@@ -1,12 +1,10 @@
 use std::sync::Arc;
 use std::net::SocketAddr;
 use std::io::{Error};
-use std::any::Any;
 
 use fnv::FnvHashMap;
 
 use pi_lib::atom::Atom;
-use pi_lib::handler::{Env, GenType};
 use pi_p2p::manage::P2PManage;
 use rpc::traits::RPCServerTraits;
 use rpc::server::RPCServer;
@@ -52,12 +50,8 @@ pub fn clone_server_node(node: &ServerNode) -> ServerNode{
     node.clone()
 }
 
-pub fn set_mqtt_topic(server_node: ServerNode, topic: String, can_publish: bool, can_subscribe: bool, only_one_key: Option<String>) -> Result<bool, String> {
-    let only_one_key = match only_one_key {
-        Some(s) => Some(Atom::from(s)),
-        None => None,
-    };
-    match server_node.set_topic_meta(Atom::from(topic), can_publish,can_subscribe,only_one_key, Box::new(|_c:ClientStub, _r:IOResult<Arc<Vec<u8>>>| {})) {
+pub fn set_mqtt_topic(server_node: ServerNode, topic: String, can_publish: bool, can_subscribe: bool) -> Result<bool, String> {
+    match server_node.set_topic_meta(Atom::from(topic), can_publish,can_subscribe, Box::new(|_c:ClientStub, _r:IOResult<Arc<Vec<u8>>>| {})) {
         Ok(_) => Ok(true),
         Err(s) => Err(s.to_string()),
     } 
@@ -66,24 +60,6 @@ pub fn set_mqtt_topic(server_node: ServerNode, topic: String, can_publish: bool,
 pub fn mqtt_respond(session: &Arc<Session>, topic: String, data: &[u8]) {
     println!("mqtt_respond------------------------{:p}", session);
     session.respond(Atom::from(topic), Vec::from(data));
-}
-
-pub fn get_attr(session: &Arc<Session>, key: String) -> Option<Vec<u8>> {
-    match session.get_attr(Atom::from(key)) {
-        Some(v) => match v {
-            GenType::Bin(arr) => Some(arr),
-            _ => {println!("session get_attr err, expect GenType::ArcBin, found unknow", );  None},
-        },
-        None => None,
-    }
-}
-//设置属性，返回上个属性值
-pub fn set_attr(session: &Arc<Session>, key: String, value: &[u8]) {
-    session.set_attr(Atom::from(key), GenType::Bin(Vec::from(value)));
-}
-//移除属性
-pub fn remove_attr(session: &Arc<Session>, key: String){
-    session.remove_attr(Atom::from(key));
 }
 
 //为rpc注册handler
