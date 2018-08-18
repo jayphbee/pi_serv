@@ -25,6 +25,9 @@ extern crate pi_p2p;
 extern crate mqtt3;
 extern crate httpc;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub mod jsloader;
 pub mod depend;
 pub mod init_js;
@@ -71,6 +74,7 @@ use json::{JsonValue, parse};
 use depend::{FileDes, Depend};
 use init_js::{init_js};
 use jsloader::Loader;
+use js_base::IS_END;
 
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
@@ -184,9 +188,9 @@ fn main() {
 
     init_js(dirs, &depend);
     
-    loop {
+    while !IS_END.lock().unwrap().0 {
         println!("###############loop, {}", now_millisecond());
-        thread::sleep(Duration::from_millis(60000));
+        thread::sleep(Duration::from_millis(10000));
     }
     // loop {
     //     println!("###############loop, {}", now_millisecond());

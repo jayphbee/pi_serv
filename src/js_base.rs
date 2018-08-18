@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::ops::Deref;
 use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
@@ -15,6 +15,10 @@ use rand::RngCore;
 use handler::AsyncRequestHandler;
 use depend::Depend;
 use init_js::push_pre;
+
+lazy_static! {
+	pub static ref IS_END: Arc<Mutex<(bool,bool)>> = Arc::new(Mutex::new((false, false)));
+}
 
 //创建一个Arc<StructInfo>
 pub fn create_sinfo(data: &[u8]) -> Arc<StructInfo>{
@@ -130,11 +134,18 @@ pub fn drop_native_obj(t: &JSType, js: &Arc<JS>) -> Result<bool, String> {
     match objs.remove(&ptr){
         Some(v) => {
             let meta = struct_metas.get(&v.meta_hash).unwrap();
+            //println!("drop_native_obj---------------------------------------------{}", meta.name);
             (meta.drop_fn)(ptr);
             Ok(true)
         },
         None => {
+            //println!("drop_native_obj fail---------------------------------------------");
             Ok(false)
         }
     }
+}
+
+pub fn end() {
+    IS_END.lock().unwrap().0 = true;
+    println!("end--------------------------------------------------{}", IS_END.lock().unwrap().0);
 }
