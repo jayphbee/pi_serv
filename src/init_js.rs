@@ -105,6 +105,7 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
             Ok(v) => v,
             Err(_) => panic!("code from_utf8 err, path: {}", key.clone()),
         };
+        println!("!!!!!!key: {}", key);
         let code = Arc::new(js.compile(key.clone(), c).unwrap());
         item.value = Some(code.clone());
         items.push(item);
