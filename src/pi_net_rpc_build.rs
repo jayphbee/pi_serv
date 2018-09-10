@@ -15,7 +15,7 @@ fn call_193751450(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = rpc::server::RPCServer::new(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1285687456);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1285687456);
 
 
     Some(CallResult::Ok)

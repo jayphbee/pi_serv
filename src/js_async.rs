@@ -120,7 +120,7 @@ impl Handler for AsyncRequestHandler {
 					let array = vm.new_array();
 					for i in 0..objs.len() {
 						value = vm.new_native_object(objs[i].get_native_object());
-						vm.set_index(&array, i as u32, &value);
+						vm.set_index(&array, i as u32, &mut value);
 					}
 					vm.new_null();
 				},
@@ -132,7 +132,7 @@ impl Handler for AsyncRequestHandler {
 					let array = vm.new_array();
 					for i in 0..objs.len() {
 						value = vm.new_native_object(objs[i].get_native_object());
-						vm.set_index(&array, i as u32, &value);
+						vm.set_index(&array, i as u32, &mut value);
 					}
 					vm.new_u32(index);
 				},

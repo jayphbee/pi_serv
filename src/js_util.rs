@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::mem::transmute_copy;
 
 use pi_vm::adapter::{JSType, JS};
 use pi_lib::sinfo::{StructInfo, EnumType};
@@ -16,7 +17,7 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
                     Ok(n) => n,
                     Err(_) => return Err(String::from("String cannot be converted to digits")),
                 };
-                js.set_index(&arr, name, &decode_by_type(js, bon, &v.ftype)?);
+                js.set_index(&arr, name, &mut decode_by_type(js, bon, &v.ftype)?);
             }
             return Ok(arr);
         },
@@ -36,36 +37,52 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
     }
 
     for v in sinfo.fields.iter(){
-        js.set_field(&obj, String::from(v.name.as_str()), &decode_by_type(js, bon, &v.ftype)?);
+        js.set_field(&obj, String::from(v.name.as_str()), &mut decode_by_type(js, bon, &v.ftype)?);
     }
     Ok(obj)
 }
 
 pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Result<JSType, String> {
-    if bon.is_nil() {
-        return Ok(js.new_undefined());
-    }
     let r = match t {
         EnumType::Bool => js.new_boolean(bool::decode(bon)),
         EnumType::U8 => js.new_u8(u8::decode(bon)),
         EnumType::U16 => js.new_u16(u16::decode(bon)),
         EnumType::U32 => js.new_u32(u32::decode(bon)),
-        //todo
-        EnumType::U64 => {js.new_u64(u64::decode(bon))},
-        //todo
-        EnumType::U128 => js.new_u64(u64::decode(bon)),
+        EnumType::U64 => {
+            let arr:[u8; 8] = unsafe{transmute_copy(&u64::decode(bon))};
+            js.check_function("pi_modules['pi/bigint/util'].exports.u64Merge".to_string());
+            js.new_uint8_array(8).from_bytes(&arr);
+            let r = js.invoke(1);
+            if r.is_none(){
+                return Err("call function error: pi_modules['pi/bigint/util'].exports.u64Merge".to_string());
+            }
+            r
+        },
+        EnumType::U128 => {
+            let r = u128::decode(bon);
+            let arr:[u8; 16] = unsafe{transmute_copy(&r)};
+            
+            js.check_function("pi_modules['pi/bigint/util'].exports.u128Merge".to_string());
+            js.new_uint8_array(16).from_bytes(&arr);
+            let r = js.invoke(1);
+            if r.is_none(){
+                return Err("call function error: pi_modules['pi/bigint/util'].exports.u128Merge".to_string());
+            }
+            r
+        }
         //todo
         EnumType::U256 => js.new_u64(u64::decode(bon)),
-        EnumType::Usize => js.new_u32(u32::decode(bon)),
+        EnumType::Usize => js.new_u64(u64::decode(bon)),
         EnumType::I8 => js.new_i8(i8::decode(bon)),
         EnumType::I16 => js.new_i16(i16::decode(bon)),
         EnumType::I32 => js.new_i32(i32::decode(bon)),
+        //todo
         EnumType::I64 => js.new_i64(i64::decode(bon)),
         //todo
         EnumType::I128 => js.new_i64(i64::decode(bon)),
         //TODO
         EnumType::I256 => js.new_i64(i64::decode(bon)),
-        EnumType::Isize => js.new_i32(i32::decode(bon)),
+        EnumType::Isize => {js.new_i64(i64::decode(bon))},
         EnumType::F32 => js.new_f32(f32::decode(bon)),
         EnumType::F64 => js.new_f64(f64::decode(bon)),
         //TODO
@@ -76,27 +93,35 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             let bin = bon.read_bin();
             js.new_array_buffer(bin.len() as u32)
         },
-        //时间戳， 没用， 可能会删除， 因此这里也没有实现
-        EnumType::UTC => js.new_i64(i64::decode(bon)),
         EnumType::Arr(v_type) => {
             let arr = js.new_array();
             let len = usize::decode(bon);
             for i in 0..len{
-                js.set_index(&arr, i as u32, &decode_by_type(js, bon, v_type)?);
+                js.set_index(&arr, i as u32, &mut decode_by_type(js, bon, v_type)?);
             }
             arr
-        }
-        //map暂时使用json代替， 需要更改 TODO
+        },
         EnumType::Map(_k_type, v_type) => {
-            let obj = js.new_object();
+            js.get_type("Map".to_string());
             let len = usize::decode(bon);
+            let temp = js.new_array();
             for i in 0..len{
-                js.set_field(&obj, String::decode(bon), &decode_by_type(js, bon, v_type)?);
+                let mut elem = js.new_array();
+                js.set_index(&elem, 0, &mut decode_by_type(js, bon, _k_type)?);
+                js.set_index(&elem, 1, &mut decode_by_type(js, bon, v_type)?);
+                js.set_index(&temp, i as u32, &mut elem);
             }
-            obj
-        }
+            js.new_type("Map".to_string(), 1) //必须保证“Map”类型存在
+        },
         EnumType::Struct(v_type) => {
             decode_by_sinfo(js, bon, v_type)?
+        },
+        EnumType::Option(v_type) => {
+            if bon.is_nil() {
+                js.new_undefined()
+            }else{
+                decode_by_type(js, bon, v_type)?
+            }
         },
     };
     Ok(r)
@@ -105,13 +130,12 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
 //将TabKV转化为js中的Json
 pub fn decode_by_tabkv(js: &Arc<JS>, tabkv: &TabKV, meta: &TabMeta) -> Result<JSType, String>{
     let obj = js.new_object();
-    js.set_field(&obj, "ware".to_string(), &js.new_str(tabkv.ware.as_str().to_string()));
-    js.set_field(&obj, "tab".to_string(), &js.new_str(tabkv.tab.as_str().to_string()));
-    js.set_field(&obj, "key".to_string(), &decode_by_type(js, &mut ReadBuffer::new(&tabkv.key, 0), &meta.k)?);
+    js.set_field(&obj, "ware".to_string(), &mut js.new_str(tabkv.ware.as_str().to_string()));
+    js.set_field(&obj, "tab".to_string(), &mut js.new_str(tabkv.tab.as_str().to_string()));
+    js.set_field(&obj, "key".to_string(), &mut decode_by_type(js, &mut ReadBuffer::new(&tabkv.key, 0), &meta.k)?);
     match &tabkv.value {
         &Some(ref v) => {
-            //println!("decode_by_tabkv value-----------------------------------------");
-            js.set_field(&obj, "value".to_string(), &decode_by_type(js, &mut ReadBuffer::new(&v, 0), &meta.v)?);
+            js.set_field(&obj, "value".to_string(), &mut decode_by_type(js, &mut ReadBuffer::new(&v, 0), &meta.v)?);
         },
         None => (),
     }

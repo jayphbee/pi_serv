@@ -26,7 +26,7 @@ fn call_3526501959(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 
 
-    let result = httpc::HttpClient::add_header(jst0,jst1,jst2);let result = js.new_u32(result as u32);
+    let result = httpc::HttpClient::add_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -45,7 +45,7 @@ fn call_2025875773(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 
 
-    let result = httpc::HttpClient::remove_header(jst0,jst1);let result = js.new_u32(result as u32);
+    let result = httpc::HttpClient::remove_header(jst0,jst1);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -72,7 +72,7 @@ fn call_29226352(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClient) };
 
 
-    let result = httpc::HttpClient::headers_size(jst0);let result = js.new_u32(result as u32);
+    let result = httpc::HttpClient::headers_size(jst0);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -86,9 +86,9 @@ fn call_3576683825(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClient) };
 
 
-    let result = httpc::HttpClient::headers_keys(jst0);let result = match result{
+    let result = httpc::HttpClient::headers_keys(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
 
  v}
         None => js.new_null()
@@ -111,9 +111,9 @@ fn call_2476662030(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 
 
-    let result = httpc::HttpClient::get_header(jst0,jst1);let result = match result{
+    let result = httpc::HttpClient::get_header(jst0,jst1);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
 
  v}
         None => js.new_null()
@@ -132,7 +132,7 @@ fn call_3825034130(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = httpc::HttpClientResponse::url(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
 
 
     Some(CallResult::Ok)
@@ -147,7 +147,7 @@ fn call_986662685(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_info(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_info(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -161,7 +161,7 @@ fn call_4079869020(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_ok(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_ok(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -175,7 +175,7 @@ fn call_2008399665(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_redirect(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_redirect(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -189,7 +189,7 @@ fn call_208103417(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_client_error(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_client_error(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -203,7 +203,7 @@ fn call_1117881293(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_server_error(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_server_error(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -217,7 +217,7 @@ fn call_45575971(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::is_undefined(jst0);let result = js.new_boolean(result);
+    let result = httpc::HttpClientResponse::is_undefined(jst0);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -231,7 +231,7 @@ fn call_3889629654(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::status(jst0);let result = js.new_u16(result);
+    let result = httpc::HttpClientResponse::status(jst0);let mut result = js.new_u16(result);
 
     Some(CallResult::Ok)
 }
@@ -245,9 +245,9 @@ fn call_484341674(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::status_info(jst0);let result = match result{
+    let result = httpc::HttpClientResponse::status_info(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
 
  v}
         None => js.new_null()
@@ -265,7 +265,7 @@ fn call_677141052(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::headers_size(jst0);let result = js.new_u32(result as u32);
+    let result = httpc::HttpClientResponse::headers_size(jst0);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -279,9 +279,9 @@ fn call_1258454971(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::headers_keys(jst0);let result = match result{
+    let result = httpc::HttpClientResponse::headers_keys(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
 
  v}
         None => js.new_null()
@@ -304,9 +304,9 @@ fn call_2914686338(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 
 
-    let result = httpc::HttpClientResponse::get_header(jst0,jst1);let result = match result{
+    let result = httpc::HttpClientResponse::get_header(jst0,jst1);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
 
  v}
         None => js.new_null()
@@ -324,8 +324,8 @@ fn call_2925270627(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::text(jst0);let result = match result{
-        Ok(r) => { let r = js.new_str(r);
+    let result = httpc::HttpClientResponse::text(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r);
     
  r }
         Err(v) => { 
@@ -345,9 +345,9 @@ fn call_2657372573(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::bin(jst0);let result = match result{
+    let result = httpc::HttpClientResponse::bin(jst0);let mut result = match result{
         Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
  r }
         Err(v) => { 

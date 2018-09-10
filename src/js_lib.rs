@@ -76,10 +76,10 @@ impl Nobjs {
     pub fn to_json(&self, vm: &Arc<JS>) -> JSType {
         let objs = vm.new_object();
         for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
-            let o = vm.new_object();
-            vm.set_field(&o, String::from("mod"), &vm.new_str(String::from(obj.path.as_str())));
-            vm.set_field(&o, String::from("obj"), &vm.new_native_object(obj.ptr));
-            vm.set_field(&objs, String::from(k.as_str()), &o);
+            let mut o = vm.new_object();
+            vm.set_field(&o, String::from("mod"), &mut vm.new_str(String::from(obj.path.as_str())));
+            vm.set_field(&o, String::from("obj"), &mut vm.new_native_object(obj.ptr));
+            vm.set_field(&objs, String::from(k.as_str()), &mut o);
         }
         objs
     }

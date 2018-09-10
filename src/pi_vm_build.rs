@@ -19,7 +19,7 @@ fn call_2222376158(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_vm::pi_vm_impl::VMFactory::new(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
 
 
     Some(CallResult::Ok)
@@ -40,7 +40,7 @@ fn call_1487978276(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_vm::pi_vm_impl::VMFactory::append(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
 
 
     Some(CallResult::Ok)
@@ -50,7 +50,7 @@ fn call_1487978276(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_54848988(js: Arc<JS>) -> Option<CallResult>{
 
     let result = pi_vm::bonmgr::NativeObjsAuth::with_none();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,510245560);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,510245560);
 
 
     Some(CallResult::Ok)

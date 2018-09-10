@@ -113,7 +113,7 @@ fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
 }
 
 fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect("???????????????json");
+	let r = parse(s).expect(format!("???????????????json parse err, pre_dir:{}, json:{}--", pre_dir, s).as_str());
 	match r {
 		JsonValue::Array(mut v) => {
 			let mut arr = Vec::new();

@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use std::io::{Error};
 
 use fnv::FnvHashMap;
-
+use mqtt3;
 
 use pi_vm::adapter::{JS};
 use pi_vm::bonmgr::{ptr_jstype};
@@ -13,7 +13,8 @@ use pi_lib::atom::Atom;
 use pi_p2p::manage::P2PManage;
 use rpc::traits::RPCServerTraits;
 use rpc::server::RPCServer;
-use net::{Config, Protocol, Socket,Stream};
+use net::{Config, Protocol,Stream};
+use net::data::Socket;
 use net::api::NetManager;
 use mqtt::server::{ServerNode, ClientStub};
 use std::io::{Result as IOResult};
@@ -46,7 +47,8 @@ impl NetMgr {
                 let r = h.lock().unwrap();
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
-                for v in r.get(&key_copy).unwrap().iter(){
+                let rr = r.get(&key_copy).unwrap();
+                for v in rr.iter(){
                     v(peer.clone(),  addr.clone());
                 }
             });
@@ -106,12 +108,12 @@ impl Handler for NetHandler {
         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
             //事件对象
             let event = vm.new_object();
-            vm.set_field(&event, String::from("event_name"), &vm.new_str((*event_name1).to_string()));
-            vm.set_field(&event, String::from("connect_id"), &vm.new_u32(conect_id as u32));
+            vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()));
+            vm.set_field(&event, String::from("connect_id"), &mut vm.new_u32(conect_id as u32));
             //mgr
 			ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
             //env
-			ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 226971089);
+			ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
             //nobj
             nobjs.to_json(&vm);
 			4
@@ -266,6 +268,21 @@ pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool
     } 
 }
 
+pub enum QoS{
+    AtMostOnce = 0,
+    AtLeastOnce = 1,
+    ExactlyOnce = 2,
+}
+
+pub fn mqtt_publish(server: &ServerNode, retain: bool, qos: QoS, topic: String, payload: &[u8]) -> Result<(), Error>{
+    let qos = match qos {
+        QoS::AtMostOnce => mqtt3::QoS::AtMostOnce,
+        QoS::AtLeastOnce => mqtt3::QoS::AtLeastOnce,
+        QoS::ExactlyOnce => mqtt3::QoS::ExactlyOnce,
+    };
+    server.publish(retain, qos, Atom::from(topic), Vec::from(payload))
+}
+
 pub fn mqtt_respond(session: &Arc<Session>, topic: String, data: &[u8]) {
     session.respond(Atom::from(topic), Vec::from(data));
 }
@@ -290,4 +307,8 @@ pub fn p2p_manage_new(addr: &str, arr1: Vec<String>, arr2: Vec<u32>) -> P2PManag
         i += 1;
     }
     P2PManage::new(addr.parse().unwrap(), map)
+}
+
+pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
+    Arc::new(socket)
 }
