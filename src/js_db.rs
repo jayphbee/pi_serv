@@ -1,19 +1,27 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::collections::HashMap;
+use std::boxed::FnBox;
+
+use mqtt3::QoS;
 
 use pi_db::memery_db::{DB};
 use pi_db::db::{TabKV, Iter, Ware, Bin, TabMeta};
+use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
 use pi_store::db::{DB as FileDB};
 use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
+use pi_lib::gray::{GrayTab, GrayVersion};
 use pi_lib::atom::Atom;
+use pi_lib::handler::{Handler, Args};
 use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
+use pi_vm::pi_vm_impl::VMFactory;
+use pi_vm::bonmgr::{ptr_jstype};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
-use mqtt3::QoS;
+use js_lib::JSGray;
 
-use pi_vm::adapter::dukc_top;
+//use pi_vm::adapter::dukc_top;
 
 use js_util::{decode_by_type, decode_by_tabkv};
 
@@ -44,10 +52,18 @@ impl DBIter{
                         Some(value) => {
                             let m = meta.clone();
                             let arr = js.new_array();
-                            js.set_index(&arr, 0, &decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k));
-                            js.set_index(&arr, 1, &decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v));
-                            js.set_global_var("_$rust_r".to_string());
-                            cb(Ok(Some(arr)));
+                            let mut k = match decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k) {
+                                Ok(v) => v,
+                                Err(s) => {cb(Err(s)); return;},
+                            };
+                            js.set_index(&arr, 0, &mut k);
+                            let mut v = match decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v) {
+                                Ok(v) => v,
+                                Err(s) => {cb(Err(s)); return;},
+                            };
+                            js.set_index(&arr, 1, &mut v);
+                            js.set_global_var("_$rust_r".to_string(), arr);
+                            cb(Ok(Some(js.new_undefined())));
                         },
                         None => cb(Ok(None)),
                     };
@@ -63,8 +79,16 @@ impl DBIter{
                         match v {
                             Some(value) => {
                                 let arr = js1.new_array();
-                                js1.set_index(&arr, 0, &decode_by_type(&js1, &mut ReadBuffer::new(&value.0, 0) , &meta1.k));
-                                js1.set_index(&arr, 1, &decode_by_type(&js1, &mut ReadBuffer::new(&value.1, 0) ,  &meta1.v));
+                                let mut k = match decode_by_type(&js1, &mut ReadBuffer::new(&value.0, 0) , &meta1.k) {
+                                    Ok(v) => v,
+                                    Err(s) => return Some(Err(s)),
+                                };
+                                js1.set_index(&arr, 0, &mut k);
+                                let mut v = match decode_by_type(&js1, &mut ReadBuffer::new(&value.1, 0) ,  &meta1.v) {
+                                    Ok(v) => v,
+                                    Err(s) => return Some(Err(s)),
+                                };
+                                js1.set_index(&arr, 1, &mut v);
                                 Some(Ok(Some(arr)))
                             },
                             None => Some(Ok(None)),
@@ -93,7 +117,7 @@ pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descendin
     //取元信息
     let meta = match tr.tab_info(&ware, &tab){
         Some(v) => v,
-        None => return None, //元信息不存在，不可能生成迭代器， 因此直接返回None
+        None => return Some(Err(String::from("meta is not exist"))), //元信息不存在，不可能生成迭代器， 因此直接返回None
     };
     let meta1 = meta.clone();
 
@@ -264,11 +288,14 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
                 let arr = js1.new_array();
                 for i in 0..v.len(){
                     let elem = &v[i];
-                    let r = decode_by_tabkv(&js1, elem, &tr1.tab_info(&elem.ware, &elem.tab).unwrap());
-                    js1.set_index(&arr, i as u32, &r);
+                    let mut r = match decode_by_tabkv(&js1, elem, &tr1.tab_info(&elem.ware, &elem.tab).unwrap()) {
+                        Ok(v) => v,
+                        Err(s) => {cb(Err(s)); return;},
+                    };
+                    js1.set_index(&arr, i as u32, &mut r);
                 }
-                js1.set_global_var("_$rust_r".to_string());
-                cb(Ok(arr));
+                js1.set_global_var("_$rust_r".to_string(), arr);
+                cb(Ok(js1.new_undefined()));
             },
             Err(s) => cb(Err(s)),
         }
@@ -280,8 +307,11 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
                     let arr = js.new_array();
                     for i in 0..v.len(){
                         let elem = &v[i];
-                        let r = decode_by_tabkv(&js, elem, &tr.tab_info(&elem.ware, &elem.tab).unwrap());
-                        js.set_index(&arr, i as u32, &r);
+                        let mut r = match decode_by_tabkv(&js, elem, &tr.tab_info(&elem.ware, &elem.tab).unwrap()) {
+                            Ok(v) => v,
+                            Err(s) => return Some(Err(s)),
+                        };
+                        js.set_index(&arr, i as u32, &mut r);
                     }
                     Some(Ok(arr))
                 },
@@ -313,7 +343,7 @@ pub fn register_db_to_mqtt_monitor(mgr: &Mgr, monitor: DBToMqttMonitor){
 
 impl Monitor for DBToMqttMonitor{
     fn notify(&self, e: Event, _mgr: Mgr){
-        //如果表中没有对应的库和表， 忽略该事件
+        //如果名单中没有对应的库和表， 忽略该事件
         match self.cfg.get(&e.ware) {
             Some(tabs) => {
                 match tabs.get(&e.tab){
@@ -327,7 +357,7 @@ impl Monitor for DBToMqttMonitor{
         //否则，将该事件投递到mqtt TODO
         match &e.other {
             &EventType::Tab{key: ref k, value: ref v} => {
-                let topic = String::from(*&e.ware.as_str()) + "." + &*e.tab.as_str() + k.to_hex().as_str();
+                let topic = String::from(*&e.ware.as_str()) + "." + &*e.tab.as_str() + "." + k.to_hex().as_str();
                 let value = match v {
                     Some(v) => Vec::from(v.as_slice()),
                     None => {
@@ -336,7 +366,7 @@ impl Monitor for DBToMqttMonitor{
                         wb.unwrap()
                     },
                 };
-                //println!("db listen-------------------------------------------{:?}", value);
+                println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
                 match self.mqtt_server.publish(false, QoS::AtMostOnce, Atom::from(topic), value) {
                     Ok(_) => (),
                     Err(r) => println!("db listen reponse fail:{}", r),
@@ -363,4 +393,63 @@ impl Monitor for DBToMqttMonitor{
             },
         }
     }
+}
+
+pub fn dump(mgr: &Mgr, ware: String, tab: String, file: String, cb: Arc<Fn(Result<(), String>)>) {
+    db_dump(mgr, Atom::from(ware), Atom::from(tab), file, cb);
+}
+
+pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox(Result<(), String>)>) {
+    db_restore(mgr, Atom::from(ware), Atom::from(tab), Atom::from(file), cb);
+}
+
+/*
+* 数据库监听器
+*/
+pub struct JSDBMonitor {
+    handler: Atom, //处理函数名称（js函数）
+    factory:Arc<VMFactory>
+}
+
+pub fn register_db_js_db_monitor(mgr: &Mgr, monitor: JSDBMonitor){
+    mgr.listen(Arc::new(monitor));
+}
+
+impl Monitor for JSDBMonitor{
+    fn notify(&self, e: Event, mgr: Mgr){
+        //否则，将该事件投递到mqtt TODO
+        match &e.other {
+            &EventType::Tab{key: ref k, value: ref v} => {
+                let k = k.clone();
+                let v = v.clone();
+                let ware = e.ware.clone();
+                let tab = e.tab.clone();
+                let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                    let event = vm.new_object();
+                    vm.set_field(&event, String::from("event_name"), &mut vm.new_str("db_change".to_string()));
+                    vm.set_field(&event, String::from("ware"), &mut vm.new_str(ware.as_str().to_string()));// ware
+                    vm.set_field(&event, String::from("tab"), &mut vm.new_str(tab.as_str().to_string()));// tab
+                    vm.set_field(&event, String::from("key"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(k)) as usize, 2886438122));//key
+                    vm.set_field(&event, String::from("value"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(v)) as usize, 2886438122));//value
+                    //mgr
+                    ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
+                    vm.new_undefined();
+                    vm.new_object();
+                    4
+                });
+                self.factory.call(0, self.handler.clone(), real_args, Atom::from("db_change".to_string() + " rpc task"));
+            },
+            &EventType::Meta(ref info) => (),
+        }
+    }
+}
+
+impl JSDBMonitor {
+	//构建一个监听器
+	pub fn new(handler: String, factory: VMFactory) -> JSDBMonitor {
+		JSDBMonitor {
+            handler: Atom::from(handler),
+            factory: Arc::new(factory)
+        }
+	}
 }

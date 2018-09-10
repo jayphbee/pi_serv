@@ -222,10 +222,10 @@ fn call_580562131(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<pi_db::db::TabKV>::as_slice(jst0);
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
-		let result_elem = &result[result_index];
-    let ptr = result_elem as *const pi_db::db::TabKV as usize;let result_elem = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,4000136370);
+		let mut result_elem = &result[result_index];
+    let ptr = result_elem as *const pi_db::db::TabKV as usize;let mut result_elem = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,4000136370);
 
-js.set_index(&result_array, result_index as u32, &result_elem);
+js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
     Some(CallResult::Ok)
@@ -372,8 +372,8 @@ fn call_1239372537(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<i64>::as_slice(jst0);
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
-		let result_elem = &result[result_index];let result_elem = js.new_i64(result_elem.clone());
-js.set_index(&result_array, result_index as u32, &result_elem);
+		let mut result_elem = &result[result_index];let mut result_elem = js.new_i64(result_elem.clone());
+js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
     Some(CallResult::Ok)
@@ -514,9 +514,9 @@ fn call_3093995464(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<String>::as_slice(jst0);
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
-		let result_elem = &result[result_index];let result_elem = js.new_str(String::from(result_elem.as_str()));
+		let mut result_elem = &result[result_index];let mut result_elem = js.new_str(String::from(result_elem.as_str()));
     
-js.set_index(&result_array, result_index as u32, &result_elem);
+js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
     Some(CallResult::Ok)
@@ -660,10 +660,10 @@ fn call_2606142630(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<Arc<Vec<u8>>>::as_slice(jst0);
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
-		let result_elem = &result[result_index];
-    let ptr = result_elem as *const Arc<Vec<u8>> as usize;let result_elem = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,2886438122);
+		let mut result_elem = &result[result_index];
+    let ptr = result_elem as *const Arc<Vec<u8>> as usize;let mut result_elem = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,2886438122);
 
-js.set_index(&result_array, result_index as u32, &result_elem);
+js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
     Some(CallResult::Ok)
@@ -810,8 +810,8 @@ fn call_2842251538(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = Vec::<u32>::as_slice(jst0);
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
-		let result_elem = &result[result_index];let result_elem = js.new_u32(result_elem.clone());
-js.set_index(&result_array, result_index as u32, &result_elem);
+		let mut result_elem = &result[result_index];let mut result_elem = js.new_u32(result_elem.clone());
+js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
     Some(CallResult::Ok)

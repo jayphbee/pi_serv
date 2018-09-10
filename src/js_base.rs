@@ -12,7 +12,7 @@ use pi_lib::bon::{ReadBuffer, Decode};
 use pi_base::timer::TIMER;
 use rand::rngs::OsRng;
 use rand::RngCore;
-use handler::AsyncRequestHandler;
+use js_async::AsyncRequestHandler;
 use depend::Depend;
 use init_js::push_pre;
 
@@ -145,7 +145,10 @@ pub fn drop_native_obj(t: &JSType, js: &Arc<JS>) -> Result<bool, String> {
     }
 }
 
-pub fn end() {
+pub fn end(js: &Arc<JS>) {
     IS_END.lock().unwrap().0 = true;
-    println!("end--------------------------------------------------{}", IS_END.lock().unwrap().0);
+    let b = js.get_objs();
+    let b = b.borrow();
+    println!("end--------------------------------------------------{}, native_obj_count:{}", IS_END.lock().unwrap().0, b.len());
 }
+

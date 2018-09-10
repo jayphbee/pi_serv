@@ -32,13 +32,13 @@ pub mod jsloader;
 pub mod depend;
 pub mod init_js;
 pub mod util;
-pub mod handler;
 pub mod js_httpc;
 pub mod js_db;
 pub mod js_net;
 pub mod js_base;
+pub mod js_lib;
+pub mod js_async;
 mod js_util;
-mod async_call;
 mod pi_crypto_build;
 mod pi_math_build;
 mod pi_db_build;
@@ -113,7 +113,7 @@ fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
 }
 
 fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect("???????????????json");
+	let r = parse(s).expect(format!("???????????????json parse err, pre_dir:{}, json:{}--", pre_dir, s).as_str());
 	match r {
 		JsonValue::Array(mut v) => {
 			let mut arr = Vec::new();
@@ -175,7 +175,7 @@ fn main() {
     pi_net_net_build::register(&BON_MGR);
     pi_serv_build::register(&BON_MGR);
     pi_vm_build::register(&BON_MGR);
-    async_call::register(&BON_MGR);
+    js_async::register(&BON_MGR);
 	pi_p2p_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
@@ -187,7 +187,6 @@ fn main() {
 	let depend = create_depend(dirs);
 
     init_js(dirs, &depend);
-    
     while !IS_END.lock().unwrap().0 {
         println!("###############loop, {}", now_millisecond());
         thread::sleep(Duration::from_millis(10000));

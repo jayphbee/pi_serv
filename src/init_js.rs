@@ -8,12 +8,8 @@ use pi_db::memery_db::DB;
 use pi_db::db::{SResult, TabKV, TabMeta};
 use pi_lib::guid::{GuidGen};
 use pi_lib::atom::Atom;
-use pi_lib::sinfo::{EnumType, StructInfo};
+use pi_lib::sinfo::{EnumType};
 use pi_lib::bon::{WriteBuffer, Encode};
-use std::thread;
-use std::time::Duration;
-
-use pi_base::util::now_millisecond;
 
 use depend::Depend;
 use jsloader::Loader;
@@ -33,6 +29,8 @@ pub fn init_js(dirs: &[String], dp: &Depend){
 
     let list: Vec<String> = Loader::list(dirs, dp);//列出目录下的所有文件
     let mut list_c = Vec::new();
+    let mut list_a = Vec::new();
+    let mut list_b = Vec::new();
     let mut list_i = Vec::new();
     //let mut start_path = String::from("");
     for e in list.into_iter(){
@@ -40,11 +38,15 @@ pub fn init_js(dirs: &[String], dp: &Depend){
             list_c.push(e);
         }else if e.ends_with(".i.js"){
             list_i.push(e);
-        }/*else if e.ends_with(".st.js"){
-            start_path = e;
-        }*/
+        }else if e.ends_with(".a.js"){
+            list_a.push(e);
+        }else if e.ends_with(".b.js"){
+            list_b.push(e);
+        }
     }
     //list_c.push(start_path);
+    list_c.extend_from_slice(&list_a);
+    list_c.extend_from_slice(&list_b);
     list_c.extend_from_slice(&list_i);
     push_pre(&mut list_c);
 

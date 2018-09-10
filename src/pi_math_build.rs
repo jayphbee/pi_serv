@@ -14,7 +14,7 @@ fn call_2798870758(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H32::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -28,7 +28,7 @@ fn call_767388297(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H32) };
 
 
-    let result = pi_math::hash::H32::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H32::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -45,7 +45,7 @@ fn call_1420780752(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H32::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3974239134);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3974239134);
 
 
     Some(CallResult::Ok)
@@ -61,7 +61,7 @@ fn call_4151244803(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H32::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3974239134);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3974239134);
 
 
     Some(CallResult::Ok)
@@ -81,7 +81,7 @@ fn call_2263528600(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H32) };
 
 
-    let result = pi_math::hash::H32::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H32::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
@@ -96,7 +96,7 @@ fn call_385903992(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H48::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -110,7 +110,7 @@ fn call_1426274161(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H48) };
 
 
-    let result = pi_math::hash::H48::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H48::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -127,7 +127,7 @@ fn call_3783527665(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H48::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,788004774);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,788004774);
 
 
     Some(CallResult::Ok)
@@ -143,7 +143,7 @@ fn call_4206140082(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H48::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,788004774);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,788004774);
 
 
     Some(CallResult::Ok)
@@ -163,7 +163,7 @@ fn call_1194676335(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H48) };
 
 
-    let result = pi_math::hash::H48::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H48::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
@@ -178,7 +178,7 @@ fn call_3292766157(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H160::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -192,7 +192,7 @@ fn call_1334624721(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H160) };
 
 
-    let result = pi_math::hash::H160::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H160::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -209,7 +209,7 @@ fn call_831073469(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H160::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
 
 
     Some(CallResult::Ok)
@@ -225,7 +225,7 @@ fn call_2102156475(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H160::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
 
 
     Some(CallResult::Ok)
@@ -245,7 +245,7 @@ fn call_1173820933(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H160) };
 
 
-    let result = pi_math::hash::H160::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H160::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
@@ -260,7 +260,7 @@ fn call_2454669575(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H256::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -274,7 +274,7 @@ fn call_3197660783(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H256) };
 
 
-    let result = pi_math::hash::H256::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H256::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -291,7 +291,7 @@ fn call_3458762269(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H256::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
 
 
     Some(CallResult::Ok)
@@ -307,7 +307,7 @@ fn call_3903164331(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H256::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
 
 
     Some(CallResult::Ok)
@@ -327,7 +327,7 @@ fn call_1683207497(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H256) };
 
 
-    let result = pi_math::hash::H256::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H256::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
@@ -342,7 +342,7 @@ fn call_3783275301(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H512::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -356,7 +356,7 @@ fn call_3697048694(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H512) };
 
 
-    let result = pi_math::hash::H512::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H512::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -373,7 +373,7 @@ fn call_1727973064(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H512::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
 
 
     Some(CallResult::Ok)
@@ -389,7 +389,7 @@ fn call_4289491258(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H512::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
 
 
     Some(CallResult::Ok)
@@ -409,7 +409,7 @@ fn call_1422643842(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H512) };
 
 
-    let result = pi_math::hash::H512::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H512::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
@@ -424,7 +424,7 @@ fn call_4027378382(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H520::take(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(&result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -438,7 +438,7 @@ fn call_2639379268(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const pi_math::hash::H520) };
 
 
-    let result = pi_math::hash::H520::tohex(jst0);let result = js.new_str(result);
+    let result = pi_math::hash::H520::tohex(jst0);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -455,7 +455,7 @@ fn call_4109608036(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H520::from_buf(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3787131431);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3787131431);
 
 
     Some(CallResult::Ok)
@@ -471,7 +471,7 @@ fn call_1287124001(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_math::hash::H520::fromhex(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,3787131431);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3787131431);
 
 
     Some(CallResult::Ok)
@@ -491,7 +491,7 @@ fn call_3340863876(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = unsafe { &*(ptr as *const pi_math::hash::H520) };
 
 
-    let result = pi_math::hash::H520::cmp(jst0,jst1);let result = js.new_i8(result);
+    let result = pi_math::hash::H520::cmp(jst0,jst1);let mut result = js.new_i8(result);
 
     Some(CallResult::Ok)
 }
