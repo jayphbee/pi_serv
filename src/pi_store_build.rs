@@ -17,9 +17,9 @@ fn call_1140526407(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 
 
-    let result = pi_store::db::DB::new(jst0);let result = match result{
+    let result = pi_store::db::DB::new(jst0);let mut result = match result{
         Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let r = ptr_jstype(js.get_objs(), js.clone(), ptr,4204700632);
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,4204700632);
 
  r }
         Err(v) => { 

@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
 use std::collections::HashMap;
 use std::boxed::FnBox;
 
@@ -10,16 +10,13 @@ use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
 use pi_store::db::{DB as FileDB};
 use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
-use pi_lib::gray::{GrayTab, GrayVersion};
 use pi_lib::atom::Atom;
-use pi_lib::handler::{Handler, Args};
 use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
-use js_lib::JSGray;
 
 //use pi_vm::adapter::dukc_top;
 
@@ -117,7 +114,7 @@ pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descendin
     //取元信息
     let meta = match tr.tab_info(&ware, &tab){
         Some(v) => v,
-        None => return Some(Err(String::from("meta is not exist"))), //元信息不存在，不可能生成迭代器， 因此直接返回None
+        None => {return Some(Err(String::from("meta is not exist")))}, //元信息不存在，不可能生成迭代器， 因此直接返回None
     };
     let meta1 = meta.clone();
 
@@ -330,14 +327,17 @@ pub struct DBToMqttMonitor{
 
 impl DBToMqttMonitor{
     pub fn new(mqtt_server: ServerNode, cfg: &[u8]) -> DBToMqttMonitor{
+        let r = HashMap::decode(&mut ReadBuffer::new(cfg, 0));
+        println!("new DBToMqttMonitor----------------{:?}", &r);
         DBToMqttMonitor{
-            cfg: HashMap::decode(&mut ReadBuffer::new(cfg, 0)),
+            cfg:r,
             mqtt_server: mqtt_server
         }
     }
 }
 
 pub fn register_db_to_mqtt_monitor(mgr: &Mgr, monitor: DBToMqttMonitor){
+    println!("register_db_to_mqtt_monitor-------------------------------------------------------------");
     mgr.listen(Arc::new(monitor));
 }
 
@@ -439,7 +439,7 @@ impl Monitor for JSDBMonitor{
                 });
                 self.factory.call(0, self.handler.clone(), real_args, Atom::from("db_change".to_string() + " rpc task"));
             },
-            &EventType::Meta(ref info) => (),
+            &EventType::Meta(ref _info) => (),
         }
     }
 }

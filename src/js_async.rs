@@ -108,7 +108,6 @@ impl Handler for AsyncRequestHandler {
         };
         let mgr = gray.mgr.clone();
         let copy_name = name.clone();
-        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!async call start, copy_name: {:?}", copy_name);
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*copy_name).to_string());
 			match args {
