@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::mem::transmute_copy;
 
 use pi_vm::adapter::{JSType, JS};
-use pi_lib::sinfo::{StructInfo, EnumType};
+use pi_lib::sinfo::{StructInfo, EnumType, EnumInfo};
 use pi_lib::bon::{ReadBuffer, Decode};
 use pi_db::db::{TabKV, TabMeta};
 
@@ -21,6 +21,13 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
             }
             return Ok(arr);
         },
+        "_$Json" => {//一个普通的Json
+            let obj = js.new_object();
+            for v in sinfo.fields.iter(){
+                js.set_field(&obj, String::from(v.name.as_str()), &mut decode_by_type(js, bon, &v.ftype)?);
+            }
+            return Ok(obj);
+        }
         _ => (),
     };
 
@@ -38,6 +45,32 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
 
     for v in sinfo.fields.iter(){
         js.set_field(&obj, String::from(v.name.as_str()), &mut decode_by_type(js, bon, &v.ftype)?);
+    }
+    Ok(obj)
+}
+
+pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) -> Result<JSType, String> {
+    let name = einfo.name.as_str();
+    let index = match name.find("."){
+        Some(v) => v,
+        None => panic!("illegal module name, lack '.', modName: {}", name),
+    };
+    let r = name.split_at(index);// r.0为模块名， r.1为类型名称;
+    let type_name = String::from("pi_modules['") + r.0 + ".s']" + ".exports" + r.1;
+    js.get_type(type_name.clone());
+    let obj = js.new_type(type_name.clone(), 0);
+    if obj.is_undefined(){
+        return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
+    }
+
+    let index = usize::decode(bon);
+    js.set_field(&obj, String::from("index"), &mut js.new_u8(index as u8));
+    let t = &einfo.members[index - 1];
+    match t {
+        &Some(ref ftype) => {
+            js.set_field(&obj, String::from("value"), &mut decode_by_type(js, bon, &ftype)?);
+        },
+        None => (),
     }
     Ok(obj)
 }
@@ -111,7 +144,8 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
                 js.set_index(&elem, 1, &mut decode_by_type(js, bon, v_type)?);
                 js.set_index(&temp, i as u32, &mut elem);
             }
-            js.new_type("Map".to_string(), 1) //必须保证“Map”类型存在
+            let tmp = js.new_type("Map".to_string(), 1); //必须保证“Map”类型存在
+            tmp
         },
         EnumType::Struct(v_type) => {
             decode_by_sinfo(js, bon, v_type)?
@@ -121,6 +155,13 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
                 js.new_undefined()
             }else{
                 decode_by_type(js, bon, v_type)?
+            }
+        },
+        EnumType::Enum(v_type) => {
+            if bon.is_nil() {
+                js.new_undefined()
+            }else{
+                decode_by_enuminfo(js, bon, v_type)?
             }
         },
     };

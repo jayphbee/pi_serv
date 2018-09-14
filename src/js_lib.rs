@@ -2,7 +2,7 @@ use std::sync::{Arc};
 
 use pi_vm::adapter::{JS, JSType};
 use pi_vm::pi_vm_impl::VMFactory;
-use pi_vm::bonmgr::{BON_MGR};
+use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
 use pi_lib::atom::Atom;
 use pi_lib::gray::{Gray};
@@ -76,10 +76,23 @@ impl Nobjs {
     pub fn to_json(&self, vm: &Arc<JS>) -> JSType {
         let objs = vm.new_object();
         for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
-            let mut o = vm.new_object();
-            vm.set_field(&o, String::from("mod"), &mut vm.new_str(String::from(obj.path.as_str())));
-            vm.set_field(&o, String::from("obj"), &mut vm.new_native_object(obj.ptr));
-            vm.set_field(&objs, String::from(k.as_str()), &mut o);
+            let name = obj.path.as_str();
+            let index = match name.find("."){
+                Some(v) => v,
+                None => panic!("illegal module name, lack '.', modName: {}", name),
+            };
+            let r = obj.path.split_at(index);// r.0为模块名， r.1为类型名称;
+            let type_name = String::from("pi_modules['") + r.0 + "']" + ".exports" + r.1;
+
+            vm.get_type(type_name.clone());
+            ptr_jstype(vm.get_objs_ref(), vm.clone(), obj.ptr, obj.hash);
+            let mut obj = vm.new_type(type_name.clone(), 1);
+
+            if obj.is_undefined(){
+                panic!("module is not exist, please make sure the module has been loaded, modName:{}", type_name);
+            }
+
+            vm.set_field(&objs, String::from(k.as_str()), &mut obj);
         }
         objs
     }

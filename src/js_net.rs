@@ -202,7 +202,6 @@ impl TopicHandler {
 pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
     let server = ServerNode::new();
     let copy = server.clone();
-    let key = Atom::from(addr.clone() + ":" + protocol.as_str());
     let f = Box::new(move |peer:Arc<Result<(Socket, Arc<RwLock<Stream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
             &Ok(ref peer) => {
@@ -262,7 +261,21 @@ pub fn clone_server_node(node: &ServerNode) -> ServerNode{
 }
 
 pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool, can_subscribe: bool) -> Result<bool, String> {
-    match server_node.set_topic_meta(Atom::from(topic), can_publish,can_subscribe, Box::new(|_c:ClientStub, _r:IOResult<Arc<Vec<u8>>>| {})) {
+    let topic = Atom::from(topic);
+    let server_node1 = server_node.clone();
+    match server_node.set_topic_meta(topic.clone(), can_publish,can_subscribe, Box::new(move |_c:ClientStub, r:IOResult<Arc<Vec<u8>>>| {
+        match r {
+            Ok(v) => {
+                match server_node1.publish(false, mqtt3::QoS::AtMostOnce, topic.clone(),Vec::from(v.as_slice())) {
+                    Ok(_) => (),
+                    Err(s) => {println!("{}, topic:{}", s.to_string(), topic.as_str());},
+                }
+            },
+            Err(s) => {
+                println!("{}, topic:{}", s.to_string(), topic.as_str());
+            },
+        }
+    })) {
         Ok(_) => Ok(true),
         Err(s) => Err(s.to_string()),
     } 

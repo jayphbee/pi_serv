@@ -9,7 +9,7 @@ use pi_db;
 fn call_278583573(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<u8> = Vec::<u8>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
 
     Some(CallResult::Ok)
@@ -25,7 +25,7 @@ fn call_605387716(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<u8> = Vec::<u8>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
 
     Some(CallResult::Ok)
@@ -40,7 +40,7 @@ fn call_3865263801(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Vec<u8>) };
 
 
-    let result = Vec::<u8>::capacity(jst0);let result = js.new_u32(result as u32);
+    let result = Vec::<u8>::capacity(jst0);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -55,7 +55,7 @@ fn call_2115662480(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<u8>::as_slice(jst0);
-    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(result);let result = result_jstype;
+    let result_jstype = js.new_uint8_array(result.len() as u32);result_jstype.from_bytes(result);let mut result = result_jstype;
 
     Some(CallResult::Ok)
 }
@@ -74,7 +74,7 @@ fn call_645064753(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<u8>::swap_remove(jst0,jst1);let result = js.new_u8(result);
+    let result = Vec::<u8>::swap_remove(jst0,jst1);let mut result = js.new_u8(result);
 
     Some(CallResult::Ok)
 }
@@ -116,7 +116,7 @@ fn call_2151809700(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<u8>::remove(jst0,jst1);let result = js.new_u8(result);
+    let result = Vec::<u8>::remove(jst0,jst1);let mut result = js.new_u8(result);
 
     Some(CallResult::Ok)
 }
@@ -148,8 +148,8 @@ fn call_2913114375(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<u8>) };
 
 
-    let result = Vec::<u8>::pop(jst0);let result = match result{
-        Some(v) => { let v = js.new_u8(v);
+    let result = Vec::<u8>::pop(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_u8(v);
  v}
         None => js.new_null()
     };
@@ -179,7 +179,7 @@ fn call_1534577376(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Vec<u8>) };
 
 
-    let result = Vec::<u8>::len(jst0);let result = js.new_u32(result as u32);
+    let result = Vec::<u8>::len(jst0);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -188,7 +188,7 @@ fn call_1534577376(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_3787109479(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<pi_db::db::TabKV> = Vec::<pi_db::db::TabKV>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
 
     Some(CallResult::Ok)
@@ -204,7 +204,7 @@ fn call_3760459365(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<pi_db::db::TabKV> = Vec::<pi_db::db::TabKV>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
 
     Some(CallResult::Ok)
@@ -246,7 +246,7 @@ fn call_3697063043(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<pi_db::db::TabKV>::swap_remove(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
 
 
     Some(CallResult::Ok)
@@ -290,7 +290,7 @@ fn call_482264970(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<pi_db::db::TabKV>::remove(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
 
 
     Some(CallResult::Ok)
@@ -323,9 +323,9 @@ fn call_3897029640(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<pi_db::db::TabKV>) };
 
 
-    let result = Vec::<pi_db::db::TabKV>::pop(jst0);let result = match result{
+    let result = Vec::<pi_db::db::TabKV>::pop(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,4000136370);
 
  v}
         None => js.new_null()
@@ -338,7 +338,7 @@ fn call_3897029640(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_1982375693(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<i64> = Vec::<i64>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2289656978);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2289656978);
 
 
     Some(CallResult::Ok)
@@ -354,7 +354,7 @@ fn call_3601066191(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<i64> = Vec::<i64>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2289656978);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2289656978);
 
 
     Some(CallResult::Ok)
@@ -393,7 +393,7 @@ fn call_859758326(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<i64>::swap_remove(jst0,jst1);let result = js.new_i64(result);
+    let result = Vec::<i64>::swap_remove(jst0,jst1);let mut result = js.new_i64(result);
 
     Some(CallResult::Ok)
 }
@@ -435,7 +435,7 @@ fn call_2071154981(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<i64>::remove(jst0,jst1);let result = js.new_i64(result);
+    let result = Vec::<i64>::remove(jst0,jst1);let mut result = js.new_i64(result);
 
     Some(CallResult::Ok)
 }
@@ -467,8 +467,8 @@ fn call_802425326(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<i64>) };
 
 
-    let result = Vec::<i64>::pop(jst0);let result = match result{
-        Some(v) => { let v = js.new_i64(v);
+    let result = Vec::<i64>::pop(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_i64(v);
  v}
         None => js.new_null()
     };
@@ -480,7 +480,7 @@ fn call_802425326(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_2399706024(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<String> = Vec::<String>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
 
 
     Some(CallResult::Ok)
@@ -496,7 +496,7 @@ fn call_3498998071(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<String> = Vec::<String>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
 
 
     Some(CallResult::Ok)
@@ -536,7 +536,7 @@ fn call_3156648318(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<String>::swap_remove(jst0,jst1);let result = js.new_str(result);
+    let result = Vec::<String>::swap_remove(jst0,jst1);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -579,7 +579,7 @@ fn call_1210159287(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<String>::remove(jst0,jst1);let result = js.new_str(result);
+    let result = Vec::<String>::remove(jst0,jst1);let mut result = js.new_str(result);
     
 
     Some(CallResult::Ok)
@@ -612,8 +612,8 @@ fn call_3830052262(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<String>) };
 
 
-    let result = Vec::<String>::pop(jst0);let result = match result{
-        Some(v) => { let v = js.new_str(v);
+    let result = Vec::<String>::pop(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(v);
     
  v}
         None => js.new_null()
@@ -626,7 +626,7 @@ fn call_3830052262(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_1828679694(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<Arc<Vec<u8>>> = Vec::<Arc<Vec<u8>>>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2962204509);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2962204509);
 
 
     Some(CallResult::Ok)
@@ -642,7 +642,7 @@ fn call_2496158841(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<Arc<Vec<u8>>> = Vec::<Arc<Vec<u8>>>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2962204509);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2962204509);
 
 
     Some(CallResult::Ok)
@@ -684,7 +684,7 @@ fn call_12783470(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<Arc<Vec<u8>>>::swap_remove(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
 
     Some(CallResult::Ok)
@@ -728,7 +728,7 @@ fn call_3566885191(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<Arc<Vec<u8>>>::remove(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
 
     Some(CallResult::Ok)
@@ -761,9 +761,9 @@ fn call_2704292785(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<Arc<Vec<u8>>>) };
 
 
-    let result = Vec::<Arc<Vec<u8>>>::pop(jst0);let result = match result{
+    let result = Vec::<Arc<Vec<u8>>>::pop(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  v}
         None => js.new_null()
@@ -776,7 +776,7 @@ fn call_2704292785(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn call_1708919049(js: Arc<JS>) -> Option<CallResult>{
 
     let result:Vec<u32> = Vec::<u32>::new();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
 
 
     Some(CallResult::Ok)
@@ -792,7 +792,7 @@ fn call_1994007224(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result:Vec<u32> = Vec::<u32>::with_capacity(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1662444400);
 
 
     Some(CallResult::Ok)
@@ -831,7 +831,7 @@ fn call_1587209337(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<u32>::swap_remove(jst0,jst1);let result = js.new_u32(result);
+    let result = Vec::<u32>::swap_remove(jst0,jst1);let mut result = js.new_u32(result);
 
     Some(CallResult::Ok)
 }
@@ -873,7 +873,7 @@ fn call_2103362090(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = Vec::<u32>::remove(jst0,jst1);let result = js.new_u32(result);
+    let result = Vec::<u32>::remove(jst0,jst1);let mut result = js.new_u32(result);
 
     Some(CallResult::Ok)
 }
@@ -905,8 +905,8 @@ fn call_3987113084(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut Vec<u32>) };
 
 
-    let result = Vec::<u32>::pop(jst0);let result = match result{
-        Some(v) => { let v = js.new_u32(v);
+    let result = Vec::<u32>::pop(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_u32(v);
  v}
         None => js.new_null()
     };
