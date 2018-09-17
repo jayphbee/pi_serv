@@ -8,3 +8,4 @@
 .depend
 /.vscode
 /scripts/build.bat
+/cfg/def_build.cfg
