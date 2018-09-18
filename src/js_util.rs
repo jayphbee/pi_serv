@@ -64,7 +64,7 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
     }
 
     let index = usize::decode(bon);
-    js.set_field(&obj, String::from("index"), &mut js.new_u8(index as u8));
+    js.set_field(&obj, String::from("enum_type"), &mut js.new_u8(index as u8));
     let t = &einfo.members[index - 1];
     match t {
         &Some(ref ftype) => {
