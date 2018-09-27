@@ -17,10 +17,10 @@ pi_vm = { path = "../pi_vm" }
 pi_math = { path = "../pi_math" }
 pi_crypto = { path = "../pi_crypto" }
 pi_db = { path = "../pi_db" }
-pi_store = { path = "../pi_store" }
 pi_base = { path = "../pi_base" }
 net = { path = "../pi_net/net" }
 mqtt = { path = "../pi_net/mqtt" }
 rpc = { path = "../pi_net/rpc" }
 httpc = { path = "../pi_net/httpc" }
+https = { path = "../pi_net/https" }
 pi_p2p = { path = "../pi_p2p" }

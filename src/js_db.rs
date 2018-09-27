@@ -1,6 +1,8 @@
 use std::sync::{Arc};
 use std::collections::HashMap;
 use std::boxed::FnBox;
+use std::path::Path;
+use std::fs;
 
 use mqtt3::QoS;
 
@@ -8,9 +10,10 @@ use pi_db::memery_db::{DB};
 use pi_db::db::{TabKV, Iter, Ware, Bin, TabMeta};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
-use pi_store::db::{DB as FileDB};
+//use pi_store::db::{DB as FileDB};
 use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
 use pi_lib::atom::Atom;
+use pi_lib::sinfo::{EnumType, StructInfo, EnumInfo};
 use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
@@ -144,9 +147,9 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-pub fn register_file_db(mgr: &Mgr, prefix: String, ware: FileDB) -> bool {
-	mgr.register(Atom::from(prefix), Arc::new(ware))
-}
+// pub fn register_file_db(mgr: &Mgr, prefix: String, ware: FileDB) -> bool {
+// 	mgr.register(Atom::from(prefix), Arc::new(ware))
+// }
 
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {
@@ -343,6 +346,7 @@ pub fn register_db_to_mqtt_monitor(mgr: &Mgr, monitor: DBToMqttMonitor){
 
 impl Monitor for DBToMqttMonitor{
     fn notify(&self, e: Event, _mgr: Mgr){
+        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
         //如果名单中没有对应的库和表， 忽略该事件
         match self.cfg.get(&e.ware) {
             Some(tabs) => {
@@ -396,12 +400,39 @@ impl Monitor for DBToMqttMonitor{
 }
 
 pub fn dump(mgr: &Mgr, ware: String, tab: String, file: String, cb: Arc<Fn(Result<(), String>)>) {
-    db_dump(mgr, Atom::from(ware), Atom::from(tab), file, cb);
+    let dir = match file.as_str().rfind("/") {
+        Some(v) => &file[0..v],
+        None => {panic!("restore file Invalid:{}", file);},
+    };
+
+    if !Path::new(&dir).exists(){
+        fs::DirBuilder::new().recursive(true).create(dir).unwrap();
+    }
+    db_dump(mgr, Atom::from(ware), Atom::from(tab), file.clone(), cb);
 }
 
-pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox(Result<(), String>)>) {
-    db_restore(mgr, Atom::from(ware), Atom::from(tab), Atom::from(file), cb);
+pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox(Result<(), String>)>){
+    let dir = match file.as_str().rfind("/") {
+        Some(v) => &file[0..v],
+        None => {panic!("restore file Invalid:{}", file);},
+    };
+    if !Path::new(&dir).exists(){
+        fs::DirBuilder::new().recursive(true).create(dir).unwrap();
+    }
+
+    if !Path::new(&file).exists(){
+        fs::File::create(&file);
+    }
+    db_restore(mgr, Atom::from(ware), Atom::from(tab), Atom::from(file.clone()), cb);
 }
+
+// 表的元信息
+// pub fn tab_info(mgr: &Mgr, ware_name:String, tab_name: String) -> Option<Arc<TabMeta>> {
+//     match mgr.tab_info(&Atom::from(ware_name), &Atom::from(tab_name)) {
+//         Some(b) => b.tab_info(tab_name),
+//         _ => None
+//     }
+// }
 
 /*
 * 数据库监听器
