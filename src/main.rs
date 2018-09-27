@@ -11,7 +11,6 @@ extern crate pi_vm;
 extern crate pi_math;
 extern crate pi_crypto;
 extern crate pi_db;
-extern crate pi_store;
 extern crate pi_lib;
 extern crate core;
 extern crate pi_base;
@@ -24,6 +23,7 @@ extern crate rand;
 extern crate pi_p2p;
 extern crate mqtt3;
 extern crate httpc;
+extern crate https;
 
 #[macro_use]
 extern crate lazy_static;
@@ -50,14 +50,13 @@ mod pi_net_rpc_build;
 mod pi_serv_build;
 mod pi_vm_build;
 mod pi_p2p_build;
-mod pi_store_build;
 mod pi_net_httpc_build;
+mod pi_net_https_build;
 
-use std::fs::{File};
-use std::path::Path;
 use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
+use std::path::Path;
 
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
@@ -70,11 +69,9 @@ use pi_base::worker_pool::WorkerPool;
 use pi_base::pi_base_impl::{JS_TASK_POOL, STORE_TASK_POOL, EXT_TASK_POOL};
 use pi_base::timer::TIMER;
 
-use json::{JsonValue, parse};
-use depend::{FileDes, Depend};
 use init_js::{init_js};
-use jsloader::Loader;
 use js_base::IS_END;
+use util::{read_file_list};
 
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
@@ -91,65 +88,6 @@ fn args() -> clap::ArgMatches<'static> {
 	matches
 	
 }
-
-fn read_file_str(path: &str) -> String{
-	let mut file = match File::open(path) {
-		Ok(f) => f,
-		Err(e) => panic!("no such file {} exception:{}", path, e)
-	};
-	let mut str_val = String::new();
-	match file.read_to_string(&mut str_val) {
-		Ok(_) => str_val,
-		Err(e) => panic!("Error Reading file: {}", e)
-	}
-}
-
-fn read_file_list(dir: &str, pre_dir: &str) -> Vec<FileDes>{
-	let path = Path::new(dir).join(pre_dir).join(".depend");
-	let path = path.to_str().unwrap();
-	let content = read_file_str(path);
-	let content = unsafe{content.slice_unchecked(11, content.len() - 14)};
-	parse_file_list(content, pre_dir)
-}
-
-fn parse_file_list(s: &str, pre_dir: &str) -> Vec<FileDes>{
-	let r = parse(s).expect(format!("???????????????json parse err, pre_dir:{}, json:{}--", pre_dir, s).as_str());
-	match r {
-		JsonValue::Array(mut v) => {
-			let mut arr = Vec::new();
-			for _ in 0..v.len() {
-				arr.push(FileDes::from(v.pop().unwrap(), pre_dir));
-			}
-			arr
-		},
-		_ => {panic!("???????array??????????Vec<FileDes>");},
-	}
-
-}
-
-fn create_depend(sp: &[String]) -> Depend{
-	let mut vec: Vec<FileDes> = Vec::new();
-	let mut root = "";
-
-	for e in sp{
-		let mut e = e.as_str();
-		if e.ends_with("/"){
-			e = &e[0..e.len() - 1];
-		}
-		let mut index = e.rfind("/");
-		if index.is_none() {
-			panic!("illegal parameter:{}", e);
-		}
-		let i = index.unwrap();
-
-		let pre_dir = String::from(unsafe{e.slice_unchecked(i + 1, e.len())}) + "/";
-		root = unsafe{e.slice_unchecked(0, i)};
-		let arr = read_file_list(root, &pre_dir);
-		vec.extend(arr.into_iter());
-	}
-	Depend::new(vec, root)
-} 
-
 
 fn main() {
 	#[cfg(not(unix))]
@@ -177,16 +115,25 @@ fn main() {
     pi_vm_build::register(&BON_MGR);
     js_async::register(&BON_MGR);
 	pi_p2p_build::register(&BON_MGR);
-    pi_store_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
+    pi_net_https_build::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
-	let dirs: Vec<String> = config.split(",").map(|e| {String::from(e)}).collect();
-	let dirs = dirs.as_slice();
-	let depend = create_depend(dirs);
+	let mut dirs: Vec<String> = config.split(",").map(|e|{e.to_string()}).collect();
+    if !dirs[0].ends_with("/"){
+        dirs[0] += "/";
+    }
+    
+    let file_list = read_file_list( &Path::new(&(dirs[0].clone() + ".depend")).to_path_buf());
+    if dirs.len() == 1{
+        init_js(&dirs[0..1], file_list, dirs[0].clone());
+    }else if dirs.len() > 1{
+        init_js(&dirs[1..], file_list, dirs[0].clone());
+    }else {
+        panic!("load dir is none, please start with '-c rootdir' or '-c rootdir,load module1,load module1..'");
+    }
 
-    init_js(dirs, &depend);
     while !IS_END.lock().unwrap().0 {
         println!("###############loop, {}", now_millisecond());
         thread::sleep(Duration::from_millis(10000));

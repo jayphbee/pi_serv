@@ -10,7 +10,7 @@ use pi_db::memery_db::{DB};
 use pi_db::db::{TabKV, Iter, Ware, Bin, TabMeta};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
-use pi_store::db::{DB as FileDB};
+//use pi_store::db::{DB as FileDB};
 use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::{EnumType, StructInfo, EnumInfo};
@@ -147,9 +147,9 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-pub fn register_file_db(mgr: &Mgr, prefix: String, ware: FileDB) -> bool {
-	mgr.register(Atom::from(prefix), Arc::new(ware))
-}
+// pub fn register_file_db(mgr: &Mgr, prefix: String, ware: FileDB) -> bool {
+// 	mgr.register(Atom::from(prefix), Arc::new(ware))
+// }
 
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {

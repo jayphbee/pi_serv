@@ -2,19 +2,29 @@ use std::sync::{Arc, Mutex};
 use std::ops::Deref;
 use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
+use std::collections::HashMap;
+use std::fs::{read, File};
+use std::path::PathBuf;
+use std::io::Read;
+
+use rand::rngs::OsRng;
+use rand::RngCore;
 
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
 use pi_vm::adapter::{JSType, JS};
-use pi_vm::bonmgr::{BON_MGR};
+use pi_vm::bonmgr::{BON_MGR, ptr_jstype, NativeObjsAuth};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::StructInfo;
-use pi_lib::bon::{ReadBuffer, Decode};
+use pi_lib::bon::{ReadBuffer, Decode, WriteBuffer, Encode};
 use pi_base::timer::TIMER;
-use rand::rngs::OsRng;
-use rand::RngCore;
+use pi_base::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
+use pi_db::mgr::Mgr;
+use pi_db::db::{TabKV};
+
 use js_async::AsyncRequestHandler;
-use depend::Depend;
+use depend::{Depend, FileDes};
 use init_js::push_pre;
+use util::{read_file_list, read_depend, read_file_str};
 
 lazy_static! {
 	pub static ref IS_END: Arc<Mutex<(bool,bool)>> = Arc::new(Mutex::new((false, false)));
@@ -152,3 +162,130 @@ pub fn end(js: &Arc<JS>) {
     println!("end--------------------------------------------------{}, native_obj_count:{}", IS_END.lock().unwrap().0, b.len());
 }
 
+pub struct FileChangeHandler{
+    mgr: Mgr,
+    factory: Arc<VMFactory>,
+    handler_name: Atom,
+}
+
+impl FileChangeHandler {
+    fn new(handler_name:String, mgr: &Mgr, factory: Arc<VMFactory>) -> FileChangeHandler {
+        FileChangeHandler{
+            handler_name: Atom::from(handler_name),
+            mgr: mgr.clone(),
+            factory: factory,
+        }
+    }
+}
+
+pub fn listen_depend(handler: FileChangeHandler,  path: String) {
+
+    let listener = FSListener(Arc::new(move |event: FSChangeEvent| {
+        match event {
+            FSChangeEvent::Create(path) => depend_change(&handler, path),
+            FSChangeEvent::Write(path) => depend_change(&handler, path),
+            FSChangeEvent::Remove(_) => (), //删除depend什么也不做
+            FSChangeEvent::Rename(_, _) => (), //重命名depend什么也不做
+        };
+    }));
+    let mut monitor = FSMonitor::new(FSMonitorOptions::File(Atom::from(path), 1000), listener);
+    monitor.run().expect("");
+}
+
+fn depend_change(handler: &FileChangeHandler, path: PathBuf) {
+    // let mut old = read_depend(&handler.mgr);
+    // let mut diff = HashMap::new();
+    // let file_list = read_file_list(&path);
+    // let mut map = HashMap::new();
+    // for n in file_list.into_iter(){
+    //     match old.get(&n.path){
+    //         Some(o) => {
+    //             if o.sign != n.sign{
+    //                 diff.insert(n.path.clone(), FileEvent::Modify(old.remove(&n.path)));
+    //             }
+    //         },
+    //         None => {diff.insert(n.path.clone(), FileEvent::Create(n));},
+    //     };
+    // }
+
+    // //遍历剩余的文件，设置为删除状态
+    // for o in old{
+    //     diff.insert(o.0.clone(), FileEvent::Remove);
+    // }
+
+    // let mgr = handler.mgr.clone();
+    // //遍历差异列表，修改代码差异和depend差异
+    // let mut depenItem = Vec::new();
+    // let mut codeItem = Vec::new();
+    // let ware = Atom::from("memory");
+    // let depend_tab = Atom::from("_$depend");
+    // let code_tab = Atom::from("_$code");
+    // let js = JS::new(0x100, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
+    // for (mod_path, d) in diff{
+    //     let mut key_bb = WriteBuffer::new();
+    //     mod_path.encode(&mut key_bb);
+    //     let key = Arc::new(key_bb.unwrap());
+    //     match d {
+    //         FileEvent::Create() => (),
+    //         FileEvent::Modify => (),
+    //         FileEvent::Remove => {
+    //             depenItem.push(TabKV{
+    //                 ware: ware.clone(),
+    //                 tab: depend_tab.clone(),
+    //                 key: key.clone(),
+    //                 value: None,
+    //                 index: 0,
+    //             });
+    //             if mod_path.ends_with(".js") {
+    //                 codeItem.push(TabKV{
+    //                     ware: ware.clone(),
+    //                     tab: code_tab.clone(),
+    //                     key: key.clone(),
+    //                     value: None,
+    //                     index: 0,
+    //                 });
+    //             }
+    //         },
+    //         FileEvent::Rename => (),
+    //     }
+    //     depenItem.push(TabKV{
+    //         ware: ware.clone(),
+    //         tab: depend_tab.clone(),
+    //         key: key.clone(),
+    //         value: None,
+    //         index: 0,
+    //     });
+    //     if mod_path.ends_with(".js") {
+    //         codeItem.push(TabKV{
+    //             ware: ware.clone(),
+    //             tab: code_tab.clone(),
+    //             key: key.clone(),
+    //             value: None,
+    //             index: 0,
+    //         });
+    //     }
+    //     let p = path.as_path().join(mod_path); //修改文件的路径
+    //     read_file_str()
+    // }
+
+    // let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+    //     //事件对象
+    //     let event = vm.new_object();
+    //     vm.set_field(&event, String::from("event_name"), &mut vm.new_str("file_change".to_string()));
+
+    //     vm.set_field(&event, String::from("path"), &mut vm.new_str(conect_id as u32));
+    //     //mgr
+    //     ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
+    //     //env
+    //     ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
+    //     2
+    // });
+    // factory.call(0, Atom::from(handler_name), real_args, Atom::from((*event_name).to_string() + " rpc task"));
+}
+
+pub enum FileEvent{
+    Create(FileDes),
+    Modify(FileDes),
+    Remove,
+    Rename
+}

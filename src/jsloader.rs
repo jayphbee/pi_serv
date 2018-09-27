@@ -9,7 +9,8 @@ impl Loader {
 	pub fn list_with_depend(dirs: &[String], dp: &Depend) -> Vec<RcFileDes>{
 		let mut mod_names: Vec<String> = Vec::new();
 		for dir in dirs.iter(){
-			let dir = &dp.get_path(&dir);
+			//let dir = &dp.get_path(&dir);
+            //println!("list_with_depend----------------------------{}", dir);
 			let f = dp.get(dir);
 			if f.is_none() {
 				panic!("找不到文件：{}", dir);
@@ -24,11 +25,12 @@ impl Loader {
 		let file_list = Loader::list_with_depend(dirs, dp);
 		let mut file_map: HashMap<String,Vec<u8>> = HashMap::new();
 		for v in file_list.iter(){
-			let p = String::from(v.borrow().path.as_ref());
-			let path = String::from(dp.root.as_str()) + "/"  + p.as_str();
+            let p = v.borrow().path.clone();
+			let path = dp.get_path(&p);
 			let r = read(Path::new(&path));
 			let data = r.expect((String::from("文件不存在！,path:") + &path).as_str());
-			file_map.insert(String::from(p.as_str()), modify_code(&p, data));
+			//file_map.insert(p, modify_code(&path, data));
+            file_map.insert(p, data);
 		}
 		success(file_map);
 	}
@@ -37,12 +39,13 @@ impl Loader {
 		let file_list = Loader::list_with_depend(dirs, dp);
 		let mut file_map: HashMap<String, Vec<u8>> = HashMap::new();
 		for v in file_list.iter(){
-            let p = String::from(v.borrow().path.as_ref());
-			let path = String::from(dp.root.as_str()) + "/"  + p.as_str();
+             let p = v.borrow().path.clone();
+			let path = dp.get_path(&p);
             //println!("----------p:{}, path:{}", &p, &path);
 			let r = read(Path::new(&path));
 			let data = r.expect((String::from("文件不存在！,path:") + &path).as_str());
-			file_map.insert(String::from(p.as_str()), modify_code(&p, data));
+			//file_map.insert(p, modify_code(&path, data));
+            file_map.insert(p, data);
 		}
 		file_map
 	}
@@ -91,7 +94,7 @@ impl Loader {
     pub fn list(dirs: &[String], dp: &Depend) -> Vec<String>{
         let mut mod_names: Vec<String> = Vec::new();
         for dir in dirs.iter(){
-            let dir = dp.get_path(&dir);
+            //let dir = dp.get_path(&dir);
             let f = dp.get(&dir);
             if f.is_none() {
                 panic!("找不到文件：{}", dir);

@@ -8,14 +8,13 @@ use pi_db::db::{TabKV, TabMeta};
 
 pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -> Result<JSType, String> {
     let name = sinfo.name.as_str();
-
     match name {
         "" => { //该类型为元组
             let arr = js.new_array();
             for v in sinfo.fields.iter(){
                 let name = match v.name.parse() {
                     Ok(n) => n,
-                    Err(_) => return Err(String::from("String cannot be converted to digits")),
+                    Err(_) => return Err(format!("String cannot be converted to digits, field:{:?}, struct:{}", v.name, name)),
                 };
                 js.set_index(&arr, name, &mut decode_by_type(js, bon, &v.ftype)?);
             }

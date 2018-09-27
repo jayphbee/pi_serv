@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 use pi_vm::adapter::{JS};
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
@@ -10,24 +12,29 @@ use pi_lib::guid::{GuidGen};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::{EnumType};
 use pi_lib::bon::{WriteBuffer, Encode};
+use util::store_depend;
 
-use depend::Depend;
+use depend::{Depend, FileDes};
 use jsloader::Loader;
 
-pub fn init_js(dirs: &[String], dp: &Depend){
+pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
+    let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
+    mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
+
+    //store_depend(&mgr, &file_list);
+
+    let dp = Depend::new(file_list, root);
     let mut dir_c = Vec::from(dirs);
     push_pre(&mut dir_c);
 
-    let file_map = Loader::load_dir_sync(dir_c.as_slice(), dp);
+    let file_map = Loader::load_dir_sync(dir_c.as_slice(), &dp);
     let js = JS::new(0x100, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
-    let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
-    mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
     create_code_tab(&mgr);//创建代码表
     let global_code = bind_global(&mgr, &js);//插入全局变量定义函数的字节码
     let file_map = code_store(&mgr, file_map, &js);//插入其他所有js代码的字节码
     js.load(&global_code);//加载全局变量定义函数的字节码
 
-    let list: Vec<String> = Loader::list(dirs, dp);//列出目录下的所有文件
+    let list: Vec<String> = Loader::list(dirs, &dp);//列出目录下的所有文件
     let mut list_c = Vec::new();
     let mut list_a = Vec::new();
     let mut list_b = Vec::new();
@@ -50,14 +57,20 @@ pub fn init_js(dirs: &[String], dp: &Depend){
     list_c.extend_from_slice(&list_i);
     push_pre(&mut list_c);
 
-    let list = Loader::list_with_depend(&list_c, dp);
+    let list = Loader::list_with_depend(&list_c, &dp);
     for des in list.iter(){
         let path = String::from(des.borrow().path.as_ref());
         //println!("des:{}", &path);
         if path.ends_with(".js"){
             let u8arr = file_map.get(&path).unwrap().as_slice();
             js.load(u8arr);
-            if path == "bin/evn.js"{//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
+            loop{
+                if js.is_ran(){
+                    break;
+                }
+                thread::sleep(Duration::from_millis(100));
+            }
+            if path == "evn.js"{//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
                 
                 //调用全局变量定义函数， 定义全局变量_$mgr
                 js.get_js_function("_$defineGlobal".to_string());
@@ -69,7 +82,7 @@ pub fn init_js(dirs: &[String], dp: &Depend){
                 //调用全局变量定义函数， 定义全局变量_$mgr
                 js.get_js_function("_$defineGlobal".to_string());
                 js.new_str(String::from("_$depend"));
-                let ptr = dp as *const Depend as usize;
+                let ptr = &dp as *const Depend as usize;
                 ptr_jstype(js.get_objs_ref(), js.clone(), ptr, 1797798710); //new native obj作为参数
                 js.call(2);
             }
@@ -100,6 +113,9 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
     let mut items = Vec::new();
     let mut m = HashMap::new();
     for (key, v) in map.into_iter(){
+        if !key.ends_with(".js"){
+            continue;
+        }
         let mut bb = WriteBuffer::new();
         key.encode(&mut bb);
         let mut item = TabKV::new(ware.clone(), tab.clone(), Arc::new(bb.unwrap()));
@@ -121,17 +137,26 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
 
 
 pub fn push_pre(list:&mut Vec<String>){
-    let evn = String::from("bin/evn.js");
-	let core = String::from("bin/core.js");
-	let firstjs = String::from("bin/first.js");
-	let nextjs = String::from("bin/next.js");
-	let lastjs = String::from("bin/last.js");
+    // let ce = match current_exe() {
+    //     Ok(p) => p,
+    //     Err(s) => panic!("current_exe err:{:?}", s),
+    // };
+    // let evn = ce.with_file_name("evn.js").to_str().unwrap().to_string();
+    // let core = ce.with_file_name("core.js").to_str().unwrap().to_string();
+    // let first = ce.with_file_name("first.js").to_str().unwrap().to_string();
+    // let next = ce.with_file_name("next.js").to_str().unwrap().to_string();
+    // let last = ce.with_file_name("last.js").to_str().unwrap().to_string();
+    let evn = "evn.js".to_string();
+    let core = "core.js".to_string();
+    let first = "first.js".to_string();
+    let next = "next.js".to_string();
+    let last = "last.js".to_string();
 
-	list.insert(0, nextjs);
-    list.insert(0, firstjs);//初始js
+	list.insert(0, next);
+    list.insert(0, first);//初始js
     list.insert(0, core);//初始js
     list.insert(0, evn);//初始js
-	list.push(lastjs);
+	list.push(last);
 }
 
 //编译_$defineGlobal函数， 得到字节码（_$defineGlobal用于定义全局变量）
