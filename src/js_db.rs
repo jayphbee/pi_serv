@@ -461,7 +461,10 @@ impl Monitor for JSDBMonitor{
                     vm.set_field(&event, String::from("ware"), &mut vm.new_str(ware.as_str().to_string()));// ware
                     vm.set_field(&event, String::from("tab"), &mut vm.new_str(tab.as_str().to_string()));// tab
                     vm.set_field(&event, String::from("key"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(k)) as usize, 2886438122));//key
-                    vm.set_field(&event, String::from("value"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(v)) as usize, 2886438122));//value
+                    match v {
+                        Some(v) => {vm.set_field(&event, String::from("value"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(v)) as usize, 2886438122));},//value,
+                        None => (),
+                    };
                     //mgr
                     ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                     vm.new_undefined();
