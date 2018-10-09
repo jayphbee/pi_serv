@@ -6,6 +6,22 @@ use https;
 
 
 
+fn call_170528392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_str();
+
+
+    let result = https::upload::FileUpload::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3578700762);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3779679042(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
@@ -132,6 +148,10 @@ fn call_374744388(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+fn drop_3578700762(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut https::upload::FileUpload) };
+}
+
 fn drop_369829824(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::file::StaticFile) };
 }
@@ -148,10 +168,12 @@ fn drop_1411051473(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
 }
 pub fn register(mgr: &BonMgr){
+    mgr.regist_struct_meta(StructMeta{name:String::from("https::upload::FileUpload"), drop_fn: drop_3578700762}, 3578700762);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::file::StaticFile"), drop_fn: drop_369829824}, 369829824);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::files::StaticFileBatch"), drop_fn: drop_2592534340}, 2592534340);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::mount::Mount"), drop_fn: drop_969075058}, 969075058);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_170528392), 170528392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3779679042), 3779679042);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3011830990), 3011830990);
     mgr.regist_fun_meta(FnMeta::Call(call_1576795673), 1576795673);
