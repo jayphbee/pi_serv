@@ -3,6 +3,8 @@
 #![feature(generic_associated_types)]
 #![feature(fnbox)]
 #![feature(unboxed_closures)]
+#![feature(vec_remove_item)]
+#![feature(nll)]
 #[warn(dead_code)]
 extern crate clap;
 extern crate json;
@@ -38,6 +40,7 @@ pub mod js_net;
 pub mod js_base;
 pub mod js_lib;
 pub mod js_async;
+pub mod hotfix;
 mod js_util;
 mod pi_crypto_build;
 mod pi_math_build;
@@ -94,10 +97,10 @@ fn main() {
     load_lib_backtrace();
     TIMER.run();
     register_native_object();
-    let worker_pool0 = Box::new(WorkerPool::new(3, 1024 * 1024, 1000));
+    let worker_pool0 = Box::new(WorkerPool::new(10, 1024 * 1024, 1000));
     worker_pool0.run(JS_TASK_POOL.clone());
 
-    let worker_pool1 = Box::new(WorkerPool::new(3, 1024 * 1024, 1000));
+    let worker_pool1 = Box::new(WorkerPool::new(10, 1024 * 1024, 1000));
     worker_pool1.run(STORE_TASK_POOL.clone());
 
     let worker_pool = Box::new(WorkerPool::new(10, 1024 * 1024, 30000));

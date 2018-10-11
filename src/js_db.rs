@@ -329,12 +329,12 @@ pub struct DBToMqttMonitor{
 }
 
 impl DBToMqttMonitor{
-    pub fn new(mqtt_server: ServerNode, cfg: &[u8]) -> DBToMqttMonitor{
+    pub fn new(mqtt_server: &ServerNode, cfg: &[u8]) -> DBToMqttMonitor{
         let r = HashMap::decode(&mut ReadBuffer::new(cfg, 0));
         println!("new DBToMqttMonitor----------------{:?}", &r);
         DBToMqttMonitor{
             cfg:r,
-            mqtt_server: mqtt_server
+            mqtt_server: mqtt_server.clone()
         }
     }
 }

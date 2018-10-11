@@ -1,11 +1,11 @@
-use std::sync::{Arc};
+use std::sync::{Arc, RwLock};
 
 use pi_vm::adapter::{JS, JSType};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
 use pi_lib::atom::Atom;
-use pi_lib::gray::{Gray};
+use pi_lib::gray::{Gray, GrayTab};
 use pi_lib::sbtree::{Tree};
 use pi_lib::ordmap::{Entry, ImOrdMap, Iter};
 
@@ -73,9 +73,27 @@ impl Nobjs {
 		}
     }
 
-    pub fn to_json(&self, vm: &Arc<JS>) -> JSType {
-        let objs = vm.new_object();
+    pub fn get_depend(&self) -> Vec<String>{
+        let mut arr = Vec::new();
         for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
+            let name = obj.path.as_str();
+            let index = match name.find("."){
+                Some(v) => v,
+                None => panic!("illegal module name, lack '.', modName: {}", name),
+            };
+            let r = obj.path.split_at(index).0.to_string() + ".js";// r.0为模块名， r.1为类型名称;
+            arr.push( r );
+        }
+        arr
+    }
+
+    pub fn to_map(&self, vm: &Arc<JS>) -> JSType {
+        vm.get_type("Map".to_string());
+        let temp = vm.new_array();
+        let mut i = 0;
+        for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
+            let mut arr = vm.new_array();
+            vm.set_index(&arr, 0, &mut vm.new_str(k.as_str().to_string()));
             let name = obj.path.as_str();
             let index = match name.find("."){
                 Some(v) => v,
@@ -92,8 +110,11 @@ impl Nobjs {
                 panic!("module is not exist, please make sure the module has been loaded, modName:{}", type_name);
             }
 
-            vm.set_field(&objs, String::from(k.as_str()), &mut obj);
+            vm.set_index(&arr, 1, &mut obj);
+            vm.set_index(&temp, i, &mut arr);
+            i += 1;
         }
+        let objs = vm.new_type("Map".to_string(), 1);
         objs
     }
 }
@@ -102,15 +123,17 @@ impl Nobjs {
 pub struct JSGray {
     pub mgr: Mgr, //数据库管理器
     pub factory: Arc<VMFactory>, //虚拟机工厂
-    pub nobjs: Nobjs //本地对象
+    pub nobjs: Nobjs, //本地对象
+    pub name: Atom,//为灰度取一个名称， 所有灰度不能重复重复
 }
 
 impl JSGray {
-    pub fn new(mgr: &Mgr, factory: VMFactory, nobjs: &Nobjs) -> Self{
+    pub fn new(mgr: &Mgr, factory: VMFactory, name: &str, nobjs: &Nobjs) -> Self{
         JSGray{
             mgr: mgr.clone(),
             factory: Arc::new(factory),
-            nobjs: nobjs.clone()
+            nobjs: nobjs.clone(),
+            name: Atom::from(name),
         }
     }
 
@@ -121,3 +144,7 @@ impl JSGray {
 }
 
 impl Gray for JSGray {}
+
+pub fn create_gray_tab(gray: JSGray) -> Arc<RwLock<GrayTab<JSGray>>>{
+    Arc::new(RwLock::new(GrayTab::new(gray)))
+} 
