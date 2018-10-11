@@ -995,24 +995,6 @@ fn call_2041214057(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
-fn call_1848540653(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in listen_depend";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 292180624, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_base::FileChangeHandler) };
-
-
-	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
-
-
-    js_base::listen_depend(jst0,jst1);
-    Some(CallResult::Ok)
-}
-
-
 fn call_1099259475(js: Arc<JS>) -> Option<CallResult>{
 
     let result = js_lib::Nobjs::new();
@@ -2413,10 +2395,6 @@ fn drop_3355421248(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_base::Rand) };
 }
 
-fn drop_292180624(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut js_base::FileChangeHandler) };
-}
-
 fn drop_1422904849(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_lib::Nobjs) };
 }
@@ -2530,7 +2508,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>"), drop_fn: drop_1542823015}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_base::AtomIndex"), drop_fn: drop_1496374710}, 1496374710);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_base::Rand"), drop_fn: drop_3355421248}, 3355421248);
-    mgr.regist_struct_meta(StructMeta{name:String::from("js_base::FileChangeHandler"), drop_fn: drop_292180624}, 292180624);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_lib::Nobjs"), drop_fn: drop_1422904849}, 1422904849);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_lib::JSGray"), drop_fn: drop_2566315655}, 2566315655);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<RwLock<pi_lib::gray::GrayTab<js_lib::JSGray>>>"), drop_fn: drop_360466124}, 360466124);
@@ -2589,7 +2566,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_957759389), 957759389);
     mgr.regist_fun_meta(FnMeta::CallArg(call_370495443), 370495443);
     mgr.regist_fun_meta(FnMeta::Call(call_2041214057), 2041214057);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_1848540653), 1848540653);
     mgr.regist_fun_meta(FnMeta::Call(call_1099259475), 1099259475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1332820780), 1332820780);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2697841501), 2697841501);
