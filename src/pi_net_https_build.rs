@@ -116,6 +116,32 @@ fn call_4128314446(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2869286636(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in mount";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 969075058, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::mount::Mount) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 3578700762, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut https::upload::FileUpload) };
+
+
+    let result = https::mount::Mount::mount(jst0,jst1,jst2);
+    let ptr = result as *const https::mount::Mount as usize;let mut result = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,969075058);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_374744388(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in start_http";
 
@@ -179,5 +205,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::Call(call_1576795673), 1576795673);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3977181471), 3977181471);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4128314446), 4128314446);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2869286636), 2869286636);
     mgr.regist_fun_meta(FnMeta::CallArg(call_374744388), 374744388);
 }
