@@ -5,13 +5,35 @@ use std::env::{current_exe};
 
 use json::JsonValue;
 use pi_lib::bon::{Decode, Encode, WriteBuffer, ReadBuffer};
+use pi_lib::atom::Atom;
 
 pub struct Depend{
-    root: String,
-	file_map: HashMap<String, RcFileDes>,
+    pub root: String,
+	pub file_map: HashMap<String, RcFileDes>,
 }
 
 impl Depend{
+    pub fn new_sample(list: Vec<FileDes>) -> Depend{
+        let mut file_map = HashMap::new();
+        for v in list{
+            file_map.insert(v.path.clone(), Rc::new(RefCell::new(v)));
+        }
+        let ce = match current_exe() {
+            Ok(p) => p,
+            Err(s) => panic!("current_exe err:{:?}", s),
+        };
+
+        file_map.insert("evn.js".to_string(), Rc::new(RefCell::new(new_path_filedes("evn.js"))));
+        file_map.insert("core.js".to_string(), Rc::new(RefCell::new(new_path_filedes("core.js"))));
+        file_map.insert("first.js".to_string(), Rc::new(RefCell::new(new_path_filedes("first.js"))));
+        file_map.insert("next.js".to_string(), Rc::new(RefCell::new(new_path_filedes("next.js"))));
+        file_map.insert("last.js".to_string(), Rc::new(RefCell::new(new_path_filedes("last.js"))));
+        Depend{
+            file_map,
+            root: String::from("")
+        }
+    }
+    
 	pub fn new(list: Vec<FileDes>, root: String) -> Depend{
 		let mut file_map = HashMap::new();
         let ce = match current_exe() {
@@ -80,6 +102,31 @@ impl Depend{
         let mut p_chain = Vec::new();
         self.depend_temp(paths, &mut temp, &mut set, &mut p_chain);
         set
+    }
+
+    //计算js文件的依赖
+    pub fn file_depend(&self, path: &str) -> Vec<Atom>{
+        let mut f = self.get(path);
+        let mut arr = Vec::new();
+        if f.is_some(){
+            let f = f.unwrap();
+            let f_ref = f.borrow();
+            if f_ref.depend.is_some(){
+                let depend = f_ref.depend.as_ref().unwrap();
+                let js_depend = depend.get("js");
+                if js_depend.is_some(){
+                    let depend = js_depend.unwrap();
+                    for v in depend{
+                        arr.push(Atom::from(Built::relative_path(&(v.clone() + ".js"), path)));
+                    }
+                }
+            }
+        }else{
+            if !(path == "seq.js"){
+                panic!("依赖列表中不存在该文件{}", path);
+            }
+        }
+        arr
     }
 
     fn depend_temp(&self, paths: &[String], temp:&mut HashMap<String, bool>, set: &mut Vec<RcFileDes>, p_chain: &mut Vec<String>){

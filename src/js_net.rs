@@ -115,7 +115,7 @@ impl Handler for NetHandler {
             //env
 			ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
             //nobj
-            nobjs.to_json(&vm);
+            nobjs.to_map(&vm);
 			4
 		});
 		gray.factory.call(0, self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " rpc task"));
@@ -179,7 +179,7 @@ impl Handler for TopicHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
-            nobjs.to_json(&vm);
+            nobjs.to_map(&vm);
             vm.new_u32(env.get_id() as u32);
 			6
 		});
@@ -190,9 +190,9 @@ impl Handler for TopicHandler {
 
 impl TopicHandler {
 	//构建一个处理器
-	pub fn new(gray: JSGray) -> Self {
+	pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
 		TopicHandler {
-			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))) ,
+			gray_tab: gray.clone()
 		}
 	}
 }
@@ -258,6 +258,10 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
 
 pub fn clone_server_node(node: &ServerNode) -> ServerNode{
     node.clone()
+}
+
+pub fn clone_rpc_server(server: &RPCServer) -> RPCServer{
+    server.clone()
 }
 
 pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool, can_subscribe: bool) -> Result<bool, String> {

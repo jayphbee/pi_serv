@@ -39,6 +39,15 @@ pub fn read_file_list(path: &PathBuf) -> Vec<FileDes>{
 	parse_file_list(content)
 }
 
+pub fn read_file_map(path: &PathBuf) -> HashMap<Atom, FileDes>{
+    let mut map = HashMap::new();
+    let list = read_file_list(path);
+    for v in list.into_iter(){
+        map.insert(Atom::from(v.path.as_str()), v);
+    }
+	map
+}
+
 pub fn parse_file_list(s: &str) -> Vec<FileDes>{
 	let r = parse(s).expect(format!("???????????????json parse err, json:{}--", s).as_str());
 	match r {
@@ -82,13 +91,15 @@ pub fn store_depend(mgr: &Mgr, arr: &Vec<FileDes>){
     match tr.alter(&Atom::from("memory"), &Atom::from("_$depend"), Some(Arc::new(TabMeta::new(EnumType::Str, EnumType::Bin))), Arc::new(move |_r: SResult<()>|{})) {
         Some(Ok(_)) => {
             encode_depend(&tr1, arr);
+            tr.prepare(Arc::new(move |_r: SResult<()>|{}));
+            tr.commit(Arc::new(move |_r: SResult<()>|{}));
         },
         _ => panic!("create_depend fail"),
     };
 }
 
 //从mgr中读depend
-pub fn read_depend(mgr: &Mgr) -> HashMap<String, FileDes>{
+pub fn read_depend(mgr: &Mgr) -> HashMap<Atom, FileDes>{
     let mut map = HashMap::new();
     let tr = mgr.transaction(false);
     let mut it = tr.iter(&Atom::from("memory"), &Atom::from("_$depend"), None, false, None, Arc::new(|_|{})).unwrap().expect("");
@@ -100,7 +111,7 @@ pub fn read_depend(mgr: &Mgr) -> HashMap<String, FileDes>{
                     Some(v) => {
                         let mut bb = ReadBuffer::new(v.1.as_slice(), 0);
                         let file_des = FileDes::decode(&mut bb);
-                        map.insert(file_des.path.clone(), file_des);
+                        map.insert(Atom::from(file_des.path.as_str()), file_des);
                     },
                     None => break,
                 };
