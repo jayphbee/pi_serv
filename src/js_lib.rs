@@ -75,7 +75,7 @@ impl Nobjs {
 
     pub fn get_depend(&self) -> Vec<String>{
         let mut arr = Vec::new();
-        for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
+        for Entry(_, obj) in Iter::iter(&self.nobjs, None, false){
             let name = obj.path.as_str();
             let index = match name.find("."){
                 Some(v) => v,

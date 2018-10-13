@@ -13,6 +13,7 @@ use pi_lib::atom::Atom;
 use pi_lib::sinfo::{EnumType};
 use pi_lib::bon::{WriteBuffer, Encode};
 use util::store_depend;
+use pi_base::util::now_millisecond;
 
 use depend::{Depend, FileDes};
 use jsloader::Loader;
@@ -21,7 +22,10 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
     let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
     mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
 
+    let t1 = now_millisecond();
     store_depend(&mgr, &file_list);
+    let t = now_millisecond();
+    println!("init_js store_depend----------------------------------{}", t - t1);
 
     let dp = Depend::new(file_list, root.clone());
     let mut dir_c = Vec::from(dirs);
@@ -33,9 +37,6 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
     let global_code = bind_global(&mgr, &js);//插入全局变量定义函数的字节码
     let file_map = code_store(&mgr, file_map, &js);//插入其他所有js代码的字节码
     js.load(&global_code);//加载全局变量定义函数的字节码
-
-    let tr = mgr.transaction(true);
-    println!("list-------------------------{:?}", tr.list(&Atom::from("memory")));
 
     let list: Vec<String> = Loader::list(dirs, &dp);//列出目录下的所有文件
     let mut list_c = Vec::new();
@@ -54,16 +55,16 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
             list_b.push(e);
         }
     }
-    //list_c.push(start_path);
     list_c.extend_from_slice(&list_a);
     list_c.extend_from_slice(&list_b);
     list_c.extend_from_slice(&list_i);
-    push_pre(&mut list_c);
 
-    let list = Loader::list_with_depend(&list_c, &dp);
+    let mut list = Loader::list_with_depend(&list_c, &dp);
+
+    push_pre(&mut list);
     {
-        let path = String::from(list[0].borrow().path.as_ref());//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
-        let u8arr = file_map.get(&path).unwrap().as_slice();
+        let path = &list[0];//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
+        let u8arr = file_map.get(path).unwrap().as_slice();
         js.load(u8arr);
         //调用全局变量定义函数， 定义全局变量_$mgr
         js.get_js_function("_$defineGlobal".to_string());
@@ -86,11 +87,10 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
         js.call(2);
     }
     for i in 1..list.len(){
-        let des = &list[i];
-        let path = String::from(des.borrow().path.as_ref());
+        let path = &list[i];
         //println!("des:{}", &path);
         if path.ends_with(".js"){
-            let u8arr = file_map.get(&path).unwrap().as_slice();
+            let u8arr = file_map.get(path).unwrap().as_slice();
             js.load(u8arr);
             loop{
                 if js.is_ran(){
@@ -100,11 +100,6 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
             }
         }
     }
-
-    // let code_number = add_line_number(&js_code);
-    // println!("{}", &js_code);
-
-    // let bytes = js.compile("init_js".to_string(), js_code).unwrap();
     
     println!("vm:meta运行成功！!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
@@ -120,6 +115,7 @@ pub fn create_code_tab(mgr: &Mgr){
 
 //将代码存入数据库，因为是内存数据库， 暂时没有关心异步插入的情况，后面会改 
 pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<String, Arc<Vec<u8>>>{
+    let t1 = now_millisecond();
     let ware = Atom::from("memory");
     let tab = Atom::from("_$code");
     let mut items = Vec::new();
@@ -140,10 +136,14 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
         items.push(item);
         m.insert(key.clone(), code.clone());
     }
+    let t = now_millisecond();
+    println!("code_store compile----------------------------------{}", t - t1);
     let tr = mgr.transaction(true);
     tr.modify(items, None, false, Arc::new(|_r: SResult<()>|{}));
     tr.prepare(Arc::new(|_x|{}));
     tr.commit(Arc::new(|_x|{}));
+    let t1 = now_millisecond();
+    println!("code_store store----------------------------------{}", t1 - t);
     m
 }
 
@@ -189,7 +189,6 @@ pub fn compeil_global(js: &JS) -> Vec<u8>{
         self[name] = value;
         console.log(value);
     }"#;
-    let key = String::from("_$define_global.js");
     let code = js.compile("_$define_global.js".to_string(), jscode.to_string()).unwrap();
     return code;
 }

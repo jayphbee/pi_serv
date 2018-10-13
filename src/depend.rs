@@ -6,6 +6,7 @@ use std::env::{current_exe};
 use json::JsonValue;
 use pi_lib::bon::{Decode, Encode, WriteBuffer, ReadBuffer};
 use pi_lib::atom::Atom;
+//use pi_base::util::now_millisecond;
 
 pub struct Depend{
     pub root: String,
@@ -18,10 +19,6 @@ impl Depend{
         for v in list{
             file_map.insert(v.path.clone(), Rc::new(RefCell::new(v)));
         }
-        let ce = match current_exe() {
-            Ok(p) => p,
-            Err(s) => panic!("current_exe err:{:?}", s),
-        };
 
         file_map.insert("evn.js".to_string(), Rc::new(RefCell::new(new_path_filedes("evn.js"))));
         file_map.insert("core.js".to_string(), Rc::new(RefCell::new(new_path_filedes("core.js"))));
@@ -36,10 +33,6 @@ impl Depend{
     
 	pub fn new(list: Vec<FileDes>, root: String) -> Depend{
 		let mut file_map = HashMap::new();
-        let ce = match current_exe() {
-            Ok(p) => p,
-            Err(s) => panic!("current_exe err:{:?}", s),
-        };
 
         file_map.insert("evn.js".to_string(), Rc::new(RefCell::new(new_path_filedes("evn.js"))));
         file_map.insert("core.js".to_string(), Rc::new(RefCell::new(new_path_filedes("core.js"))));
@@ -95,18 +88,19 @@ impl Depend{
         }
 	}
 
-    pub fn depend(&self, paths: &[String]) -> Vec<RcFileDes>{
-        let mut set: Vec<RcFileDes> = Vec::new();
-        let mut temp: HashMap<String, bool> = HashMap::new();
+    pub fn depend(&self, paths: Vec<String>) -> Vec<String>{
+        //let t = now_millisecond();
+        let mut set: Vec<String> = Vec::new();
+        let mut temp = HashMap::new();
 
-        let mut p_chain = Vec::new();
-        self.depend_temp(paths, &mut temp, &mut set, &mut p_chain);
+        self.depend_temp(paths, &mut temp, &mut set);
+        //println!("depend----------------------------------{}", now_millisecond() - t);
         set
     }
 
     //计算js文件的依赖
     pub fn file_depend(&self, path: &str) -> Vec<Atom>{
-        let mut f = self.get(path);
+        let f = self.get(path);
         let mut arr = Vec::new();
         if f.is_some(){
             let f = f.unwrap();
@@ -129,23 +123,14 @@ impl Depend{
         arr
     }
 
-    fn depend_temp(&self, paths: &[String], temp:&mut HashMap<String, bool>, set: &mut Vec<RcFileDes>, p_chain: &mut Vec<String>){
-        let gd = |f: RcFileDes, arr: &mut Vec<RcFileDes>, temp: &mut HashMap<String, bool>|{
-            if temp.contains_key(&String::from(f.borrow().path.as_ref())){
-                return;
-            }
-            arr.push(f.clone());
-            temp.insert(String::from(f.borrow().path.as_ref()), true);
-        };
-        //println!("--------------------------");
-        for i in 0..paths.len(){
-            let path = paths[i].as_str();
+    fn depend_temp(&self, paths: Vec<String>, temp:&mut HashMap<String, ()>, set: &mut Vec<String>){
+        for path in paths{
             //println!("path:{}", path);
-            if is_exist(p_chain, path){
+            if temp.contains_key(&path){
                 continue;
             }
-            p_chain.push(String::from(path));
-            let mut f = self.get(path);
+            temp.insert(path.clone(), ());
+            let f = self.get(&path);
             if f.is_some(){
                 let f = f.unwrap().clone();
                 let f_ref = f.borrow();
@@ -154,21 +139,17 @@ impl Depend{
                     let js_depend = depend.get("js");
                     if js_depend.is_some(){
                         let depend = js_depend.unwrap();
-                        let depend_path: Vec<String> = depend.iter().map(|e|{Built::relative_path(&(e.clone() + ".js"), path)}).collect();
-                        //println!("depend_temp---------------------{:?}, {:?}, {}", depend_path, depend, path);
-                        self.depend_temp(depend_path.as_slice(), temp, set, p_chain); 
+                        let depend_path: Vec<String> = depend.iter().map(|e|{Built::relative_path(&(e.clone() + ".js"), &path)}).collect();
+                        self.depend_temp(depend_path, temp, set); 
                     }
                 }
-
-                gd(f.clone(), set, temp);
+                set.push(path);
             }else{
-                if !(paths[i] == "seq.js"){
-                    panic!("依赖列表中不存在该文件{}", paths[i]);
+                if !(path == "seq.js"){
+                    panic!("依赖列表中不存在该文件{}", path);
                 }
                 
             }
-            let l = p_chain.len();
-            p_chain.remove(l - 1);
         }
     }
 
@@ -372,11 +353,6 @@ fn un_jvalue(o: Option<JsonValue>) -> JsonValue{
 pub struct Built;
 impl Built{
 	pub fn relative_path(file_path: &str, dir: &str) -> String {
-        // if file_path.find("vm").is_some(){
-        //     println!("file_path:{}, {}", file_path, dir);
-        // }
-        // println!("file_path:{}", file_path);
-        // println!("dir:{}", dir);
 		if !file_path.starts_with("./") && !file_path.starts_with("../"){
 			return String::from(file_path);
 		}
@@ -412,14 +388,6 @@ impl Built{
         }else{
             Built::join(dv.as_slice(), "/")
         };
-
-        // if file_path.find("vm").is_some(){
-        //     println!("file_path:{}, {}, {}, {}, {}", file_path, dir, dv.len(), fv.len(), r);
-        // }
-        // let x = ;
-        // println!("fv:{:?}", &fv);
-        
-
 		return r;
 	}
 
@@ -438,15 +406,6 @@ impl Built{
 	
 }
 
-fn is_exist(v: &Vec<String>, s: &str) -> bool{
-    for vv in v.iter(){
-        if vv == s{
-            return true
-        }
-    }
-    false
-}
-
 fn new_path_filedes(path: &str) -> FileDes{
     FileDes{
         path: String::from(path),
@@ -458,27 +417,6 @@ fn new_path_filedes(path: &str) -> FileDes{
     }
 }
 
-// impl BonCode for FileDes {
-// 	fn bon_encode(&self, bb: &mut BonBuffer, next: fn(&mut BonBuffer,  &Self)){
-// 		let mut buf = BonBuffer::new();
-// 		buf.write_utf8(self.path);
-// 		buf.write_utf8(self.sign);
-// 		buf.write_u64(self.time);
-// 		buf.write_u64(self.size);
-// 		buf.write_utf8(self.path);
-// 		let next = fn(){
-// 			let bc: Struct = new meta.construct();
-// 			bc.binDecode(bb, getAllReadNext(mgr));
-// 		}
-// 		buf.write_container::<FileDes>(&(self.depend), fn())
-// 		<T: BonCode>(&mut self, o: &T, write_next: fn(&mut BonBuffer,  &T), estimated_size: Option<usize>) 
-// 	}
-// 	fn bon_decode(&mut self, bb: &BonBuffer, next: fn(&BonBuffer,  &u32) -> Self){
-
-// 	};
-// }
-
-	
 #[test]
 fn from_jvalue(){
 	use json::parse;

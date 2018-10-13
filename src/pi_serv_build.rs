@@ -194,7 +194,7 @@ fn call_2153620660(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = jstype_ptr(&jst1, js.clone(), 730519735, true, param_error).expect("");
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_vm::pi_vm_impl::VMFactory) };
 
-
+    println!("ccccccccccccccccccccccccccccccccccccccccccccccc{}",v.len());
     let result = js_db::JSDBMonitor::new(jst0,jst1);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1495847839);
 

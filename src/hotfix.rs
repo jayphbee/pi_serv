@@ -1,6 +1,4 @@
 use std::sync::{Arc, Mutex, RwLock, MutexGuard};
-use std::rc::{Rc};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::thread;
@@ -20,6 +18,7 @@ use pi_base::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent
 use pi_db::mgr::Mgr;
 use pi_db::db::{TabKV, SResult};
 use pi_lib::gray::GrayTab;
+//use pi_base::util::now_millisecond;
 
 use depend::{Depend, FileDes};
 use init_js::{push_pre, compeil_global};
@@ -70,13 +69,12 @@ impl GrayMgr {
             dependent: dependent,
             nobjs: nobjs.clone()
         }
+        
     }
 
     pub fn update_gray(&mut self, key: &str, mgr: &Mgr, factor: VMFactory) -> bool{
-        //println!("update_gray----------------------------------------{}", key);
         match self.map.get(&Atom::from(key)) {
             Some(v) => {
-                //println!("update_gray some----------------------------------------");
                 let mut v = v.write().unwrap();
                 let (name, nobjs) = {
                     let last = v.get_last();
@@ -115,7 +113,7 @@ impl GrayMgr {
         }
     }
 
-    pub fn remove_gray(&self, version: usize) -> bool {
+    pub fn remove_gray(&self, _version: usize) -> bool {
         true
     }
 
@@ -207,7 +205,7 @@ fn depend_change(gray_mgr: Arc<Mutex<GrayMgr>>, path: PathBuf, list_u: &[String]
     start_vm(list_c, diff_list_all, &new_mgr, &old_mgr,new_depend, gray_mgr_lock);
 }
 
-fn start_vm(mut list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mgr: &Mgr, old_mgr: &Mgr, depend: Depend, gray_mgr: MutexGuard<GrayMgr>) {
+fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mgr: &Mgr, old_mgr: &Mgr, depend: Depend, gray_mgr: MutexGuard<GrayMgr>) {
     let js = JS::new(0x100, Arc::new(NativeObjsAuth::new(None, None))).unwrap();
     let global_code = compeil_global(&js);//插入全局变量定义函数的字节码
     js.load(&global_code);//加载全局变量定义函数的字节码
@@ -215,14 +213,14 @@ fn start_vm(mut list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, ne
     let mut list = nobjs.get_depend();
     let nobjs_len = Loader::list_with_depend(&list, &depend).len();
     list.extend_from_slice(&list_c);
+    let mut list = Loader::list_with_depend(&list, &depend);
     push_pre(&mut list);
-    let list = Loader::list_with_depend(&list, &depend);
     
 
     let file_map = read_code(new_mgr, &list);
     //"evn.js", "core.js", "first.js", "next.js", nobjs的依赖
     for i in 0..4 + nobjs_len{
-        let path = String::from(list[i].borrow().path.as_ref());
+        let path = &list[i];
         //println!("path-------------------------------------{}", path);
         let u8arr = file_map.get(&Atom::from(path.clone())).unwrap().as_slice(); 
         js.load(u8arr);
@@ -297,8 +295,7 @@ fn start_vm(mut list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, ne
         js.call(2);
     }
     for i in 2..list.len(){
-        let des = &list[i];
-        let path = String::from(des.borrow().path.as_ref());
+        let path = &list[i];
         //println!("des:{}", &path);
         if path.ends_with(".js"){
             let u8arr = file_map.get(&Atom::from(path.clone())).unwrap().as_slice();
@@ -493,23 +490,23 @@ fn modify_gray_mgr(gray_mgr: &mut GrayMgr, mgr: &Mgr, diff: &HashMap<Atom, FileE
     }
 }
 
-fn read_code(mgr: &Mgr, files: &Vec<Rc<RefCell<FileDes>>>) -> HashMap<Atom, Arc<Vec<u8>>>{
+fn read_code(mgr: &Mgr, files: &Vec<String>) -> HashMap<Atom, Arc<Vec<u8>>>{
     let ware = Atom::from("memory");
     let tab = Atom::from("_$code");
     let mut file_map = HashMap::new();
     let mut arr = Vec::new();
     for v in files{
         let mut bb = WriteBuffer::new();
-        v.borrow().path.encode(&mut bb);
+        v.encode(&mut bb);
         arr.push(TabKV{ware: ware.clone(), tab: tab.clone(), key: Arc::new(bb.unwrap()), value: None, index: 0});
     }
     let tr = mgr.transaction(false);
-    let r = tr.query(arr, None, false, Arc::new(|r: SResult<Vec<TabKV>>|{})).unwrap();
+    let r = tr.query(arr, None, false, Arc::new(|_r: SResult<Vec<TabKV>>|{})).unwrap();
     match r {
         Ok(r) => {
             let mut i = 0;
             for v in r.into_iter(){
-                file_map.insert(Atom::from(files[i].borrow().path.as_str()),v.value.unwrap());
+                file_map.insert(Atom::from(files[i].as_str()),v.value.unwrap());
                 i += 1;
             }
         },
