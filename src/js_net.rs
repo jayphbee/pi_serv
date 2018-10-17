@@ -183,7 +183,6 @@ impl Handler for TopicHandler {
             vm.new_u32(env.get_id() as u32);
 			6
 		});
-
 		gray.factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 	}
 }

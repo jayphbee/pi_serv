@@ -3,10 +3,12 @@ use depend::{Depend, RcFileDes};
 use std::path::Path;
 use std::fs::read;
 
+//use pi_base::util::now_millisecond;
+
 pub struct Loader;
 
 impl Loader {
-	pub fn list_with_depend(dirs: &[String], dp: &Depend) -> Vec<RcFileDes>{
+	pub fn list_with_depend(dirs: &[String], dp: &Depend) -> Vec<String>{
 		let mut mod_names: Vec<String> = Vec::new();
 		for dir in dirs.iter(){
 			//let dir = &dp.get_path(&dir);
@@ -18,19 +20,19 @@ impl Loader {
 			Loader::list_dir(f.unwrap(), &mut mod_names);
 		}
 
-		dp.depend(mod_names.as_slice())
+		let r = dp.depend(mod_names);
+        r
 	}
 
 	pub fn load_dir<F>(dirs: &[String], dp: &Depend, mut success: F)where F: FnMut(HashMap<String, Vec<u8>>){
 		let file_list = Loader::list_with_depend(dirs, dp);
 		let mut file_map: HashMap<String,Vec<u8>> = HashMap::new();
-		for v in file_list.iter(){
-            let p = v.borrow().path.clone();
-			let path = dp.get_path(&p);
+		for v in file_list.into_iter(){
+			let path = dp.get_path(&v);
 			let r = read(Path::new(&path));
 			let data = r.expect((String::from("文件不存在！,path:") + &path).as_str());
 			//file_map.insert(p, modify_code(&path, data));
-            file_map.insert(p, data);
+            file_map.insert(v, data);
 		}
 		success(file_map);
 	}
@@ -38,14 +40,15 @@ impl Loader {
 	pub fn load_dir_sync(dirs: &[String], dp: &Depend) -> HashMap<String, Vec<u8>>{
 		let file_list = Loader::list_with_depend(dirs, dp);
 		let mut file_map: HashMap<String, Vec<u8>> = HashMap::new();
-		for v in file_list.iter(){
-             let p = v.borrow().path.clone();
-			let path = dp.get_path(&p);
+		for v in file_list.into_iter(){
+			let path = dp.get_path(&v);
             //println!("----------p:{}, path:{}", &p, &path);
-			let r = read(Path::new(&path));
-			let data = r.expect((String::from("文件不存在！,path:") + &path).as_str());
-			//file_map.insert(p, modify_code(&path, data));
-            file_map.insert(p, data);
+            if path.ends_with(".js") {
+                let r = read(Path::new(&path));
+                let data = r.expect((String::from("文件不存在！,path:") + &path).as_str());
+                //file_map.insert(p, modify_code(&path, data));
+                file_map.insert(v, data);
+            }
 		}
 		file_map
 	}
@@ -119,29 +122,4 @@ impl Loader {
 			},
 		}
 	}
-}
-
-// 构建时，路径不包含根路径， 应该替换掉
-fn modify_code(path: &str, mut code: Vec<u8>) -> Vec<u8> {
-    if path.ends_with(".js"){
-        let point_i = path.rfind(".");
-        if code.len() > 10 {
-            if is_replace(&String::from_utf8_lossy(&code[0..9])){
-                let end = code.iter().position(|&x| {x == 44}).unwrap() - 1;
-                let p = &path[0..point_i.unwrap()];
-                code.splice(10..end, p.as_bytes().iter().cloned());
-                return code;
-            }
-        }
-        
-    }
-    code
-}
-
-fn is_replace(s: &str) -> bool{
-    if s == "_$define("{
-        return true;
-    }else{
-        return false;
-    }
 }

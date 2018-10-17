@@ -10,10 +10,8 @@ use pi_db::memery_db::{DB};
 use pi_db::db::{TabKV, Iter, Ware, Bin, TabMeta};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
-//use pi_store::db::{DB as FileDB};
 use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
 use pi_lib::atom::Atom;
-use pi_lib::sinfo::{EnumType, StructInfo, EnumInfo};
 use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
@@ -21,6 +19,7 @@ use pi_vm::bonmgr::{ptr_jstype};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
+//use pi_base::util::now_millisecond;
 //use pi_vm::adapter::dukc_top;
 
 use js_util::{decode_by_type, decode_by_tabkv};
@@ -421,7 +420,7 @@ pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox
     }
 
     if !Path::new(&file).exists(){
-        fs::File::create(&file);
+        fs::File::create(&file).expect("");
     }
     db_restore(mgr, Atom::from(ware), Atom::from(tab), Atom::from(file.clone()), cb);
 }
@@ -439,7 +438,7 @@ pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox
 */
 pub struct JSDBMonitor {
     handler: Atom, //处理函数名称（js函数）
-    factory:Arc<VMFactory>
+    factory:Arc<VMFactory>,
 }
 
 pub fn register_db_js_db_monitor(mgr: &Mgr, monitor: JSDBMonitor){
@@ -449,6 +448,9 @@ pub fn register_db_js_db_monitor(mgr: &Mgr, monitor: JSDBMonitor){
 impl Monitor for JSDBMonitor{
     fn notify(&self, e: Event, mgr: Mgr){
         //否则，将该事件投递到mqtt TODO
+        if e.ware.as_str() != "file" {
+            return;
+        }
         match &e.other {
             &EventType::Tab{key: ref k, value: ref v} => {
                 let k = k.clone();

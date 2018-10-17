@@ -2,30 +2,21 @@ use std::sync::{Arc, Mutex};
 use std::ops::Deref;
 use std::boxed::FnBox;
 use std::sync::atomic::{AtomicIsize};
-use std::collections::HashMap;
-use std::fs::{read, File};
-use std::path::PathBuf;
-use std::io::Read;
 
 use rand::rngs::OsRng;
 use rand::RngCore;
 
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
 use pi_vm::adapter::{JSType, JS};
-use pi_vm::bonmgr::{BON_MGR, ptr_jstype, NativeObjsAuth};
+use pi_vm::bonmgr::{BON_MGR};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::StructInfo;
-use pi_lib::bon::{ReadBuffer, Decode, WriteBuffer, Encode};
+use pi_lib::bon::{ReadBuffer, Decode};
 use pi_base::timer::TIMER;
-use pi_base::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
-use pi_db::mgr::Mgr;
-use pi_db::db::{TabKV};
 
 use js_async::AsyncRequestHandler;
-use depend::{Depend, FileDes};
+use depend::{Depend};
 use init_js::push_pre;
-use util::{read_file_list, read_depend, read_file_str};
-use js_lib::Nobjs;
 
 lazy_static! {
 	pub static ref IS_END: Arc<Mutex<(bool,bool)>> = Arc::new(Mutex::new((false, false)));
@@ -67,11 +58,10 @@ pub fn box_new<T>(v: T) -> Box<T>{
 
 //getdepend
 pub fn get_depend(dp: &Depend, path: &[String]) -> Vec<String> {
-    let d = dp.depend(path);
+    let d = dp.depend(Vec::from(path));
     let mut arr = Vec::new();
     let mut arr1 = Vec::new();
-    for v in d.into_iter(){
-        let path = v.borrow().path.clone();
+    for path in d.into_iter(){
         if path.ends_with(".s.js"){
             arr.push(path);
         }else {
