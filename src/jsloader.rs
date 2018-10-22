@@ -15,7 +15,7 @@ impl Loader {
             //println!("list_with_depend----------------------------{}", dir);
 			let f = dp.get(dir);
 			if f.is_none() {
-				panic!("找不到文件：{}", dir);
+				panic!("找不到文件或目录：{}", dp.get_path(dir));
 			}
 			Loader::list_dir(f.unwrap(), &mut mod_names);
 		}
