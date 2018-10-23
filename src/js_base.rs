@@ -12,7 +12,7 @@ use pi_vm::bonmgr::{BON_MGR};
 use pi_lib::atom::Atom;
 use pi_lib::sinfo::StructInfo;
 use pi_lib::bon::{ReadBuffer, Decode};
-use pi_base::timer::TIMER;
+use pi_lib::timer::{TIMER, FuncRuner};
 
 use js_async::AsyncRequestHandler;
 use depend::{Depend};
@@ -75,16 +75,16 @@ pub fn get_depend(dp: &Depend, path: &[String]) -> Vec<String> {
 
 //休眠
 pub fn sleep(ms: u32, f: Box<FnBox()>){
-	TIMER.set_timeout(f, ms);
+	TIMER.set_timeout(FuncRuner::new(f), ms);
 }
 
 pub struct AtomIndex(Arc<AtomicUsize>);
 pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> AtomIndex{
-	AtomIndex(TIMER.set_timeout(f, ms))
+	AtomIndex(TIMER.set_timeout(FuncRuner::new(f), ms))
 }
 
 pub fn clear_timeout(index: AtomIndex){
-	TIMER.cancel(index.0);
+	TIMER.cancel(&index.0);
 }
 
 pub struct Rand(OsRng);

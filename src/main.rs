@@ -72,7 +72,7 @@ use clap::{Arg, App};
 use pi_base::util::now_millisecond;
 use pi_base::worker_pool::WorkerPool;
 use pi_base::pi_base_impl::{JS_TASK_POOL, STORE_TASK_POOL, EXT_TASK_POOL};
-use pi_base::timer::TIMER;
+use pi_lib::timer::TIMER;
 
 use init_js::{init_js};
 use js_base::IS_END;
