@@ -24,3 +24,4 @@ rpc = { path = "../pi_net/rpc" }
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
 pi_p2p = { path = "../pi_p2p" }
+pi_store = { path = "../pi_store" }

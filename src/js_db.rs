@@ -16,6 +16,7 @@ use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype};
+//use pi_store::db::{DB as FileDB};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
@@ -345,7 +346,6 @@ pub fn register_db_to_mqtt_monitor(mgr: &Mgr, monitor: DBToMqttMonitor){
 
 impl Monitor for DBToMqttMonitor{
     fn notify(&self, e: Event, _mgr: Mgr){
-        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
         //如果名单中没有对应的库和表， 忽略该事件
         match self.cfg.get(&e.ware) {
             Some(tabs) => {
@@ -356,6 +356,8 @@ impl Monitor for DBToMqttMonitor{
             },
             None => return,
         }
+
+        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
 
         //否则，将该事件投递到mqtt TODO
         match &e.other {

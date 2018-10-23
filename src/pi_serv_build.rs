@@ -8,6 +8,7 @@ use std::mem::{transmute, uninitialized};
 use pi_vm;
 use mqtt;
 use pi_db;
+//use pi_store;
 use pi_db::mgr::Monitor;
 use pi_lib;
 use std::sync::RwLock;
@@ -194,7 +195,7 @@ fn call_2153620660(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = jstype_ptr(&jst1, js.clone(), 730519735, true, param_error).expect("");
 	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_vm::pi_vm_impl::VMFactory) };
 
-    println!("ccccccccccccccccccccccccccccccccccccccccccccccc{}",v.len());
+
     let result = js_db::JSDBMonitor::new(jst0,jst1);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1495847839);
 
@@ -321,6 +322,30 @@ fn call_1905006775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
+
+
+// fn call_3038249291(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+// 	let param_error = "param error in register_file_db";
+
+// 	let jst0 = &v[0];
+//     let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+// 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+// 	let jst1 = &v[1];
+// 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+// 	let jst1 = jst1.get_str();
+
+
+// 	let jst2 = &v[2];
+//     let ptr = jstype_ptr(&jst2, js.clone(), 4204700632, true, param_error).expect("");
+// 	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_store::db::DB) };
+
+
+//     let result = js_db::register_file_db(jst0,jst1,jst2);let mut result = js.new_boolean(result);
+
+//     Some(CallResult::Ok)
+// }
 
 
 fn call_2097131752(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
@@ -2355,6 +2380,10 @@ fn drop_1237457629(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::memery_db::DB) };
 }
 
+// fn drop_4204700632(ptr: usize){
+//     unsafe { Box::from_raw(ptr as *mut pi_store::db::DB) };
+// }
+
 fn drop_4000136370(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::db::TabKV) };
 }
@@ -2498,6 +2527,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
+    //mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::db::DB"), drop_fn: drop_4204700632}, 4204700632);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
@@ -2539,6 +2569,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1967373661_sync), 1967373661);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1420275781), 1420275781);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1905006775), 1905006775);
+    //mgr.regist_fun_meta(FnMeta::CallArg(call_3038249291), 3038249291);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2097131752), 2097131752);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1247562096), 1247562096);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1579404380), 1579404380);

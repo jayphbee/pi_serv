@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::ops::Deref;
 use std::boxed::FnBox;
-use std::sync::atomic::{AtomicIsize};
+use std::sync::atomic::{AtomicUsize};
 
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -78,7 +78,7 @@ pub fn sleep(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(f, ms);
 }
 
-pub struct AtomIndex(Arc<AtomicIsize>);
+pub struct AtomIndex(Arc<AtomicUsize>);
 pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> AtomIndex{
 	AtomIndex(TIMER.set_timeout(f, ms))
 }
