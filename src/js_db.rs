@@ -10,7 +10,7 @@ use pi_db::memery_db::{DB};
 use pi_db::db::{TabKV, Iter, Ware, Bin, TabMeta};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
-use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer};
+use pi_lib::bon::{Decode, Encode, ReadBuffer, WriteBuffer, ReadBonErr};
 use pi_lib::atom::Atom;
 use pi_math::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
@@ -181,7 +181,13 @@ pub fn tabkv_get_value(tabkv: &TabKV) -> Option<Arc<Vec<u8>>> {
 //插入元信息
 pub fn alter(tr: &Tr, ware: String, tab: String, meta_buf: Option<&[u8]>, cb: Arc<Fn(Result<(), String>)>) -> Option<Result<(), String>>{
     let meta = match meta_buf {
-        Some(buf) => Some(Arc::new(TabMeta::decode(&mut ReadBuffer::new(buf, 0)))),
+        Some(buf) => {
+            let r = match TabMeta::decode(&mut ReadBuffer::new(buf, 0)) {
+                Ok(o) => o,
+                Err(e) => return Some(Err(e.to_string())),
+            };
+            Some(Arc::new(r))
+        },
         None => None,
     };
     let r = tr.alter(&Atom::from(ware), &Atom::from(tab), meta, cb);
@@ -322,6 +328,11 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
     }
 }
 
+// 表的大小
+pub fn tab_size(tr: &Tr, ware_name:&str, tab_name: &str, cb: Arc<Fn(Result<usize, String>)>) -> Option<Result<usize, String>> {
+    tr.tab_size(&Atom::from(ware_name), &Atom::from(tab_name), cb)
+}
+
 //数据库监听器
 pub struct DBToMqttMonitor{
     cfg: HashMap<Atom, HashMap<Atom, bool>>,
@@ -329,13 +340,13 @@ pub struct DBToMqttMonitor{
 }
 
 impl DBToMqttMonitor{
-    pub fn new(mqtt_server: &ServerNode, cfg: &[u8]) -> DBToMqttMonitor{
-        let r = HashMap::decode(&mut ReadBuffer::new(cfg, 0));
+    pub fn new(mqtt_server: &ServerNode, cfg: &[u8]) -> Result<DBToMqttMonitor, ReadBonErr>{
+        let r = HashMap::decode(&mut ReadBuffer::new(cfg, 0))?;
         println!("new DBToMqttMonitor----------------{:?}", &r);
-        DBToMqttMonitor{
+        Ok(DBToMqttMonitor{
             cfg:r,
             mqtt_server: mqtt_server.clone()
-        }
+        })
     }
 }
 

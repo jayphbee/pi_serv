@@ -17,15 +17,16 @@ use pi_lib::timer::{TIMER, FuncRuner};
 use js_async::AsyncRequestHandler;
 use depend::{Depend};
 use init_js::push_pre;
+use pi_lib::bon::ReadBonErr;
 
 lazy_static! {
 	pub static ref IS_END: Arc<Mutex<(bool,bool)>> = Arc::new(Mutex::new((false, false)));
 }
 
 //创建一个Arc<StructInfo>
-pub fn create_sinfo(data: &[u8]) -> Arc<StructInfo>{
+pub fn create_sinfo(data: &[u8]) -> Result<Arc<StructInfo>, ReadBonErr>{
 	let mut buf = ReadBuffer::new(data, 0);
-	Arc::new(StructInfo::decode(&mut buf))
+	Ok(Arc::new(StructInfo::decode(&mut buf)?))
 }
 //clone vm工厂（VMFactory没有显示实现clone方法， 无法导出， 需要封装）
 pub fn clone_vm_factory(factory: &VMFactory) -> VMFactory{

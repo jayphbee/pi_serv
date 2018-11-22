@@ -67,10 +67,15 @@ fn drop_730519735(ptr: usize){
 fn drop_2886438122(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>) };
 }
+
+fn drop_3720506907(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_vm::channel_map::VMChannel) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_vm::bonmgr::NativeObjsAuth>"), drop_fn: drop_510245560}, 510245560);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::channel_map::VMChannel"), drop_fn: drop_3720506907}, 3720506907);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2222376158), 2222376158);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1487978276), 1487978276);
     mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);

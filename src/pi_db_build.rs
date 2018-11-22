@@ -417,6 +417,14 @@ fn drop_1754972364(ptr: usize){
 fn drop_2202214327(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Vec<pi_db::db::TabKV>) };
 }
+
+fn drop_18210791(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_db::db::TabMeta) };
+}
+
+fn drop_4000136370(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_db::db::TabKV) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::guid::GuidGen"), drop_fn: drop_1706731228}, 1706731228);
@@ -425,6 +433,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>"), drop_fn: drop_2202214327}, 2202214327);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabMeta"), drop_fn: drop_18210791}, 18210791);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_fun_meta(FnMeta::Call(call_3651801454), 3651801454);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4081023775), 4081023775);
     mgr.regist_fun_meta(FnMeta::CallArg(call_258785726), 258785726);

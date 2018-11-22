@@ -7,10 +7,9 @@ use pi_lib::atom::Atom;
 use std::mem::{transmute, uninitialized};
 use pi_vm;
 use mqtt;
-use pi_db;
-//use pi_store;
-use pi_db::mgr::Monitor;
 use pi_lib;
+use pi_db;
+use pi_db::mgr::Monitor;
 use std::sync::RwLock;
 use httpc;
 use rpc;
@@ -152,9 +151,15 @@ fn call_1993779671(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 
-    let result = js_db::DBToMqttMonitor::new(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2627601653);
+    let result = js_db::DBToMqttMonitor::new(jst0,jst1);let mut result = match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,2627601653);
 
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v.to_string() + "Result is Err"));
+        }
+    };
 
     Some(CallResult::Ok)
 }
@@ -322,30 +327,6 @@ fn call_1905006775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     Some(CallResult::Ok)
 }
-
-
-// fn call_3038249291(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-// 	let param_error = "param error in register_file_db";
-
-// 	let jst0 = &v[0];
-//     let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
-// 	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
-
-
-// 	let jst1 = &v[1];
-// 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-// 	let jst1 = jst1.get_str();
-
-
-// 	let jst2 = &v[2];
-//     let ptr = jstype_ptr(&jst2, js.clone(), 4204700632, true, param_error).expect("");
-// 	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_store::db::DB) };
-
-
-//     let result = js_db::register_file_db(jst0,jst1,jst2);let mut result = js.new_boolean(result);
-
-//     Some(CallResult::Ok)
-// }
 
 
 fn call_2097131752(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
@@ -604,6 +585,54 @@ fn call_583163851_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2986122496_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+	let param_error = "param error in tab_size";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = &jst2.get_str();
+
+    let jscopy = js.clone();
+	let call_back = move |r: Result<usize,String>| {let mut r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let mut r = js.new_u32(r as u32);
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
+        Err(v) => { 
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            return;
+        }
+    };
+
+    };
+    let r = js_db::tab_size(jst0,jst1,jst2,Arc::new(call_back));
+	if r.is_some(){
+        let r = r.unwrap();let mut r = match r{
+        Ok(r) => { let mut r = js.new_u32(r as u32);
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+        return Some(CallResult::Ok);
+    }
+	None
+}
+
+
 fn call_1869880364(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in register_db_to_mqtt_monitor";
 
@@ -751,9 +780,15 @@ fn call_1347190475(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 
-    let result = js_base::create_sinfo(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1721307497);
+    let result = js_base::create_sinfo(jst0);let mut result = match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,1721307497);
 
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v.to_string() + "Result is Err"));
+        }
+    };
 
     Some(CallResult::Ok)
 }
@@ -2380,10 +2415,6 @@ fn drop_1237457629(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::memery_db::DB) };
 }
 
-// fn drop_4204700632(ptr: usize){
-//     unsafe { Box::from_raw(ptr as *mut pi_store::db::DB) };
-// }
-
 fn drop_4000136370(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::db::TabKV) };
 }
@@ -2527,7 +2558,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
-    //mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::db::DB"), drop_fn: drop_4204700632}, 4204700632);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
@@ -2569,13 +2599,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1967373661_sync), 1967373661);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1420275781), 1420275781);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1905006775), 1905006775);
-    //mgr.regist_fun_meta(FnMeta::CallArg(call_3038249291), 3038249291);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2097131752), 2097131752);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1247562096), 1247562096);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1579404380), 1579404380);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2680255887_sync), 2680255887);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2725879080_sync), 2725879080);
     mgr.regist_fun_meta(FnMeta::CallArg(call_583163851_sync), 583163851);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2986122496_sync), 2986122496);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1869880364), 1869880364);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4281318477_sync), 4281318477);
     mgr.regist_fun_meta(FnMeta::CallArg(call_479322726_sync), 479322726);
