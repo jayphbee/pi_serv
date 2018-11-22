@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::env::{current_exe};
 
 use json::JsonValue;
-use pi_lib::bon::{Decode, Encode, WriteBuffer, ReadBuffer};
+use pi_lib::bon::{Decode, Encode, WriteBuffer, ReadBuffer, ReadBonErr};
 use pi_lib::atom::Atom;
 //use pi_base::util::now_millisecond;
 
@@ -315,31 +315,31 @@ impl Encode for FileDes {
 }
 
 impl Decode for FileDes {
-    fn decode(bb: &mut ReadBuffer) -> FileDes{
-        let path = String::decode(bb);
-        let sign = <(Option<String>)>::decode(bb);
-        let time = <(Option<u64>)>::decode(bb);
-        let size = u64::decode(bb);
-        let depend = <(Option<HashMap<String, Vec<String>>>)>::decode(bb);
+    fn decode(bb: &mut ReadBuffer) -> Result<FileDes, ReadBonErr>{
+        let path = String::decode(bb)?;
+        let sign = <(Option<String>)>::decode(bb)?;
+        let time = <(Option<u64>)>::decode(bb)?;
+        let size = u64::decode(bb)?;
+        let depend = <(Option<HashMap<String, Vec<String>>>)>::decode(bb)?;
         let children;
-        if bb.is_nil() {
+        if bb.is_nil()? {
             children = None;
         }else{
             let mut map = HashMap::new();
-            let count = usize::decode(bb);
+            let count = usize::decode(bb)?;
             for _ in 0..count{
-                map.insert(String::decode(bb), Rc::new(RefCell::new(FileDes::decode(bb))));
+                map.insert(String::decode(bb)?, Rc::new(RefCell::new(FileDes::decode(bb)?)));
             }
             children = Some(map);
         }
-        FileDes{
+        Ok(FileDes{
             path,
             sign,
             time,
             size,
             depend,
             children,
-        }
+        })
     }
 }
 

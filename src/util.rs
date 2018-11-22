@@ -110,7 +110,7 @@ pub fn read_depend(mgr: &Mgr) -> HashMap<Atom, FileDes>{
                 match temp {
                     Some(v) => {
                         let mut bb = ReadBuffer::new(v.1.as_slice(), 0);
-                        let file_des = FileDes::decode(&mut bb);
+                        let file_des = FileDes::decode(&mut bb).unwrap();
                         map.insert(Atom::from(file_des.path.as_str()), file_des);
                     },
                     None => break,
