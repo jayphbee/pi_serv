@@ -78,6 +78,12 @@ use init_js::{init_js};
 use js_base::IS_END;
 use util::{read_file_list};
 
+#[cfg(any(unix))]
+use std::alloc::Sytem;
+#[cfg(any(unix))]
+#[global_allocator]
+static GLOBAL: System = System;
+
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
 						.version("1.0")
