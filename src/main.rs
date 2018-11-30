@@ -79,7 +79,7 @@ use js_base::IS_END;
 use util::{read_file_list};
 
 #[cfg(any(unix))]
-use std::alloc::Sytem;
+use std::alloc::System;
 #[cfg(any(unix))]
 #[global_allocator]
 static GLOBAL: System = System;
