@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::mem::transmute_copy;
 
 use pi_vm::adapter::{JSType, JS};
-use pi_lib::sinfo::{StructInfo, EnumType, EnumInfo};
-use pi_lib::util::err_map;
-use pi_lib::bon::{ReadBuffer, Decode};
+use sinfo::{StructInfo, EnumType, EnumInfo};
+use lib_util::err_map;
+use bon::{ReadBuffer, Decode};
 use pi_db::db::{TabKV, TabMeta};
 
 pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -> Result<JSType, String> {

@@ -8,12 +8,12 @@ use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_db::mgr::{Mgr};
 use pi_db::memery_db::DB;
 use pi_db::db::{SResult, TabKV, TabMeta};
-use pi_lib::guid::{GuidGen};
-use pi_lib::atom::Atom;
-use pi_lib::sinfo::{EnumType};
-use pi_lib::bon::{WriteBuffer, Encode};
+use guid::{GuidGen};
+use atom::Atom;
+use sinfo::{EnumType};
+use bon::{WriteBuffer, Encode};
 use util::store_depend;
-use pi_base::util::now_millisecond;
+use lib_util::now_millisecond;
 
 use depend::{Depend, FileDes};
 use jsloader::Loader;

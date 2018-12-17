@@ -1,10 +1,11 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
-use pi_base::task::TaskType;
+use worker::task::TaskType;
 use pi_vm::pi_vm_impl::{block_reply, block_throw};
 use std::sync::Arc;
-use pi_lib::atom::Atom;
-use pi_lib;
+use atom::Atom;
+use guid;
+use atom;
 use pi_db;
 
 
@@ -23,8 +24,8 @@ fn call_4081023775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1706731228, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut pi_lib::guid::GuidGen) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 1736136244, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut guid::GuidGen) };
 
 
     let result = pi_db::mgr::Mgr::new(jst0);
@@ -44,13 +45,13 @@ fn call_258785726(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, false, param_error).expect("");
-	let jst1 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const atom::Atom) };
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 1411051473, false, param_error).expect("");
-	let jst2 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst2, js.clone(), 913748025, false, param_error).expect("");
+	let jst2 = unsafe { &*(ptr as *const atom::Atom) };
 
 
     let result = pi_db::mgr::Mgr::tab_info(jst0,jst1,jst2);let mut result = match result{
@@ -340,13 +341,13 @@ fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, false, param_error).expect("");
-	let jst1 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const atom::Atom) };
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 1411051473, false, param_error).expect("");
-	let jst2 = unsafe { &*(ptr as *const pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst2, js.clone(), 913748025, false, param_error).expect("");
+	let jst2 = unsafe { &*(ptr as *const atom::Atom) };
 
 
 	let jst3 = &v[3];
@@ -394,16 +395,16 @@ fn drop_1237457629(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::memery_db::DB) };
 }
 
-fn drop_1706731228(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_lib::guid::GuidGen) };
+fn drop_1736136244(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut guid::GuidGen) };
 }
 
 fn drop_2976191628(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Mgr) };
 }
 
-fn drop_1411051473(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+fn drop_913748025(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 }
 
 fn drop_4164638564(ptr: usize){
@@ -427,9 +428,9 @@ fn drop_4000136370(ptr: usize){
 }
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::guid::GuidGen"), drop_fn: drop_1706731228}, 1706731228);
+    mgr.regist_struct_meta(StructMeta{name:String::from("guid::GuidGen"), drop_fn: drop_1736136244}, 1736136244);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr"), drop_fn: drop_2976191628}, 2976191628);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>"), drop_fn: drop_2202214327}, 2202214327);

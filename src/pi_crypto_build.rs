@@ -2,7 +2,7 @@ use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResul
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
 use std::mem::transmute;
-use pi_math;
+use hash_value;
 use std::ops::Drop;
 use pi_crypto;
 
@@ -24,7 +24,7 @@ fn call_266558349(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::ed25519::exchange(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
 
 
     Some(CallResult::Ok)
@@ -43,11 +43,11 @@ fn call_2282179587(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = pi_crypto::ed25519::keypair(jst0);
 	let array = js.new_array();
     let mut result_elem = result.0;
-    let ptr = Box::into_raw(Box::new(result_elem)) as usize;let mut result_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
+    let ptr = Box::into_raw(Box::new(result_elem)) as usize;let mut result_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,3223866506);
 
 js.set_index(&array, 0, &mut result_elem);
     let mut result_elem = result.1;
-    let ptr = Box::into_raw(Box::new(result_elem)) as usize;let mut result_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result_elem)) as usize;let mut result_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
 
 js.set_index(&array, 1, &mut result_elem);
 
@@ -71,7 +71,7 @@ fn call_1005885597(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::ed25519::sign(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2521161042);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3223866506);
 
 
     Some(CallResult::Ok)
@@ -115,7 +115,7 @@ fn call_1476345609(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::hash::ripemd160(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1176882760);
 
 
     Some(CallResult::Ok)
@@ -132,7 +132,7 @@ fn call_2108893530(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::hash::keccak256(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
 
 
     Some(CallResult::Ok)
@@ -149,7 +149,7 @@ fn call_842379557(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::hash::dhash160(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3995272273);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1176882760);
 
 
     Some(CallResult::Ok)
@@ -166,7 +166,7 @@ fn call_1125159944(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::hash::dhash256(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,526967798);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
 
 
     Some(CallResult::Ok)
@@ -214,7 +214,7 @@ fn call_235181891(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::hash::checksum(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3974239134);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3383104515);
 
 
     Some(CallResult::Ok)
@@ -1286,20 +1286,20 @@ fn call_2084703123(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
-fn drop_526967798(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H256) };
+fn drop_1035403249(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut hash_value::H256) };
 }
 
-fn drop_2521161042(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H512) };
+fn drop_3223866506(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut hash_value::H512) };
 }
 
-fn drop_3995272273(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H160) };
+fn drop_1176882760(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut hash_value::H160) };
 }
 
-fn drop_3974239134(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_math::hash::H32) };
+fn drop_3383104515(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut hash_value::H32) };
 }
 
 fn drop_1875205449(ptr: usize){
@@ -1346,10 +1346,10 @@ fn drop_2886438122(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>) };
 }
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H256"), drop_fn: drop_526967798}, 526967798);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H512"), drop_fn: drop_2521161042}, 2521161042);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H160"), drop_fn: drop_3995272273}, 3995272273);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_math::hash::H32"), drop_fn: drop_3974239134}, 3974239134);
+    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H256"), drop_fn: drop_1035403249}, 1035403249);
+    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H512"), drop_fn: drop_3223866506}, 3223866506);
+    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H160"), drop_fn: drop_1176882760}, 1176882760);
+    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H32"), drop_fn: drop_3383104515}, 3383104515);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsIdVec"), drop_fn: drop_1875205449}, 1875205449);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecKeyVec"), drop_fn: drop_2934268916}, 2934268916);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPubKeyVec"), drop_fn: drop_3840517932}, 3840517932);

@@ -4,10 +4,10 @@ use pi_vm::adapter::{JS, JSType};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
-use pi_lib::atom::Atom;
-use pi_lib::gray::{Gray, GrayTab};
-use pi_lib::sbtree::{Tree};
-use pi_lib::ordmap::{Entry, ImOrdMap, Iter};
+use atom::Atom;
+use gray::{Gray, GrayTab};
+use ordmap::sbtree::{Tree};
+use ordmap::ordmap::{Entry, ImOrdMap, Iter};
 
 //NativeObject, 灰度系统需要使用
 #[derive(Clone, Debug)]

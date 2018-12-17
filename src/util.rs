@@ -9,9 +9,9 @@ use std::collections::HashMap;
 
 use pi_db::mgr::{Mgr, Tr};
 use pi_db::db::{SResult, TabKV, TabMeta};
-use pi_lib::atom::Atom;
-use pi_lib::bon::{WriteBuffer, Encode, ReadBuffer, Decode};
-use pi_lib::sinfo::{EnumType};
+use atom::Atom;
+use bon::{WriteBuffer, Encode, ReadBuffer, Decode};
+use sinfo::{EnumType};
 
 use depend::FileDes;
 

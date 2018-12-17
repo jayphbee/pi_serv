@@ -7,9 +7,9 @@ use mqtt3;
 
 use pi_vm::adapter::{JS};
 use pi_vm::bonmgr::{ptr_jstype};
-use pi_lib::handler::{Args, Handler};
-use pi_lib::gray::{GrayVersion, GrayTab};
-use pi_lib::atom::Atom;
+use handler::{Args, Handler};
+use gray::{GrayVersion, GrayTab};
+use atom::Atom;
 use pi_p2p::manage::P2PManage;
 use rpc::traits::RPCServerTraits;
 use rpc::server::RPCServer;
