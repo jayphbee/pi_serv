@@ -1,8 +1,8 @@
 use std::sync::{Arc, RwLock};
 
-use pi_lib::atom::Atom;
-use pi_lib::handler::{Handler, Args};
-use pi_lib::gray::{ GrayVersion, GrayTab};
+use atom::Atom;
+use handler::{Handler, Args};
+use gray::{ GrayVersion, GrayTab};
 use pi_vm::bonmgr::{BonMgr, FnMeta, jstype_ptr, CallResult};
 use pi_vm::channel_map::VMChannel;
 use pi_vm::pi_vm_impl::async_request;

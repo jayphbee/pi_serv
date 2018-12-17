@@ -5,7 +5,7 @@ use std::io;
 
 use httpc;
 use httpc::SharedHttpc;
-use pi_lib::atom::Atom;
+use atom::Atom;
 
 /*
 * http客户端选项

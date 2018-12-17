@@ -4,8 +4,8 @@ use std::cell::RefCell;
 use std::env::{current_exe};
 
 use json::JsonValue;
-use pi_lib::bon::{Decode, Encode, WriteBuffer, ReadBuffer, ReadBonErr};
-use pi_lib::atom::Atom;
+use bon::{Decode, Encode, WriteBuffer, ReadBuffer, ReadBonErr};
+use atom::Atom;
 //use pi_base::util::now_millisecond;
 
 pub struct Depend{

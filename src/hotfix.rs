@@ -11,13 +11,13 @@ use fnv::FnvHashMap;
 use pi_vm::pi_vm_impl::{VMFactory};
 use pi_vm::adapter::{JS, JSType};
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
-use pi_lib::atom::Atom;
+use atom::Atom;
 
-use pi_lib::bon::{WriteBuffer, Encode};
-use pi_base::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
+use bon::{WriteBuffer, Encode};
+use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
 use pi_db::mgr::Mgr;
 use pi_db::db::{TabKV, SResult};
-use pi_lib::gray::GrayTab;
+use gray::GrayTab;
 //use pi_base::util::now_millisecond;
 
 use depend::{Depend, FileDes};

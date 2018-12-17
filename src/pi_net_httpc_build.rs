@@ -1,7 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
-use pi_lib;
+use atom;
 use std::io::Result;
 use httpc::SharedHttpc;
 use httpc;
@@ -17,13 +17,13 @@ fn call_3526501959(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 1411051473, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst2, js.clone(), 913748025, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
     let result = httpc::HttpClient::add_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
@@ -41,8 +41,8 @@ fn call_2025875773(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
     let result = httpc::HttpClient::remove_header(jst0,jst1);let mut result = js.new_u32(result as u32);
@@ -88,7 +88,7 @@ fn call_3576683825(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = httpc::HttpClient::headers_keys(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2108096905);
 
  v}
         None => js.new_null()
@@ -107,13 +107,13 @@ fn call_2476662030(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
     let result = httpc::HttpClient::get_header(jst0,jst1);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2108096905);
 
  v}
         None => js.new_null()
@@ -132,7 +132,7 @@ fn call_3825034130(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = httpc::HttpClientResponse::url(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,913748025);
 
 
     Some(CallResult::Ok)
@@ -247,7 +247,7 @@ fn call_484341674(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = httpc::HttpClientResponse::status_info(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,1411051473);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,913748025);
 
  v}
         None => js.new_null()
@@ -281,7 +281,7 @@ fn call_1258454971(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = httpc::HttpClientResponse::headers_keys(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2108096905);
 
  v}
         None => js.new_null()
@@ -300,13 +300,13 @@ fn call_2914686338(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
     let result = httpc::HttpClientResponse::get_header(jst0,jst1);let mut result = match result{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,3367212459);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2108096905);
 
  v}
         None => js.new_null()
@@ -362,16 +362,16 @@ fn drop_1107924793(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<httpc::HttpClient>) };
 }
 
-fn drop_1411051473(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+fn drop_913748025(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 }
 
 fn drop_1867977966(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut httpc::HttpClient) };
 }
 
-fn drop_3367212459(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<pi_lib::atom::Atom>) };
+fn drop_2108096905(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<atom::Atom>) };
 }
 
 fn drop_606449873(ptr: usize){
@@ -383,9 +383,9 @@ fn drop_104530634(ptr: usize){
 }
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<httpc::HttpClient>"), drop_fn: drop_1107924793}, 1107924793);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_struct_meta(StructMeta{name:String::from("httpc::HttpClient"), drop_fn: drop_1867977966}, 1867977966);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_lib::atom::Atom>"), drop_fn: drop_3367212459}, 3367212459);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<atom::Atom>"), drop_fn: drop_2108096905}, 2108096905);
     mgr.regist_struct_meta(StructMeta{name:String::from("httpc::HttpClientResponse"), drop_fn: drop_606449873}, 606449873);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3526501959), 3526501959);

@@ -1,7 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
-use pi_lib;
+use atom;
 use https;
 
 
@@ -151,8 +151,8 @@ fn call_374744388(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1411051473, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 
 
 	let jst2 = &v[2];
@@ -190,15 +190,15 @@ fn drop_969075058(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::mount::Mount) };
 }
 
-fn drop_1411051473(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_lib::atom::Atom) };
+fn drop_913748025(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
 }
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("https::upload::FileUpload"), drop_fn: drop_3578700762}, 3578700762);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::file::StaticFile"), drop_fn: drop_369829824}, 369829824);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::files::StaticFileBatch"), drop_fn: drop_2592534340}, 2592534340);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::mount::Mount"), drop_fn: drop_969075058}, 969075058);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_lib::atom::Atom"), drop_fn: drop_1411051473}, 1411051473);
+    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_fun_meta(FnMeta::CallArg(call_170528392), 170528392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3779679042), 3779679042);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3011830990), 3011830990);

@@ -9,15 +9,15 @@ use rand::RngCore;
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::bonmgr::{BON_MGR};
-use pi_lib::atom::Atom;
-use pi_lib::sinfo::StructInfo;
-use pi_lib::bon::{ReadBuffer, Decode};
-use pi_lib::timer::{TIMER, FuncRuner};
+use atom::Atom;
+use sinfo::StructInfo;
+use bon::{ReadBuffer, Decode};
+use timer::{TIMER, FuncRuner};
 
 use js_async::AsyncRequestHandler;
 use depend::{Depend};
 use init_js::push_pre;
-use pi_lib::bon::ReadBonErr;
+use bon::ReadBonErr;
 
 lazy_static! {
 	pub static ref IS_END: Arc<Mutex<(bool,bool)>> = Arc::new(Mutex::new((false, false)));
@@ -79,13 +79,12 @@ pub fn sleep(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(FuncRuner::new(f), ms);
 }
 
-pub struct AtomIndex(Arc<AtomicUsize>);
-pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> AtomIndex{
-	AtomIndex(TIMER.set_timeout(FuncRuner::new(f), ms))
+pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> usize{
+	TIMER.set_timeout(FuncRuner::new(f), ms)
 }
 
-pub fn clear_timeout(index: AtomIndex){
-	TIMER.cancel(&index.0);
+pub fn clear_timeout(index: usize){
+	TIMER.cancel(index);
 }
 
 pub struct Rand(OsRng);
