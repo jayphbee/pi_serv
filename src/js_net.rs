@@ -284,6 +284,13 @@ pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool
     } 
 }
 
+pub fn unset_mqtt_topic(server_node: &ServerNode, topic: String) -> Result<(), String> {
+    match server_node.unset_topic_meta(Atom::from(topic)) {
+        Ok(r) => Ok(r),
+        Err(r) => Err(r.to_string()),
+    }
+}
+
 pub enum QoS{
     AtMostOnce = 0,
     AtLeastOnce = 1,

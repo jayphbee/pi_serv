@@ -1982,6 +1982,32 @@ fn call_2482429183(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2867121613(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in unset_mqtt_topic";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_str();
+
+
+    let result = js_net::unset_mqtt_topic(jst0,jst1);let mut result = match result{
+        Ok(r) => { 
+	let array = js.new_array();    let mut r = array;
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1551231400(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_publish";
 
@@ -2657,6 +2683,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2248917003), 2248917003);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3695051784), 3695051784);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2482429183), 2482429183);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2867121613), 2867121613);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1551231400), 1551231400);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2874114884), 2874114884);
     mgr.regist_fun_meta(FnMeta::CallArg(call_138660483), 138660483);
