@@ -5,6 +5,7 @@ use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype, BON_MGR};
 use pi_db::mgr::Mgr;
 use atom::Atom;
+use guid::GuidGen;
 use gray::{Gray, GrayTab};
 use ordmap::sbtree::{Tree};
 use ordmap::ordmap::{Entry, ImOrdMap, Iter};
@@ -147,4 +148,9 @@ impl Gray for JSGray {}
 
 pub fn create_gray_tab(gray: JSGray) -> Arc<RwLock<GrayTab<JSGray>>>{
     Arc::new(RwLock::new(GrayTab::new(gray)))
+}
+
+pub fn guid_gen(guid: &GuidGen, ctrl_id: u16) -> u128 {
+    guid.gen(ctrl_id).0
 } 
+

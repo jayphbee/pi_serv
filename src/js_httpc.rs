@@ -134,24 +134,22 @@ pub fn create_http_client(options: HttpClientOptions) -> Result<Arc<httpc::HttpC
     }
 }
 
-pub fn get<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox((Arc<httpc::HttpClient>, Result<httpc::HttpClientResponse, String>))>){
+pub fn get<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
     let c = Box::new(|c: Arc<httpc::HttpClient>, r: io::Result<httpc::HttpClientResponse>|{
-        let r = match  r {
-            Ok(v) => Ok(v),
-            Err(e) => Err(e.to_string()),
-        };
-        callback((c, r));
+        match  r {
+            Ok(v) => callback(Ok((c, v))),
+            Err(e) => callback(Err(e.to_string())),
+        }
     });
     httpc::HttpClient::get(client, url, body.0, c);
 }
 
-pub fn post<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox((Arc<httpc::HttpClient>, Result<httpc::HttpClientResponse, String>))>){
+pub fn post<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
     let c = Box::new(|c: Arc<httpc::HttpClient>, r: io::Result<httpc::HttpClientResponse>|{
-        let r = match  r {
-            Ok(v) => Ok(v),
-            Err(r) => Err(r.to_string()),
-        };
-        callback((c, r));
+        match  r {
+            Ok(v) => callback(Ok((c, v))),
+            Err(e) => callback(Err(e.to_string())),
+        }
     });
     httpc::HttpClient::post(client, url, body.0, c);
 }

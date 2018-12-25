@@ -13,6 +13,7 @@ use pi_db::mgr::Monitor;
 use sinfo;
 use gray;
 use std::sync::RwLock;
+use guid;
 use atom;
 use httpc;
 use handler;
@@ -1190,6 +1191,24 @@ fn call_3635855143(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3557646357(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in guid_gen";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1736136244, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const guid::GuidGen) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u16();
+
+
+    let result = js_lib::guid_gen(jst0,jst1);let mut result = js.new_str(result.to_string()); 
+    Some(CallResult::Ok)
+}
+
+
 fn call_373179692(js: Arc<JS>) -> Option<CallResult>{
 
     let result = js_httpc::HttpClientOptions::default();
@@ -1615,6 +1634,52 @@ fn call_997239765(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2282211344_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+	let param_error = "param error in get";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1107924793, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 4139279264, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<Vec<u8>>) };
+
+    let jscopy = js.clone();
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {let mut r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
+	let array = js.new_array();
+    let mut r_elem = r.0;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
+
+js.set_index(&array, 0, &mut r_elem);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
+        Err(v) => { 
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            return;
+        }
+    };
+
+    };
+    js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
+	None
+}
+
+
 fn call_739596726_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let param_error = "param error in get";
@@ -1635,22 +1700,22 @@ fn call_739596726_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: (Arc<httpc::HttpClient>,Result<httpc::HttpClientResponse,String>)| {
-		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
 	let array = js.new_array();
     let mut r_elem = r.0;
     let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
 
 js.set_index(&array, 0, &mut r_elem);
-    let mut r_elem = r.1;let mut r_elem = match r_elem{
-        Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
 
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
         Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
-js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
             1
         } ), Atom::from(""));
@@ -1658,6 +1723,52 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
     js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
 	Some(CallResult::Ok)
+}
+
+
+fn call_4177861558_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+	let param_error = "param error in get";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1107924793, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 3642917301, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+    let jscopy = js.clone();
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {let mut r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
+	let array = js.new_array();
+    let mut r_elem = r.0;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
+
+js.set_index(&array, 0, &mut r_elem);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
+        Err(v) => { 
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            return;
+        }
+    };
+
+    };
+    js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
+	None
 }
 
 
@@ -1681,22 +1792,22 @@ fn call_2173630691_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: (Arc<httpc::HttpClient>,Result<httpc::HttpClientResponse,String>)| {
-		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
 	let array = js.new_array();
     let mut r_elem = r.0;
     let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
 
 js.set_index(&array, 0, &mut r_elem);
-    let mut r_elem = r.1;let mut r_elem = match r_elem{
-        Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
 
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
         Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
-js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
             1
         } ), Atom::from(""));
@@ -1704,6 +1815,52 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
     js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
 	Some(CallResult::Ok)
+}
+
+
+fn call_3729751590_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+	let param_error = "param error in post";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1107924793, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 4139279264, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<Vec<u8>>) };
+
+    let jscopy = js.clone();
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {let mut r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
+	let array = js.new_array();
+    let mut r_elem = r.0;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
+
+js.set_index(&array, 0, &mut r_elem);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
+        Err(v) => { 
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            return;
+        }
+    };
+
+    };
+    js_httpc::post(jst0,jst1,jst2,Box::new(call_back));
+	None
 }
 
 
@@ -1727,22 +1884,22 @@ fn call_1358301807_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: (Arc<httpc::HttpClient>,Result<httpc::HttpClientResponse,String>)| {
-		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
 	let array = js.new_array();
     let mut r_elem = r.0;
     let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
 
 js.set_index(&array, 0, &mut r_elem);
-    let mut r_elem = r.1;let mut r_elem = match r_elem{
-        Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
 
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
         Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
-js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
             1
         } ), Atom::from(""));
@@ -1750,6 +1907,52 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
     js_httpc::post(jst0,jst1,jst2,Box::new(call_back));
 	Some(CallResult::Ok)
+}
+
+
+fn call_2383978915_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+	let param_error = "param error in post";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1107924793, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 3642917301, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+    let jscopy = js.clone();
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {let mut r = match r{
+        Ok(r) => {
+            block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
+	let array = js.new_array();
+    let mut r_elem = r.0;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
+
+js.set_index(&array, 0, &mut r_elem);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
+
+            } ), TaskType::Sync, 10, Atom::from(""));
+        }
+        Err(v) => { 
+            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            return;
+        }
+    };
+
+    };
+    js_httpc::post(jst0,jst1,jst2,Box::new(call_back));
+	None
 }
 
 
@@ -1773,22 +1976,22 @@ fn call_3423707807_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: (Arc<httpc::HttpClient>,Result<httpc::HttpClientResponse,String>)| {
-		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {
+	let call_back = move |r: Result<(Arc<httpc::HttpClient>,httpc::HttpClientResponse),String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
 	let array = js.new_array();
     let mut r_elem = r.0;
     let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
 
 js.set_index(&array, 0, &mut r_elem);
-    let mut r_elem = r.1;let mut r_elem = match r_elem{
-        Ok(r) => { 
-    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
+    let mut r_elem = r.1;
+    let ptr = Box::into_raw(Box::new(r_elem)) as usize;let mut r_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,606449873);
 
+js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
         Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
-js.set_index(&array, 1, &mut r_elem);    let mut r = array;
 
             1
         } ), Atom::from(""));
@@ -2491,6 +2694,10 @@ fn drop_3386914360(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<RwLock<gray::GrayTab<js_lib::JSGray>>>) };
 }
 
+fn drop_1736136244(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut guid::GuidGen) };
+}
+
 fn drop_1131624585(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientOptions) };
 }
@@ -2594,6 +2801,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_lib::Nobjs"), drop_fn: drop_1422904849}, 1422904849);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_lib::JSGray"), drop_fn: drop_2566315655}, 2566315655);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<RwLock<gray::GrayTab<js_lib::JSGray>>>"), drop_fn: drop_3386914360}, 3386914360);
+    mgr.regist_struct_meta(StructMeta{name:String::from("guid::GuidGen"), drop_fn: drop_1736136244}, 1736136244);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientOptions"), drop_fn: drop_1131624585}, 1131624585);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<Vec<u8>>"), drop_fn: drop_4139279264}, 4139279264);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<String>"), drop_fn: drop_3642917301}, 3642917301);
@@ -2655,6 +2863,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2697841501), 2697841501);
     mgr.regist_fun_meta(FnMeta::CallArg(call_691063210), 691063210);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3635855143), 3635855143);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3557646357), 3557646357);
     mgr.regist_fun_meta(FnMeta::Call(call_373179692), 373179692);
     mgr.regist_fun_meta(FnMeta::CallArg(call_145125716), 145125716);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2887071833), 2887071833);
@@ -2671,9 +2880,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_965054041), 965054041);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2118843620), 2118843620);
     mgr.regist_fun_meta(FnMeta::CallArg(call_997239765), 997239765);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2282211344_sync), 2282211344);
     mgr.regist_fun_meta(FnMeta::CallArg(call_739596726_async), 739596726);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4177861558_sync), 4177861558);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2173630691_async), 2173630691);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3729751590_sync), 3729751590);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1358301807_async), 1358301807);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2383978915_sync), 2383978915);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3423707807_async), 3423707807);
     mgr.regist_fun_meta(FnMeta::Call(call_545958709), 545958709);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1849109725), 1849109725);
