@@ -35,7 +35,7 @@ extern crate sinfo;
 extern crate hash_value;
 extern crate timer;
 extern crate ordmap;
-//extern crate pi_store;
+extern crate pi_store;
 
 #[macro_use]
 extern crate lazy_static;
@@ -68,7 +68,7 @@ mod pi_vm_build;
 mod pi_p2p_build;
 mod pi_net_httpc_build;
 mod pi_net_https_build;
-//mod pi_store_build;
+mod pi_store_build;
 
 //use std::io::prelude::*;
 use std::thread;
@@ -109,7 +109,7 @@ fn args() -> clap::ArgMatches<'static> {
 							.takes_value(true))
 						.get_matches();
 	matches
-	
+
 }
 
 fn main() {
@@ -144,7 +144,7 @@ fn main() {
 	pi_p2p_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
     pi_net_https_build::register(&BON_MGR);
-    //pi_store_build::register(&BON_MGR);
+    pi_store_build::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();
@@ -152,7 +152,7 @@ fn main() {
     if !dirs[0].ends_with("/"){
         dirs[0] += "/";
     }
-    
+
     let file_list = read_file_list( &Path::new(&(dirs[0].clone() + ".depend")).to_path_buf());
     if dirs.len() == 1{
         init_js(&dirs[0..1], file_list, dirs[0].clone());

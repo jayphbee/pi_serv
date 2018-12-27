@@ -9,6 +9,7 @@ use pi_vm;
 use mqtt;
 use bon;
 use pi_db;
+use pi_store;
 use pi_db::mgr::Monitor;
 use sinfo;
 use gray;
@@ -107,10 +108,24 @@ fn call_2701929727_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &mut *(ptr as *mut js_db::DBIter) };
 
     let jscopy = js.clone();
-	let call_back = move |r: Result<Option<pi_vm::adapter::JSType>,String>| {let mut r = match r{
+	let call_back = move |r: Result<Option<(Arc<Vec<u8>>,Arc<Vec<u8>>,Vec<u8>)>,String>| {let mut r = match r{
         Ok(r) => {
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {let mut r = match r{
-        Some(v) => { let mut v = js.new_undefined(); v}
+        Some(v) => { 
+	let array = js.new_array();
+    let mut v_elem = v.0;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+
+js.set_index(&array, 0, &mut v_elem);
+    let mut v_elem = v.1;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+
+js.set_index(&array, 1, &mut v_elem);
+    let mut v_elem = v.2;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+js.set_index(&array, 2, &mut v_elem);    let mut v = array;
+ v}
         None => js.new_null()
     };
 
@@ -127,7 +142,21 @@ fn call_2701929727_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	if r.is_some(){
         let r = r.unwrap();let mut r = match r{
         Ok(r) => { let mut r = match r{
-        Some(v) => {  v}
+        Some(v) => { 
+	let array = js.new_array();
+    let mut v_elem = v.0;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+
+js.set_index(&array, 0, &mut v_elem);
+    let mut v_elem = v.1;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+
+js.set_index(&array, 1, &mut v_elem);
+    let mut v_elem = v.2;
+    let ptr = Box::into_raw(Box::new(v_elem)) as usize;let mut v_elem = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+js.set_index(&array, 2, &mut v_elem);    let mut v = array;
+ v}
         None => js.new_null()
     };
  r }
@@ -329,6 +358,30 @@ fn call_1905006775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_db::register_memery_db(jst0,jst1,jst2);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3038249291(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_file_db";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 568147534, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_store::lmdb_file::DB) };
+
+
+    let result = js_db::register_file_db(jst0,jst1,jst2);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -2610,8 +2663,8 @@ fn drop_2886438122(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>) };
 }
 
-fn drop_4252329727(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_vm::adapter::JSType) };
+fn drop_104530634(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 }
 
 fn drop_1751456239(ptr: usize){
@@ -2646,8 +2699,16 @@ fn drop_1237457629(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::memery_db::DB) };
 }
 
+fn drop_568147534(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_store::lmdb_file::DB) };
+}
+
 fn drop_4000136370(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::db::TabKV) };
+}
+
+fn drop_4252329727(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_vm::adapter::JSType) };
 }
 
 fn drop_1675843967(ptr: usize){
@@ -2656,10 +2717,6 @@ fn drop_1675843967(ptr: usize){
 
 fn drop_1797798710(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut depend::Depend) };
-}
-
-fn drop_104530634(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 }
 
 fn drop_1846921536(ptr: usize){
@@ -2780,7 +2837,7 @@ fn drop_646865374(ptr: usize){
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::adapter::JSType"), drop_fn: drop_4252329727}, 4252329727);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode"), drop_fn: drop_1751456239}, 1751456239);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBToMqttMonitor"), drop_fn: drop_2627601653}, 2627601653);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::JSDBMonitor"), drop_fn: drop_1495847839}, 1495847839);
@@ -2789,10 +2846,11 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::adapter::JSType"), drop_fn: drop_4252329727}, 4252329727);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_async::AsyncRequestHandler"), drop_fn: drop_259136547}, 259136547);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_async::AsyncRequestHandler>"), drop_fn: drop_374659923}, 374659923);
@@ -2830,6 +2888,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1967373661_sync), 1967373661);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1420275781), 1420275781);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1905006775), 1905006775);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3038249291), 3038249291);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2097131752), 2097131752);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1247562096), 1247562096);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1579404380), 1579404380);

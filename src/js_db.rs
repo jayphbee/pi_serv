@@ -16,7 +16,7 @@ use hash_value::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype};
-//use pi_store::db::{DB as FileDB};
+use pi_store::lmdb_file::{DB as Lmdb};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
@@ -40,30 +40,81 @@ impl DBIter{
         }
     }
 
-    pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<JSType>, String>)>, js: &Arc<JS>) -> Option<Result<Option<JSType>, String>>{
-        let js = js.clone();
-        let js1 = js.clone();
+    // pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<JSType>, String>)>, js: &Arc<JS>) -> Option<Result<Option<JSType>, String>>{
+    //     let js = js.clone();
+    //     let js1 = js.clone();
+    //     let meta = self.1.clone();
+    //     let meta1 = self.1.clone();
+    //     let call_back = move|r: Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>|{
+    //         match r {
+    //             Ok(v) => {
+    //                 match v {
+    //                     Some(value) => {
+    //                         let m = meta.clone();
+    //                         let arr = js.new_array();
+    //                         let mut k = match decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k) {
+    //                             Ok(v) => v,
+    //                             Err(s) => {cb(Err(s)); return;},
+    //                         };
+    //                         js.set_index(&arr, 0, &mut k);
+    //                         let mut v = match decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v) {
+    //                             Ok(v) => v,
+    //                             Err(s) => {cb(Err(s)); return;},
+    //                         };
+    //                         js.set_index(&arr, 1, &mut v);
+    //                         js.set_global_var("_$rust_r".to_string(), arr);
+    //                         cb(Ok(Some(js.new_undefined())));
+    //                     },
+    //                     None => cb(Ok(None)),
+    //                 };
+    //             },
+    //             Err(s) => cb(Err(s)),
+    //         }
+    //     };
+
+    //     match self.0.next(Arc::new(call_back)) {
+    //         Some(v) => {
+    //             match v {
+    //                 Ok(v) => {
+    //                     match v {
+    //                         Some(value) => {
+    //                             let arr = js1.new_array();
+    //                             let mut k = match decode_by_type(&js1, &mut ReadBuffer::new(&value.0, 0) , &meta1.k) {
+    //                                 Ok(v) => v,
+    //                                 Err(s) => return Some(Err(s)),
+    //                             };
+    //                             js1.set_index(&arr, 0, &mut k);
+    //                             let mut v = match decode_by_type(&js1, &mut ReadBuffer::new(&value.1, 0) ,  &meta1.v) {
+    //                                 Ok(v) => v,
+    //                                 Err(s) => return Some(Err(s)),
+    //                             };
+    //                             js1.set_index(&arr, 1, &mut v);
+    //                             Some(Ok(Some(arr)))
+    //                         },
+    //                         None => Some(Ok(None)),
+    //                     }
+    //                 },
+    //                 Err(s) => Some(Err(s)),
+    //             }
+    //         },
+    //         None => None,
+    //     }
+    // }
+
+    pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>, Vec<u8>)>, String>)>, js: &Arc<JS>) -> Option<Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>, Vec<u8>)>, String>> {
         let meta = self.1.clone();
-        let meta1 = self.1.clone();
+        let mut wb = WriteBuffer::new();
+        meta.encode(&mut wb);
+
+        let buf = Arc::new(wb);
+        let buf1 = buf.clone();
+
         let call_back = move|r: Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>|{
             match r {
                 Ok(v) => {
                     match v {
                         Some(value) => {
-                            let m = meta.clone();
-                            let arr = js.new_array();
-                            let mut k = match decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k) {
-                                Ok(v) => v,
-                                Err(s) => {cb(Err(s)); return;},
-                            };
-                            js.set_index(&arr, 0, &mut k);
-                            let mut v = match decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v) {
-                                Ok(v) => v,
-                                Err(s) => {cb(Err(s)); return;},
-                            };
-                            js.set_index(&arr, 1, &mut v);
-                            js.set_global_var("_$rust_r".to_string(), arr);
-                            cb(Ok(Some(js.new_undefined())));
+                            cb(Ok(Some((value.0, value.1, buf.to_vec()))));
                         },
                         None => cb(Ok(None)),
                     };
@@ -77,20 +128,7 @@ impl DBIter{
                 match v {
                     Ok(v) => {
                         match v {
-                            Some(value) => {
-                                let arr = js1.new_array();
-                                let mut k = match decode_by_type(&js1, &mut ReadBuffer::new(&value.0, 0) , &meta1.k) {
-                                    Ok(v) => v,
-                                    Err(s) => return Some(Err(s)),
-                                };
-                                js1.set_index(&arr, 0, &mut k);
-                                let mut v = match decode_by_type(&js1, &mut ReadBuffer::new(&value.1, 0) ,  &meta1.v) {
-                                    Ok(v) => v,
-                                    Err(s) => return Some(Err(s)),
-                                };
-                                js1.set_index(&arr, 1, &mut v);
-                                Some(Ok(Some(arr)))
-                            },
+                            Some(value) => Some(Ok(Some((value.0, value.1, buf1.to_vec())))),
                             None => Some(Ok(None)),
                         }
                     },
@@ -100,7 +138,6 @@ impl DBIter{
             None => None,
         }
     }
-
 }
 
 pub struct DBWare(Arc<Ware>);
@@ -134,7 +171,7 @@ pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descendin
             Err(s) => Some(Err(s)),
         },
         None => None,
-    } 
+    }
 }
 
 pub fn clone_db_mgr(mgr: &Mgr) -> Mgr{
@@ -147,9 +184,9 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-// pub fn register_file_db(mgr: &Mgr, prefix: String, ware: FileDB) -> bool {
-// 	mgr.register(Atom::from(prefix), Arc::new(ware))
-// }
+pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
+    mgr.register(Atom::from(prefix), Arc::new(ware))
+}
 
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {
