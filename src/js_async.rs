@@ -143,7 +143,7 @@ impl Handler for AsyncRequestHandler {
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3366364668);
 			6
 		});
-		gray.factory.call(0, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
+		gray.factory.call(None, Atom::from("_$async"), real_args, Atom::from((*name).to_string() + " rpc task"));
 	}
 }
 

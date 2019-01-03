@@ -6,6 +6,7 @@ use fnv::FnvHashMap;
 use mqtt3;
 
 use pi_vm::adapter::{JS};
+use pi_vm::pi_vm_impl::{remove_queue};
 use pi_vm::bonmgr::{ptr_jstype};
 use handler::{Args, Handler};
 use gray::{GrayVersion, GrayTab};
@@ -90,6 +91,7 @@ impl Handler for NetHandler {
 	type HandleResult = Result<(), String>;
 
 	fn handle(&self, env: Arc<dyn GrayVersion>, event_name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let id = env.get_id();
         let conect_id = match args {
             Args::OneArgs(conect_id) => conect_id,
             _ => return Err(String::from("invalid net event handler args")),
@@ -118,7 +120,7 @@ impl Handler for NetHandler {
             nobjs.to_map(&vm);
 			4
 		});
-		gray.factory.call(0, self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " rpc task"));
+		gray.factory.call(Some(id), self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " rpc task"));
         Ok(())
 	}
 }
@@ -156,6 +158,7 @@ impl Handler for TopicHandler {
 
 	fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
         let gray_tab = self.gray_tab.read().unwrap();
+        let id = env.get_id();
         let gray = match env.get_gray() {
             Some(v) => match gray_tab.get(v) {
                 Some(g) => g,
@@ -180,10 +183,10 @@ impl Handler for TopicHandler {
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
             nobjs.to_map(&vm);
-            vm.new_u32(env.get_id() as u32);
+            vm.new_u32(id as u32);
 			6
 		});
-		gray.factory.call(0, Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+		gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 	}
 }
 
@@ -233,6 +236,7 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
                 let socket1 = socket.clone();
                 let close_handler = close_handler.clone();
                 stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _| {
+                    remove_queue(id);
                     match close_handler.handle(socket1.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
                         Ok(_) => (),
                         Err(s) => {

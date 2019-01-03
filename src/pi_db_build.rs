@@ -101,10 +101,10 @@ fn call_3803008464_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let mut r = array;
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
@@ -141,10 +141,10 @@ fn call_1346774966_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let mut r = array;
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
@@ -181,10 +181,10 @@ fn call_977907218_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let mut r = array;
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
@@ -243,10 +243,10 @@ fn call_1841891766_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,2202214327);
 
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
@@ -305,10 +305,10 @@ fn call_685881041_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let mut r = array;
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
@@ -366,10 +366,10 @@ fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
             block_reply(jscopy.clone(), Box::new(move |js: Arc<JS>| {
 	let array = js.new_array();    let mut r = array;
 
-            } ), TaskType::Sync, 10, Atom::from(""));
+            } ), Atom::from(""));
         }
         Err(v) => { 
-            block_throw(jscopy.clone(), v + ", Result is Err", TaskType::Sync, 10, Atom::from("block throw task"));
+            block_throw(jscopy.clone(), v + ", Result is Err", Atom::from("block throw task"));
             return;
         }
     };
