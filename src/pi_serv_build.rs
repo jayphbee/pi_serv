@@ -20,7 +20,6 @@ use httpc;
 use handler;
 use rpc;
 use std::io::Error;
-use pi_p2p;
 use net;
 use std::sync::Mutex;
 use js_db;
@@ -2065,6 +2064,22 @@ fn call_545958709(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
+fn call_471202658(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u32() as usize;
+
+
+    let result = js_net::TlsNetMgr::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4120821321);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1849109725(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
@@ -2167,6 +2182,95 @@ fn call_3222050891(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_net::net_connect_bind(jst0,jst1,jst2,jst3,jst4);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in mqtt_bind_tls";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 4120821321, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_net::TlsNetMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_str();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_str();
+
+
+	let jst4 = &v[4];
+	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst4 = jst4.get_str();
+
+
+	let jst5 = &v[5];
+	if !jst5.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst5 = jst5.get_u32() as usize;
+
+
+	let jst6 = &v[6];
+	if !jst6.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst6 = jst6.get_u32() as usize;
+
+
+    let result = js_net::mqtt_bind_tls(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1751456239);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2877879633(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in net_connect_bind_tls";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 4120821321, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_net::TlsNetMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_str();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_str();
+
+
+	let jst4 = &v[4];
+	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst4 = jst4.get_str();
+
+
+	let jst5 = &v[5];
+    let ptr = jstype_ptr(&jst5, js.clone(), 1707332364, false, param_error).expect("");
+	let jst5 = unsafe { &*(ptr as *const js_net::NetHandler) };
+
+
+	let jst6 = &v[6];
+    let ptr = jstype_ptr(&jst6, js.clone(), 1707332364, false, param_error).expect("");
+	let jst6 = unsafe { &*(ptr as *const js_net::NetHandler) };
+
+
+    js_net::net_connect_bind_tls(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
     Some(CallResult::Ok)
 }
 
@@ -2387,42 +2491,16 @@ fn call_527952504(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3189305086(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in p2p_manage_new";
-
-	let jst0 = &v[0];
-	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
-
-
-	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 1542823015, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
-
-
-	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 1662444400, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut Vec<u32>) };
-
-
-    let result = js_net::p2p_manage_new(jst0,jst1,jst2);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3035778520);
-
-
-    Some(CallResult::Ok)
-}
-
-
 fn call_3781439120(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in creat_arc_sokect";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 3434008649, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut net::data::Socket) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 1251467163, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut net::api::Socket) };
 
 
     let result = js_net::creat_arc_sokect(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,589055833);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3958719350);
 
 
     Some(CallResult::Ok)
@@ -2783,6 +2861,10 @@ fn drop_2462173101(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::NetMgr) };
 }
 
+fn drop_4120821321(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_net::TlsNetMgr) };
+}
+
 fn drop_1707332364(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::NetHandler) };
 }
@@ -2807,20 +2889,12 @@ fn drop_3776892844(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<js_net::TopicHandler>) };
 }
 
-fn drop_1662444400(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<u32>) };
+fn drop_1251467163(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut net::api::Socket) };
 }
 
-fn drop_3035778520(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_p2p::manage::P2PManage) };
-}
-
-fn drop_3434008649(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut net::data::Socket) };
-}
-
-fn drop_589055833(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<net::data::Socket>) };
+fn drop_3958719350(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<net::api::Socket>) };
 }
 
 fn drop_3355816649(ptr: usize){
@@ -2867,16 +2941,15 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<httpc::HttpClient>"), drop_fn: drop_1107924793}, 1107924793);
     mgr.regist_struct_meta(StructMeta{name:String::from("httpc::HttpClientResponse"), drop_fn: drop_606449873}, 606449873);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetMgr"), drop_fn: drop_2462173101}, 2462173101);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TlsNetMgr"), drop_fn: drop_4120821321}, 4120821321);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetHandler"), drop_fn: drop_1707332364}, 1707332364);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TopicHandler"), drop_fn: drop_15779622}, 15779622);
     mgr.regist_struct_meta(StructMeta{name:String::from("rpc::server::RPCServer"), drop_fn: drop_1285687456}, 1285687456);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::QoS"), drop_fn: drop_2688700187}, 2688700187);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt::session::Session>"), drop_fn: drop_226971089}, 226971089);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_net::TopicHandler>"), drop_fn: drop_3776892844}, 3776892844);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u32>"), drop_fn: drop_1662444400}, 1662444400);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_p2p::manage::P2PManage"), drop_fn: drop_3035778520}, 3035778520);
-    mgr.regist_struct_meta(StructMeta{name:String::from("net::data::Socket"), drop_fn: drop_3434008649}, 3434008649);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<net::data::Socket>"), drop_fn: drop_589055833}, 589055833);
+    mgr.regist_struct_meta(StructMeta{name:String::from("net::api::Socket"), drop_fn: drop_1251467163}, 1251467163);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<net::api::Socket>"), drop_fn: drop_3958719350}, 3958719350);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Mutex<hotfix::GrayMgr>>"), drop_fn: drop_579352454}, 579352454);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgrMutax"), drop_fn: drop_646865374}, 646865374);
@@ -2948,10 +3021,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2383978915_sync), 2383978915);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3423707807_async), 3423707807);
     mgr.regist_fun_meta(FnMeta::Call(call_545958709), 545958709);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_471202658), 471202658);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1849109725), 1849109725);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2637800921), 2637800921);
     mgr.regist_fun_meta(FnMeta::CallArg(call_357009886), 357009886);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3222050891), 3222050891);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3574413612), 3574413612);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2877879633), 2877879633);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2248917003), 2248917003);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3695051784), 3695051784);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2482429183), 2482429183);
@@ -2960,7 +3036,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2874114884), 2874114884);
     mgr.regist_fun_meta(FnMeta::CallArg(call_138660483), 138660483);
     mgr.regist_fun_meta(FnMeta::CallArg(call_527952504), 527952504);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3189305086), 3189305086);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3781439120), 3781439120);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466051911), 466051911);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1942014446), 1942014446);

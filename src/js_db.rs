@@ -523,7 +523,7 @@ impl Monitor for JSDBMonitor{
                     vm.new_object();
                     4
                 });
-                self.factory.call(None, self.handler.clone(), real_args, Atom::from("db_change".to_string() + " rpc task"));
+                self.factory.call(None, self.handler.clone(), real_args, Atom::from("db_change".to_string() + " db task"));
             },
             &EventType::Meta(ref _info) => (),
         }

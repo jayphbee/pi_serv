@@ -174,6 +174,49 @@ fn call_374744388(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_3415190104(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in start_https";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 969075058, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut https::mount::Mount) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u16();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_u32() as usize;
+
+
+	let jst4 = &v[4];
+	if !jst4.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst4 = jst4.get_u32();
+
+
+	let jst5 = &v[5];
+    let ptr = jstype_ptr(&jst5, js.clone(), 913748025, true, param_error).expect("");
+	let jst5 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+	let jst6 = &v[6];
+    let ptr = jstype_ptr(&jst6, js.clone(), 913748025, true, param_error).expect("");
+	let jst6 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+
+
+    https::https_impl::start_https(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
+    Some(CallResult::Ok)
+}
+
 fn drop_3578700762(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::upload::FileUpload) };
 }
@@ -207,4 +250,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_4128314446), 4128314446);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2869286636), 2869286636);
     mgr.regist_fun_meta(FnMeta::CallArg(call_374744388), 374744388);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3415190104), 3415190104);
 }

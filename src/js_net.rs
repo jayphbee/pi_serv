@@ -11,12 +11,15 @@ use pi_vm::bonmgr::{ptr_jstype};
 use handler::{Args, Handler};
 use gray::{GrayVersion, GrayTab};
 use atom::Atom;
-use pi_p2p::manage::P2PManage;
+// use pi_p2p::manage::P2PManage;
 use rpc::traits::RPCServerTraits;
 use rpc::server::RPCServer;
-use net::{Config, Protocol,Stream};
-use net::data::Socket;
-use net::api::NetManager;
+use net::data::{RawSocket, RawStream};
+use net::tls::{TlsSocket, TlsStream, TlsConfig};
+use net::{Config, Protocol};
+use net::api::{Socket, Stream};
+use net::api::{NetManager, TlsManager};
+use net::data::ListenerFn;
 use mqtt::server::{ServerNode, ClientStub};
 use std::io::{Result as IOResult};
 use mqtt::data::Server;
@@ -25,7 +28,7 @@ use js_lib::JSGray;
 
 pub struct NetMgr {
     pub mgr: NetManager,
-    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(Socket, Arc<RwLock<Stream>>),Error>>,
+    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>,
     Arc<Result<SocketAddr,Error>>) + Send>>>>>,
 }
 
@@ -37,14 +40,14 @@ impl NetMgr {
         }
     }
 
-    pub fn add_handler(&mut self, addr: String, protocol: String, f: Box<Fn(Arc<Result<(Socket, Arc<RwLock<Stream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
+    fn add_handler(&mut self, addr: String, protocol: String, f: Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
         let key = Atom::from(addr.clone() + ":" + protocol.as_str());
         let h = self.handler.clone();
         let mut r = self.handler.lock().unwrap();
         let key_copy = key.clone();
         let v = r.entry(key).or_insert_with(||{
             let arr = Vec::new();
-            let callback = Box::new(move |peer: Result<(Socket, Arc<RwLock<Stream>>),Error>, addr: Result<SocketAddr,Error>|{
+            let callback: ListenerFn = Box::new(move |peer: Result<(RawSocket, Arc<RwLock<RawStream>>),Error>, addr: Result<SocketAddr,Error>|{
                 let r = h.lock().unwrap();
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
@@ -60,6 +63,52 @@ impl NetMgr {
                 },
                 addr: addr.parse().unwrap()
             };
+            self.mgr.bind(cfg, callback);
+            arr
+        });
+        v.push(f);
+    }
+}
+
+pub struct TlsNetMgr {
+    pub mgr: TlsManager,
+    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>,
+    Arc<Result<SocketAddr,Error>>) + Send>>>>>,
+}
+
+impl TlsNetMgr {
+    pub fn new(recv_buff_size: usize) -> TlsNetMgr{
+        TlsNetMgr{
+            mgr: TlsManager::new(recv_buff_size),
+            handler: Arc::new(Mutex::new(FnvHashMap::default())),
+        }
+    }
+
+    fn add_handler(&mut self, addr: String, protocol: String, cert_path:String, key_path: String, f: Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
+        let key = Atom::from(addr.clone() + ":" + protocol.as_str());
+        let h = self.handler.clone();
+        let mut r = self.handler.lock().unwrap();
+        let key_copy = key.clone();
+        let v = r.entry(key).or_insert_with(||{
+            let arr = Vec::new();
+            let callback = Box::new(move |peer: Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>, addr: Result<SocketAddr,Error>|{
+                let r = h.lock().unwrap();
+                let peer = Arc::new(peer);
+                let addr = Arc::new(addr);
+                let rr = r.get(&key_copy).unwrap();
+                for v in rr.iter(){
+                    v(peer.clone(),  addr.clone());
+                }
+            });
+            let cfg = TlsConfig::new(
+                match protocol.as_str() {
+                    "tcp" => Protocol::TCP,
+                    _ => {panic!("nonsupport protocol:{}", protocol);},
+                },
+                addr.parse().unwrap(),
+                &cert_path,
+                &key_path
+            );
             self.mgr.bind(cfg, callback);
             arr
         });
@@ -120,7 +169,7 @@ impl Handler for NetHandler {
             nobjs.to_map(&vm);
 			4
 		});
-		gray.factory.call(Some(id), self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " rpc task"));
+		gray.factory.call(Some(id), self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " net task"));
         Ok(())
 	}
 }
@@ -186,7 +235,7 @@ impl Handler for TopicHandler {
             vm.new_u32(id as u32);
 			6
 		});
-		gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+		gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
 	}
 }
 
@@ -204,7 +253,7 @@ impl TopicHandler {
 pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
     let server = ServerNode::new();
     let copy = server.clone();
-    let f = Box::new(move |peer:Arc<Result<(Socket, Arc<RwLock<Stream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
+    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = &peer.0;
@@ -214,7 +263,7 @@ pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size
                     s.set_recv_timeout(recv_timeout);
                     s.set_socket(socket.clone());
                 }
-                copy.clone().add_stream(socket.clone(), stream.clone());
+                copy.clone().add_stream(Socket::Raw(socket.clone()), Stream::Raw(stream.clone()));
             } ,
             Err(s) => println!("{}", s),
         };
@@ -226,7 +275,7 @@ pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size
 pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handler: &NetHandler, close_handler: &NetHandler) {
     let handler = handler.clone();
     let close_handler = close_handler.clone();
-    let f = Box::new(move |peer:Arc<Result<(Socket, Arc<RwLock<Stream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
+    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = peer.0.clone();
@@ -257,6 +306,65 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
         
     });
     mgr.add_handler(addr, protocol, f);
+}
+
+//为mqtt绑定安全网络， 返回mqttserver
+pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
+    let server = ServerNode::new();
+    let copy = server.clone();
+    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
+        match peer.as_ref() {
+            &Ok(ref peer) => {
+                let socket = &peer.0;
+                let stream = &peer.1;
+                {let s = &mut stream.write().unwrap();
+                    s.set_send_buf_size(send_buf_size);
+                    s.set_recv_timeout(recv_timeout);
+                    s.set_socket(socket.clone());
+                }
+                copy.clone().add_stream(Socket::Tls(socket.clone()), Stream::Tls(stream.clone()));
+            } ,
+            Err(s) => println!("{}", s),
+        };
+    });
+    mgr.add_handler(addr, protocol, cert_path, key_path, f);
+    server
+}
+
+pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, handler: &NetHandler, close_handler: &NetHandler) {
+    let handler = handler.clone();
+    let close_handler = close_handler.clone();
+    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
+        match peer.as_ref() {
+            &Ok(ref peer) => {
+                let socket = peer.0.clone();
+                let stream = &peer.1;
+                let id = socket.socket;
+                let socket = Arc::new(socket);
+                let socket1 = socket.clone();
+                let close_handler = close_handler.clone();
+                stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _| {
+                    remove_queue(id);
+                    match close_handler.handle(socket1.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
+                        Ok(_) => (),
+                        Err(s) => {
+                            println!("{}", s);
+                        },
+                    };
+                }));
+
+                match handler.handle(socket, Atom::from("net_connect"), Args::OneArgs(id)){
+                    Ok(_) => (),
+                    Err(s) => {
+                        println!("{}", s);
+                    },
+                }
+            } ,
+            Err(s) => println!("{}", s),
+        };
+        
+    });
+    mgr.add_handler(addr, protocol, cert_path, key_path, f);
 }
 
 pub fn clone_server_node(node: &ServerNode) -> ServerNode{
@@ -325,16 +433,16 @@ pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
 }
 
 //为pi_p2p封装一个P2PManage::new方法
-pub fn p2p_manage_new(addr: &str, arr1: Vec<String>, arr2: Vec<u32>) -> P2PManage {
+// pub fn p2p_manage_new(addr: &str, arr1: Vec<String>, arr2: Vec<u32>) -> P2PManage {
 
-    let mut map: FnvHashMap<SocketAddr, u64> = FnvHashMap::default();
-    let mut i = 0;
-    for time in arr2 {
-        map.insert(arr1.get(i).unwrap().parse().unwrap(), time as u64);
-        i += 1;
-    }
-    P2PManage::new(addr.parse().unwrap(), map)
-}
+//     let mut map: FnvHashMap<SocketAddr, u64> = FnvHashMap::default();
+//     let mut i = 0;
+//     for time in arr2 {
+//         map.insert(arr1.get(i).unwrap().parse().unwrap(), time as u64);
+//         i += 1;
+//     }
+//     P2PManage::new(addr.parse().unwrap(), map)
+// }
 
 pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
     Arc::new(socket)
