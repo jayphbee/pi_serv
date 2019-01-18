@@ -35,7 +35,7 @@ extern crate sinfo;
 extern crate hash_value;
 extern crate timer;
 extern crate ordmap;
-extern crate pi_store;
+// extern crate pi_store;
 
 #[macro_use]
 extern crate lazy_static;
@@ -68,7 +68,7 @@ mod pi_vm_build;
 // mod pi_p2p_build;
 mod pi_net_httpc_build;
 mod pi_net_https_build;
-mod pi_store_build;
+// mod pi_store_build;
 
 use std::io::prelude::*;
 use std::thread;
@@ -144,7 +144,7 @@ fn main() {
 	// pi_p2p_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
     pi_net_https_build::register(&BON_MGR);
-    pi_store_build::register(&BON_MGR);
+    // pi_store_build::register(&BON_MGR);
 
 	let matches = args();
 	let config = matches.value_of("config").unwrap();

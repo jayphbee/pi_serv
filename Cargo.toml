@@ -22,7 +22,7 @@ rpc = { path = "../pi_net/rpc" }
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
 # pi_p2p = { path = "../pi_p2p" }
-pi_store = { path = "../pi_store" }
+# pi_store = { path = "../pi_store" }
 atom = { path = "../pi_lib/atom" }
 worker = { path = "../pi_lib/worker" }
 handler = { path = "../pi_lib/handler" }
