@@ -1232,19 +1232,24 @@ fn call_145125716(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
 
 	let jst2 = &v[2];
-	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_i32() as isize;
-
+	if !jst2.is_boolean(){ return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.get_boolean();
+    
 
 	let jst3 = &v[3];
-    if !jst3.is_uint8_array() && !jst3.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{*(jst3.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst3 = unsafe {
+	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_i32() as isize;
+
+
+	let jst4 = &v[4];
+    if !jst4.is_uint8_array() && !jst4.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{*(jst4.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst4 = unsafe {
         transmute::<[u8; 8], u64>(arr)
     }; 
 
 
-    let result = js_httpc::HttpClientOptions::normal(jst0,jst1,jst2,jst3);
+    let result = js_httpc::HttpClientOptions::normal(jst0,jst1,jst2,jst3,jst4);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1131624585);
 
 
@@ -1320,19 +1325,24 @@ fn call_2011091417(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
 
 	let jst3 = &v[3];
-	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_i32() as isize;
-
+	if !jst3.is_boolean(){ return Some(CallResult::Err(String::from(param_error))); }
+    let jst3 = jst3.get_boolean();
+    
 
 	let jst4 = &v[4];
-    if !jst4.is_uint8_array() && !jst4.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{*(jst4.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst4 = unsafe {
+	if !jst4.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst4 = jst4.get_i32() as isize;
+
+
+	let jst5 = &v[5];
+    if !jst5.is_uint8_array() && !jst5.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let arr = unsafe{*(jst5.to_bytes().as_ptr() as usize as *const [u8; 8])};
+    let jst5 = unsafe {
         transmute::<[u8; 8], u64>(arr)
     }; 
 
 
-    let result = js_httpc::HttpClientOptions::proxy(jst0,jst1,jst2,jst3,jst4);
+    let result = js_httpc::HttpClientOptions::proxy(jst0,jst1,jst2,jst3,jst4,jst5);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1131624585);
 
 

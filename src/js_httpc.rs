@@ -19,8 +19,8 @@ impl HttpClientOptions {
     }
 
     //gzip: 是否gzip压缩, referer: bool, count:  重定向最大次数, timeout: 请求超时时间（ms）
-    pub fn normal(gzip: bool, referer: bool, count: isize, timeout: u64) -> Self{
-        HttpClientOptions(httpc::HttpClientOptions::Normal(gzip, referer, count, timeout))
+    pub fn normal(https: bool, gzip: bool, referer: bool, count: isize, timeout: u64) -> Self{
+        HttpClientOptions(httpc::HttpClientOptions::Normal(https, gzip, referer, count, timeout))
     }
 
     //cert_file: 根证书路径, identity_file: 个人证书, pk: 私钥字符串, gzip: 是否gzip压缩, referer: bool, count:  重定向最大次数, timeout: 请求超时时间（ms）
@@ -40,8 +40,8 @@ impl HttpClientOptions {
     }
 
     //proxy_url:代理服务器的url, gzip: 是否gzip压缩, referer: bool, count:  重定向最大次数, timeout: 请求超时时间（ms）
-    pub fn proxy(proxy_url: String, gzip: bool, referer: bool, count: isize, timeout: u64) -> Self{
-        HttpClientOptions(httpc::HttpClientOptions::Proxy(Atom::from(proxy_url), gzip, referer, count, timeout))
+    pub fn proxy(proxy_url: String, https: bool, gzip: bool, referer: bool, count: isize, timeout: u64) -> Self{
+        HttpClientOptions(httpc::HttpClientOptions::Proxy(Atom::from(proxy_url), https, gzip, referer, count, timeout))
     }
 
 
