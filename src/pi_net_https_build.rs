@@ -38,6 +38,49 @@ fn call_3779679042(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1738064952(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 369829824, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::file::StaticFile) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = &jst2.get_str();
+
+
+    let result = https::file::StaticFile::add_gen_resp_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_422874864(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 369829824, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::file::StaticFile) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+    let result = https::file::StaticFile::remove_gen_resp_header(jst0,jst1);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3011830990(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
@@ -49,6 +92,49 @@ fn call_3011830990(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = https::files::StaticFileBatch::new(jst0);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2592534340);
 
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4071207699(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2592534340, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::files::StaticFileBatch) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = &jst2.get_str();
+
+
+    let result = https::files::StaticFileBatch::add_gen_resp_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2098113688(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2592534340, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::files::StaticFileBatch) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = &jst1.get_str();
+
+
+    let result = https::files::StaticFileBatch::remove_gen_resp_header(jst0,jst1);let mut result = js.new_u32(result as u32);
 
     Some(CallResult::Ok)
 }
@@ -244,7 +330,11 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_fun_meta(FnMeta::CallArg(call_170528392), 170528392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3779679042), 3779679042);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1738064952), 1738064952);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_422874864), 422874864);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3011830990), 3011830990);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4071207699), 4071207699);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2098113688), 2098113688);
     mgr.regist_fun_meta(FnMeta::Call(call_1576795673), 1576795673);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3977181471), 3977181471);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4128314446), 4128314446);
