@@ -188,6 +188,10 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 //     mgr.register(Atom::from(prefix), Arc::new(ware))
 // }
 
+pub fn get_all_wares(mgr: &Mgr) -> Vec<String> {
+    mgr.ware_name_list()
+}
+
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {
     TabKV{
