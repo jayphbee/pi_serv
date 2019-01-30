@@ -74,10 +74,16 @@ use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
 use std::path::Path;
+use std::io;
+use std::sync::Arc;
+use std::boxed::FnBox;
+use std::sync::mpsc::channel;
+use std::io::{Read, Write, Result as IOResult};
 
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
 use pi_vm::adapter::{register_native_object};
+use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::bonmgr::BON_MGR;
 use clap::{Arg, App};
 
@@ -107,6 +113,12 @@ fn args() -> clap::ArgMatches<'static> {
 							.value_name("FILE")
 							.help("config path")
 							.takes_value(true))
+                        .arg(Arg::with_name("shell")
+                            .short("s")
+                            .long("shell")
+                            .value_name("BOOL")
+                            .takes_value(true)
+                            .help("Open the console at startup"))
 						.get_matches();
 	matches
 
@@ -162,10 +174,83 @@ fn main() {
         panic!("load dir is none, please start with '-c rootdir' or '-c rootdir,load module1,load module1..'");
     }
 
-    while !IS_END.lock().unwrap().0 {
-        println!("###############loop, {}", now_millisecond());
-        thread::sleep(Duration::from_millis(10000));
+    if let None = matches.value_of("shell") {
+        while !IS_END.lock().unwrap().0 {
+            println!("###############loop, {}", now_millisecond());
+            thread::sleep(Duration::from_millis(10000));
+        }
+    } else {
+        let (req_sender, req_receiver) = channel();
+        let (resp_sender, resp_receiver) = channel();
+
+        let req_sender_copy = req_sender.clone();
+        let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnBox(Arc<Vec<u8>>)>>| {
+            resp_sender.send(result);
+            req_sender.send(req);
+        });
+
+
+        let s = SHELL_MANAGER.write().unwrap().open();
+        if let Some(shell) = s {
+            let req = SHELL_MANAGER.write().unwrap().connect(shell, resp.clone());
+            if req.is_none() {
+                eprintln!("Connect Error");
+            }
+            req_sender_copy.send(req);
+
+            println!("Shell v0.1");
+
+            let mut req: Option<Box<FnBox(Arc<Vec<u8>>)>> = None;
+            loop {
+                print!(">");
+                io::stdout().flush();
+
+                let mut buffer = String::new();
+                while let Err(e) = io::stdin().read_line(&mut buffer) {
+                    eprintln!("Input Error, {:?}", e);
+                    print!(">");
+                    io::stdout().flush();
+                }
+
+                if buffer.trim().as_bytes() == b"exit" {
+                    println!("Shell closed");
+                    return;
+                }
+
+                if let None = req {
+                    //当前没有请求回调，则接收请求回调
+                    match req_receiver.recv() {
+                        Err(e) => {
+
+                        },
+                        Ok(new) => {
+                            if new.is_none() {
+                                println!("Shell closed");
+                                return;
+                            }
+                            req = new; //更新请求回调
+                        }
+                    }
+                }
+
+                if let Some(r) = req.take() {
+                    r(Arc::new(buffer.into_bytes()));
+                }
+
+                //接收请求响应
+                match resp_receiver.recv() {
+                    Err(e) => eprintln!("Output Error, {:?}", e),
+                    Ok(result) => {
+                        match result {
+                            Err(e) => eprintln!("{:?}", e),
+                            Ok(r) => println!("{output}", output = String::from_utf8_lossy(&r[..]).as_ref()),
+                        }
+                    }
+                }
+            }
+        }
     }
+
     // loop {
     //     println!("###############loop, {}", now_millisecond());
     //     thread::sleep(Duration::from_millis(60000));

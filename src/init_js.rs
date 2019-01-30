@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use std::path::Path;
 
 use pi_vm::adapter::{JS};
+use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_db::mgr::{Mgr};
 use pi_db::memery_db::DB;
@@ -66,12 +68,16 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
         let path = &list[0];//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
         let u8arr = file_map.get(path).unwrap().as_slice();
         js.load(u8arr);
+
+
         //调用全局变量定义函数， 定义全局变量_$mgr
         js.get_js_function("_$defineGlobal".to_string());
         js.new_str(String::from("_$db_mgr"));
         let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
         ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
         js.call(2);
+
+        SHELL_MANAGER.write().unwrap().add_natobj_env("_$db_mgr", ptr, 2976191628);
 
         //调用全局变量定义函数， 定义全局变量_$mgr
         js.get_js_function("_$defineGlobal".to_string());
@@ -100,8 +106,10 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
             }
         }
     }
-    
-    println!("vm:meta运行成功！!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+    println!("vm:meta运行成功！!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n");
+
+    init_shell_manager(&list, &file_map);
 }
 
 pub fn create_code_tab(mgr: &Mgr){
@@ -200,4 +208,30 @@ pub fn add_line_number(s: &str) -> String{
         s = s + "\n" + i.to_string().as_str() + jc[i-1];
     }
     s
+}
+
+//初始化系统shell管理器
+fn init_shell_manager(files: &Vec<String>, codes: &HashMap<String, Arc<Vec<u8>>>) {
+    let mut vec: Vec<Arc<Vec<u8>>> = Vec::new();
+
+    for file in files {
+        if file.ends_with(r".c.js") ||
+            file.ends_with(r".i.js") ||
+            file.ends_with(r".a.js") ||
+            file.ends_with(r".b.js") {
+                //忽略初始化代码
+                continue;
+        } else {
+            if Path::new(file).starts_with("pi_pt/init/init.js") {
+                //忽略初始化代码
+                continue;
+            }
+
+            if let Some(code) = codes.get(file) {
+                vec.push(code.clone());
+            }
+        }
+    }
+
+    SHELL_MANAGER.write().unwrap().init(Some(vec));
 }
