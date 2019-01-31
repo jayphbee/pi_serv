@@ -373,6 +373,22 @@ fn call_360427781(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2573413979(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in get_tabmeta_buffer";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 18210791, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::db::TabMeta) };
+
+
+    let result = js_db::get_tabmeta_buffer(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2097131752(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in tabkv_with_value";
 
@@ -2801,6 +2817,10 @@ fn drop_1542823015(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Vec<String>) };
 }
 
+fn drop_18210791(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_db::db::TabMeta) };
+}
+
 fn drop_4000136370(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::db::TabKV) };
 }
@@ -2934,6 +2954,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>"), drop_fn: drop_1542823015}, 1542823015);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabMeta"), drop_fn: drop_18210791}, 18210791);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
@@ -2974,6 +2995,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1905006775), 1905006775);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3038249291), 3038249291);
     mgr.regist_fun_meta(FnMeta::CallArg(call_360427781), 360427781);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2573413979), 2573413979);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2097131752), 2097131752);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1247562096), 1247562096);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1579404380), 1579404380);

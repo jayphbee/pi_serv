@@ -192,6 +192,12 @@ pub fn get_all_wares(mgr: &Mgr) -> Vec<String> {
     mgr.ware_name_list()
 }
 
+pub fn get_tabmeta_buffer(meta: Arc<TabMeta>) -> Vec<u8> {
+    let mut bon = WriteBuffer::new();
+    meta.encode(&mut bon);
+    bon.unwrap()
+}
+
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {
     TabKV{
