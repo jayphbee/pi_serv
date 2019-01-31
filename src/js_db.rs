@@ -219,6 +219,20 @@ pub fn tabkv_get_value(tabkv: &TabKV) -> Option<Arc<Vec<u8>>> {
     tabkv.value.clone()
 }
 
+pub fn list_all_tables(tr: &Tr, ware: String) -> Vec<String> {
+    match tr.list(&Atom::from(ware)) {
+        Some(tabs) => {
+            let mut v = vec![];
+            for t in tabs {
+                v.push(t.to_string());
+            }
+            v
+        }
+
+        None => vec![]
+    }
+}
+
 //插入元信息
 pub fn alter(tr: &Tr, ware: String, tab: String, meta_buf: Option<&[u8]>, cb: Arc<Fn(Result<(), String>)>) -> Option<Result<(), String>>{
     let meta = match meta_buf {
