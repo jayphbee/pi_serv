@@ -77,7 +77,8 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
         ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
         js.call(2);
 
-        SHELL_MANAGER.write().unwrap().add_natobj_env("_$db_mgr", ptr, 2976191628);
+        let mgr_ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+        SHELL_MANAGER.write().unwrap().add_natobj_env("_$db_mgr", mgr_ptr, 2976191628);
 
         //调用全局变量定义函数， 定义全局变量_$mgr
         js.get_js_function("_$defineGlobal".to_string());
