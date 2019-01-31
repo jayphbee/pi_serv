@@ -174,81 +174,84 @@ fn main() {
         panic!("load dir is none, please start with '-c rootdir' or '-c rootdir,load module1,load module1..'");
     }
 
-    if let None = matches.value_of("shell") {
-        while !IS_END.lock().unwrap().0 {
-            println!("###############loop, {}", now_millisecond());
-            thread::sleep(Duration::from_millis(10000));
-        }
-    } else {
-        let (req_sender, req_receiver) = channel();
-        let (resp_sender, resp_receiver) = channel();
+    match matches.value_of("shell") {
+        Some("true") => {
+            let (req_sender, req_receiver) = channel();
+            let (resp_sender, resp_receiver) = channel();
 
-        let req_sender_copy = req_sender.clone();
-        let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnBox(Arc<Vec<u8>>)>>| {
-            resp_sender.send(result);
-            req_sender.send(req);
-        });
+            let req_sender_copy = req_sender.clone();
+            let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnBox(Arc<Vec<u8>>)>>| {
+                resp_sender.send(result);
+                req_sender.send(req);
+            });
 
 
-        let s = SHELL_MANAGER.write().unwrap().open();
-        if let Some(shell) = s {
-            let req = SHELL_MANAGER.write().unwrap().connect(shell, resp.clone());
-            if req.is_none() {
-                eprintln!("Connect Error");
-            }
-            req_sender_copy.send(req);
+            let s = SHELL_MANAGER.write().unwrap().open();
+            if let Some(shell) = s {
+                let req = SHELL_MANAGER.write().unwrap().connect(shell, resp.clone());
+                if req.is_none() {
+                    eprintln!("Connect Error");
+                }
+                req_sender_copy.send(req);
 
-            println!("Shell v0.1");
+                println!("Shell v0.1");
 
-            let mut req: Option<Box<FnBox(Arc<Vec<u8>>)>> = None;
-            loop {
-                print!(">");
-                io::stdout().flush();
-
-                let mut buffer = String::new();
-                while let Err(e) = io::stdin().read_line(&mut buffer) {
-                    eprintln!("Input Error, {:?}", e);
+                let mut req: Option<Box<FnBox(Arc<Vec<u8>>)>> = None;
+                loop {
                     print!(">");
                     io::stdout().flush();
-                }
 
-                if buffer.trim().as_bytes() == b"exit" {
-                    println!("Shell closed");
-                    return;
-                }
+                    let mut buffer = String::new();
+                    while let Err(e) = io::stdin().read_line(&mut buffer) {
+                        eprintln!("Input Error, {:?}", e);
+                        print!(">");
+                        io::stdout().flush();
+                    }
 
-                if let None = req {
-                    //当前没有请求回调，则接收请求回调
-                    match req_receiver.recv() {
-                        Err(e) => {
+                    if buffer.trim().as_bytes() == b"exit" {
+                        println!("Shell closed");
+                        return;
+                    }
 
-                        },
-                        Ok(new) => {
-                            if new.is_none() {
-                                println!("Shell closed");
-                                return;
+                    if let None = req {
+                        //当前没有请求回调，则接收请求回调
+                        match req_receiver.recv() {
+                            Err(e) => {
+
+                            },
+                            Ok(new) => {
+                                if new.is_none() {
+                                    println!("Shell closed");
+                                    return;
+                                }
+                                req = new; //更新请求回调
                             }
-                            req = new; //更新请求回调
                         }
                     }
-                }
 
-                if let Some(r) = req.take() {
-                    r(Arc::new(buffer.into_bytes()));
-                }
+                    if let Some(r) = req.take() {
+                        r(Arc::new(buffer.into_bytes()));
+                    }
 
-                //接收请求响应
-                match resp_receiver.recv() {
-                    Err(e) => eprintln!("Output Error, {:?}", e),
-                    Ok(result) => {
-                        match result {
-                            Err(e) => eprintln!("{:?}", e),
-                            Ok(r) => println!("{output}", output = String::from_utf8_lossy(&r[..]).as_ref()),
+                    //接收请求响应
+                    match resp_receiver.recv() {
+                        Err(e) => eprintln!("Output Error, {:?}", e),
+                        Ok(result) => {
+                            match result {
+                                Err(e) => eprintln!("{:?}", e),
+                                Ok(r) => println!("{output}", output = String::from_utf8_lossy(&r[..]).as_ref()),
+                            }
                         }
                     }
                 }
             }
-        }
+        },
+        _ => {
+            while !IS_END.lock().unwrap().0 {
+                println!("###############loop, {}", now_millisecond());
+                thread::sleep(Duration::from_millis(10000));
+            }
+        },
     }
 
     // loop {
