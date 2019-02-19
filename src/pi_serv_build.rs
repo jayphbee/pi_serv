@@ -9,6 +9,7 @@ use pi_vm;
 use mqtt;
 use bon;
 use pi_db;
+use pi_store;
 use pi_db::mgr::Monitor;
 use sinfo;
 use gray;
@@ -343,7 +344,7 @@ fn call_3038249291(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -377,8 +378,8 @@ fn call_2573413979(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_tabmeta_buffer";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 18210791, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const pi_db::db::TabMeta) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 4164638564, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_db::db::TabMeta>)}.clone();
 
 
     let result = js_db::get_tabmeta_buffer(jst0);
@@ -479,7 +480,7 @@ fn call_3169463176(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result = js_db::list_all_tables(jst0,jst1);
@@ -2817,8 +2818,12 @@ fn drop_1542823015(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Vec<String>) };
 }
 
-fn drop_18210791(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_db::db::TabMeta) };
+fn drop_4164638564(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<pi_db::db::TabMeta>) };
+}
+
+fn drop_104530634(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 }
 
 fn drop_4000136370(ptr: usize){
@@ -2831,10 +2836,6 @@ fn drop_1675843967(ptr: usize){
 
 fn drop_1797798710(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut depend::Depend) };
-}
-
-fn drop_104530634(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
 }
 
 fn drop_1846921536(ptr: usize){
@@ -2954,11 +2955,11 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>"), drop_fn: drop_1542823015}, 1542823015);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabMeta"), drop_fn: drop_18210791}, 18210791);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_async::AsyncRequestHandler"), drop_fn: drop_259136547}, 259136547);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_async::AsyncRequestHandler>"), drop_fn: drop_374659923}, 374659923);

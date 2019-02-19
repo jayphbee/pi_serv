@@ -16,7 +16,7 @@ use hash_value::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype};
-// use pi_store::lmdb_file::{DB as Lmdb};
+use pi_store::lmdb_file::{DB as Lmdb};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
@@ -184,9 +184,9 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-// pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
-//     mgr.register(Atom::from(prefix), Arc::new(ware))
-// }
+pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
+    mgr.register(Atom::from(prefix), Arc::new(ware))
+}
 
 pub fn get_all_wares(mgr: &Mgr) -> Vec<String> {
     mgr.ware_name_list()
