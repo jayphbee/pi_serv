@@ -35,6 +35,7 @@ extern crate sinfo;
 extern crate hash_value;
 extern crate timer;
 extern crate ordmap;
+extern crate pref;
 // extern crate pi_store;
 
 #[macro_use]
@@ -96,11 +97,9 @@ use init_js::{init_js};
 use js_base::IS_END;
 use util::{read_file_list};
 
-#[cfg(any(unix))]
-use std::alloc::System;
-#[cfg(any(unix))]
+use pref::allocator::CounterSystemAllocator;
 #[global_allocator]
-static GLOBAL: System = System;
+static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
