@@ -197,7 +197,7 @@ fn call_2153620660(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
@@ -224,12 +224,12 @@ fn call_1967373661_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -254,7 +254,7 @@ fn call_1967373661_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None
     }else{
 	if !jst5.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst5 = jst5.get_str();
+    let jst5 = jst5.get_str();
 
         Some(jst5)
     };
@@ -319,7 +319,7 @@ fn call_1905006775(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -338,12 +338,12 @@ fn call_2097131752(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -371,12 +371,12 @@ fn call_1247562096(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -424,12 +424,12 @@ fn call_2680255887_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -600,12 +600,12 @@ fn call_2986122496_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = &jst2.get_str();
+    let jst2 = &jst2.get_str();
 
     let jscopy = js.clone();
 	let call_back = move |r: Result<usize,String>| {let mut r = match r{
@@ -666,17 +666,17 @@ fn call_4281318477_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
     let jscopy = js.clone();
 	let call_back = move |r: Result<(),String>| {let mut r = match r{
@@ -709,17 +709,17 @@ fn call_479322726_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
     let jscopy = js.clone();
 	let call_back = move |r: Result<(),String>| {let mut r = match r{
@@ -764,7 +764,7 @@ fn call_2239806005(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = util::read_file(jst0);
@@ -835,7 +835,7 @@ fn call_3272869145(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
@@ -880,7 +880,7 @@ fn call_509141093(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     for i in 0..a_len{
 		let jst1_e = jst1.get_index(i as u32);
 	if !jst1_e.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1_e = jst1_e.get_str();
+    let jst1_e = jst1_e.get_str();
     jst1_.push(jst1_e);
     }
     let jst1 = jst1_.as_slice();
@@ -1077,7 +1077,7 @@ fn call_1332820780(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -1085,12 +1085,12 @@ fn call_1332820780(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
 	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst4 = jst4.get_str();
+    let jst4 = jst4.get_str();
 
 
     let result = js_lib::Nobjs::set_obj(jst0,jst1,jst2,jst3,jst4,&js);let mut result = match result{
@@ -1120,7 +1120,7 @@ fn call_2697841501(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = &jst2.get_str();
+    let jst2 = &jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -1146,7 +1146,7 @@ fn call_691063210(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -1154,12 +1154,12 @@ fn call_691063210(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
 	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst4 = jst4.get_str();
+    let jst4 = jst4.get_str();
 
 
     let result = js_lib::JSGray::set_obj(jst0,jst1,jst2,jst3,jst4,&js);let mut result = match result{
@@ -1262,17 +1262,17 @@ fn call_2887071833(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -1311,7 +1311,7 @@ fn call_2011091417(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
@@ -1355,22 +1355,22 @@ fn call_2937777264(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
@@ -1414,12 +1414,11 @@ fn call_2175286088(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::get_json_val(jst0,jst1);let mut result = match result{
         Some(v) => { let mut v = js.new_str(String::from(v.as_str()));
-    
  v}
         None => js.new_null()
     };
@@ -1438,12 +1437,12 @@ fn call_1065006446(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::add_json_kv(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
@@ -1462,12 +1461,11 @@ fn call_1500292772(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::remove_json_kv(jst0,jst1);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };
@@ -1499,12 +1497,12 @@ fn call_1016322459(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
     let result:js_httpc::HttpClientBody<Vec<u8>> = js_httpc::HttpClientBody::<Vec<u8>>::add_form_kv(jst0,jst1,jst2);
@@ -1525,12 +1523,12 @@ fn call_2344044784(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::add_form_file(jst0,jst1,jst2);let mut result = match result{
@@ -1568,7 +1566,7 @@ fn call_794872933(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result:js_httpc::HttpClientBody<String> = js_httpc::HttpClientBody::<String>::body(jst0);
@@ -1583,13 +1581,13 @@ fn call_965054041(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in json";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 913748025, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = Atom::from(jst0.get_str());
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result:js_httpc::HttpClientBody<String> = js_httpc::HttpClientBody::<String>::json(jst0,jst1);
@@ -1605,12 +1603,12 @@ fn call_2118843620(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result:js_httpc::HttpClientBody<String> = js_httpc::HttpClientBody::<String>::form(jst0,jst1);
@@ -1653,8 +1651,8 @@ fn call_2282211344_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -1697,8 +1695,8 @@ fn call_739596726_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 	let jst2 = &v[2];
     let ptr = jstype_ptr(&jst2, js.clone(), 4139279264, true, param_error).expect("");
@@ -1745,8 +1743,8 @@ fn call_4177861558_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -1789,8 +1787,8 @@ fn call_2173630691_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 	let jst2 = &v[2];
     let ptr = jstype_ptr(&jst2, js.clone(), 3642917301, true, param_error).expect("");
@@ -1837,8 +1835,8 @@ fn call_3729751590_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -1881,8 +1879,8 @@ fn call_1358301807_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 	let jst2 = &v[2];
     let ptr = jstype_ptr(&jst2, js.clone(), 4139279264, true, param_error).expect("");
@@ -1929,8 +1927,8 @@ fn call_2383978915_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -1973,8 +1971,8 @@ fn call_3423707807_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const Arc<httpc::HttpClient>) };
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 	let jst2 = &v[2];
     let ptr = jstype_ptr(&jst2, js.clone(), 3642917301, true, param_error).expect("");
@@ -2042,7 +2040,7 @@ fn call_1849109725(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
 	let jst1 = &v[1];
@@ -2084,12 +2082,12 @@ fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -2120,12 +2118,12 @@ fn call_3222050891(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
@@ -2153,22 +2151,22 @@ fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
 	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst4 = jst4.get_str();
+    let jst4 = jst4.get_str();
 
 
 	let jst5 = &v[5];
@@ -2199,22 +2197,22 @@ fn call_2877879633(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
 	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst4 = jst4.get_str();
+    let jst4 = jst4.get_str();
 
 
 	let jst5 = &v[5];
@@ -2274,7 +2272,7 @@ fn call_2482429183(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -2309,7 +2307,7 @@ fn call_2867121613(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     let result = js_net::unset_mqtt_topic(jst0,jst1);let mut result = match result{
@@ -2350,7 +2348,7 @@ fn call_1551231400(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
@@ -2382,7 +2380,7 @@ fn call_2874114884(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -2406,7 +2404,7 @@ fn call_138660483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -2511,7 +2509,7 @@ fn call_2753091108(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -2540,7 +2538,7 @@ fn call_2997074552(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
     let result = hotfix::GrayMgr::has_gray_tab(jst0,jst1);let mut result = js.new_boolean(result);
@@ -2559,7 +2557,7 @@ fn call_4222745849(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
     let result = hotfix::GrayMgr::get_gray_tab(jst0,jst1);let mut result = match result{
@@ -2629,7 +2627,7 @@ fn call_56672718(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -2637,12 +2635,12 @@ fn call_56672718(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst3 = &v[3];
 	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_str();
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
 	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst4 = jst4.get_str();
+    let jst4 = jst4.get_str();
 
 
     let result = hotfix::GrayMgr::set_obj(jst0,jst1,jst2,jst3,jst4,&js);let mut result = match result{
@@ -2683,7 +2681,7 @@ fn call_3668445806(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     hotfix::hotfix_listen(jst0,jst1);
@@ -2798,10 +2796,6 @@ fn drop_3642917301(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<String>) };
 }
 
-fn drop_913748025(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
-}
-
 fn drop_1107924793(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<httpc::HttpClient>) };
 }
@@ -2889,7 +2883,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientOptions"), drop_fn: drop_1131624585}, 1131624585);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<Vec<u8>>"), drop_fn: drop_4139279264}, 4139279264);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<String>"), drop_fn: drop_3642917301}, 3642917301);
-    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<httpc::HttpClient>"), drop_fn: drop_1107924793}, 1107924793);
     mgr.regist_struct_meta(StructMeta{name:String::from("httpc::HttpClientResponse"), drop_fn: drop_606449873}, 606449873);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetMgr"), drop_fn: drop_2462173101}, 2462173101);

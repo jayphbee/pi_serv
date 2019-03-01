@@ -1,6 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
+use atom::Atom;
 use pi_p2p;
 
 
@@ -28,7 +29,7 @@ fn call_338675993(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
     pi_p2p::manage::P2PManage::connect_addr(jst0,jst1);

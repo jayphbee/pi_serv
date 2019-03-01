@@ -1,6 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
+use atom::Atom;
 use hash_value;
 
 
@@ -29,7 +30,6 @@ fn call_2655400174(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H32::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -57,7 +57,7 @@ fn call_640799706(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H32::fromhex(jst0);
@@ -111,7 +111,6 @@ fn call_3679689648(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H48::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -139,7 +138,7 @@ fn call_3968952281(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H48::fromhex(jst0);
@@ -193,7 +192,6 @@ fn call_1290828860(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H160::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -221,7 +219,7 @@ fn call_3933772904(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H160::fromhex(jst0);
@@ -275,7 +273,6 @@ fn call_4173242765(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H256::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -303,7 +300,7 @@ fn call_1103597055(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H256::fromhex(jst0);
@@ -357,7 +354,6 @@ fn call_768602447(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H512::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -385,7 +381,7 @@ fn call_2370856657(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H512::fromhex(jst0);
@@ -439,7 +435,6 @@ fn call_1178325458(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = hash_value::H520::tohex(jst0);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -467,7 +462,7 @@ fn call_1046314649(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = &jst0.get_str();
+    let jst0 = &jst0.get_str();
 
 
     let result = hash_value::H520::fromhex(jst0);

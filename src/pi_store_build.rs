@@ -14,8 +14,8 @@ fn call_4027749383(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 913748025, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = Atom::from(jst0.get_str());
 
 
 	let jst1 = &v[1];
@@ -36,15 +36,10 @@ fn call_4027749383(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
-fn drop_913748025(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
-}
-
 fn drop_568147534(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_store::lmdb_file::DB) };
 }
 pub fn register(mgr: &BonMgr){
-    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4027749383), 4027749383);
 }

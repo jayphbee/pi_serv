@@ -57,7 +57,6 @@ mod pi_crypto_build;
 mod pi_math_hash_build;
 mod pi_db_build;
 mod pi_lib_guid_build;
-mod pi_lib_atom_build;
 mod pi_lib_gray_build;
 mod pi_lib_sinfo_build;
 mod def_build;
@@ -141,7 +140,6 @@ fn main() {
     pi_math_hash_build::register(&BON_MGR);
     pi_db_build::register(&BON_MGR);
     pi_lib_guid_build::register(&BON_MGR);
-    pi_lib_atom_build::register(&BON_MGR);
     pi_lib_gray_build::register(&BON_MGR);
     pi_lib_sinfo_build::register(&BON_MGR);
     pi_db_build::register(&BON_MGR);

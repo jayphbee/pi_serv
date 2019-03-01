@@ -2,6 +2,7 @@ use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResul
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
 use std::mem::transmute;
+use atom::Atom;
 use hash_value;
 use std::ops::Drop;
 use pi_crypto;
@@ -325,7 +326,6 @@ fn call_2496411899(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = pi_crypto::bls::bls_get_curve_order(jst0);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };
@@ -344,7 +344,6 @@ fn call_755737870(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = pi_crypto::bls::bls_get_field_order(jst0);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };
@@ -384,7 +383,7 @@ fn call_2402380511(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result = pi_crypto::bls::bls_id_set_dec_str(jst0);let mut result = match result{
@@ -404,7 +403,7 @@ fn call_2426850537(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result = pi_crypto::bls::bls_id_set_hex_str(jst0);let mut result = match result{
@@ -434,7 +433,6 @@ fn call_3075954650(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = pi_crypto::bls::bls_id_get_dec_str(jst0,jst1);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };
@@ -458,7 +456,6 @@ fn call_3801863647(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = pi_crypto::bls::bls_id_get_hex_str(jst0,jst1);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };

@@ -515,7 +515,6 @@ fn call_3093995464(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let mut result_array = js.new_array();
 	for result_index in 0..result.len(){
 		let mut result_elem = &result[result_index];let mut result_elem = js.new_str(String::from(result_elem.as_str()));
-    
 js.set_index(&result_array, result_index as u32, &mut result_elem);
     }
 
@@ -537,7 +536,6 @@ fn call_3156648318(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<String>::swap_remove(jst0,jst1);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -558,7 +556,7 @@ fn call_1978728938(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_str();
+    let jst2 = jst2.get_str();
 
 
     Vec::<String>::insert(jst0,jst1,jst2);
@@ -580,7 +578,6 @@ fn call_1210159287(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = Vec::<String>::remove(jst0,jst1);let mut result = js.new_str(result);
-    
 
     Some(CallResult::Ok)
 }
@@ -596,7 +593,7 @@ fn call_3803919743(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_str();
+    let jst1 = jst1.get_str();
 
 
     Vec::<String>::push(jst0,jst1);
@@ -614,7 +611,6 @@ fn call_3830052262(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = Vec::<String>::pop(jst0);let mut result = match result{
         Some(v) => { let mut v = js.new_str(v);
-    
  v}
         None => js.new_null()
     };

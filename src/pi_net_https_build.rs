@@ -1,6 +1,7 @@
 use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResult};
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
+use atom::Atom;
 use atom;
 use https;
 
@@ -11,7 +12,7 @@ fn call_170528392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result = https::upload::FileUpload::new(jst0);
@@ -27,7 +28,7 @@ fn call_3779679042(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result = https::file::StaticFile::new(jst0);
@@ -48,12 +49,12 @@ fn call_1738064952(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = &jst2.get_str();
+    let jst2 = &jst2.get_str();
 
 
     let result = https::file::StaticFile::add_gen_resp_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
@@ -72,7 +73,7 @@ fn call_422874864(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
     let result = https::file::StaticFile::remove_gen_resp_header(jst0,jst1);let mut result = js.new_u32(result as u32);
@@ -86,7 +87,7 @@ fn call_3011830990(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_str();
+    let jst0 = jst0.get_str();
 
 
     let result = https::files::StaticFileBatch::new(jst0);
@@ -107,12 +108,12 @@ fn call_4071207699(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
 	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = &jst2.get_str();
+    let jst2 = &jst2.get_str();
 
 
     let result = https::files::StaticFileBatch::add_gen_resp_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
@@ -131,7 +132,7 @@ fn call_2098113688(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
     let result = https::files::StaticFileBatch::remove_gen_resp_header(jst0,jst1);let mut result = js.new_u32(result as u32);
@@ -160,7 +161,7 @@ fn call_3977181471(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -186,7 +187,7 @@ fn call_4128314446(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -212,7 +213,7 @@ fn call_2869286636(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let jst1 = &v[1];
 	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = &jst1.get_str();
+    let jst1 = &jst1.get_str();
 
 
 	let jst2 = &v[2];
@@ -237,8 +238,8 @@ fn call_374744388(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -270,8 +271,8 @@ fn call_3415190104(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 913748025, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
 
 
 	let jst2 = &v[2];
@@ -290,13 +291,13 @@ fn call_3415190104(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst5 = &v[5];
-    let ptr = jstype_ptr(&jst5, js.clone(), 913748025, true, param_error).expect("");
-	let jst5 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst5.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst5 = Atom::from(jst5.get_str());
 
 
 	let jst6 = &v[6];
-    let ptr = jstype_ptr(&jst6, js.clone(), 913748025, true, param_error).expect("");
-	let jst6 = *unsafe { Box::from_raw(ptr as *mut atom::Atom) };
+    if !jst6.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst6 = Atom::from(jst6.get_str());
 
 
     https::https_impl::start_https(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
@@ -318,16 +319,11 @@ fn drop_2592534340(ptr: usize){
 fn drop_969075058(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::mount::Mount) };
 }
-
-fn drop_913748025(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut atom::Atom) };
-}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("https::upload::FileUpload"), drop_fn: drop_3578700762}, 3578700762);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::file::StaticFile"), drop_fn: drop_369829824}, 369829824);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::files::StaticFileBatch"), drop_fn: drop_2592534340}, 2592534340);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::mount::Mount"), drop_fn: drop_969075058}, 969075058);
-    mgr.regist_struct_meta(StructMeta{name:String::from("atom::Atom"), drop_fn: drop_913748025}, 913748025);
     mgr.regist_fun_meta(FnMeta::CallArg(call_170528392), 170528392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3779679042), 3779679042);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1738064952), 1738064952);

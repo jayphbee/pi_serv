@@ -2,6 +2,7 @@ use pi_vm::bonmgr::{BonMgr, StructMeta, FnMeta, jstype_ptr,ptr_jstype, CallResul
 use pi_vm::adapter::{JSType, JS};
 use std::sync::Arc;
 use std::mem::transmute;
+use atom::Atom;
 use sinfo;
 
 pub fn register(mgr: &BonMgr){
