@@ -106,91 +106,52 @@ fn call_1115867356(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_1476345609(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in ripemd160";
+fn call_3937242908(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in digest";
 
 	let jst0 = &v[0];
-	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst0 = jst0.to_bytes();
-
-
-
-    let result = pi_crypto::hash::ripemd160(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1176882760);
-
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_2108893530(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in keccak256";
-
-	let jst0 = &v[0];
-	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst0 = jst0.to_bytes();
-
-
-
-    let result = pi_crypto::hash::keccak256(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
-
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_842379557(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in dhash160";
-
-	let jst0 = &v[0];
-	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst0 = jst0.to_bytes();
-
-
-
-    let result = pi_crypto::hash::dhash160(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1176882760);
-
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_1125159944(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in dhash256";
-
-	let jst0 = &v[0];
-	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst0 = jst0.to_bytes();
-
-
-
-    let result = pi_crypto::hash::dhash256(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1035403249);
-
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_796485226(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in siphash24";
-
-	let jst0 = &v[0];
-    if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{*(jst0.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst0 = unsafe {
-        transmute::<[u8; 8], u64>(arr)
-    }; 
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::digest::DigestAlgorithm::SHA1,
+        1 => pi_crypto::digest::DigestAlgorithm::SHA256,
+        2 => pi_crypto::digest::DigestAlgorithm::SHA384,
+        3 => pi_crypto::digest::DigestAlgorithm::SHA512,
+        _ => panic!("enum type error")
+    };
 
 
 	let jst1 = &v[1];
-    if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let arr = unsafe{*(jst1.to_bytes().as_ptr() as usize as *const [u8; 8])};
-    let jst1 = unsafe {
-        transmute::<[u8; 8], u64>(arr)
-    }; 
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+    let result = pi_crypto::digest::digest(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3800356447(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in sign";
+
+	let jst0 = &v[0];
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::hmac::DigestAlgorithm::SHA1,
+        1 => pi_crypto::hmac::DigestAlgorithm::SHA256,
+        2 => pi_crypto::hmac::DigestAlgorithm::SHA384,
+        3 => pi_crypto::hmac::DigestAlgorithm::SHA512,
+        _ => panic!("enum type error")
+    };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
 
 
 	let jst2 = &v[2];
@@ -199,24 +160,47 @@ fn call_796485226(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 
-    let result = pi_crypto::hash::siphash24(jst0,jst1,jst2);let mut result = js.new_u64(result);
+    let result = pi_crypto::hmac::Hmac::sign(jst0,jst1,jst2);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
 
     Some(CallResult::Ok)
 }
 
 
-fn call_235181891(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in checksum";
+fn call_2199666057(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in verify";
 
 	let jst0 = &v[0];
-	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
-    let jst0 = jst0.to_bytes();
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::hmac::DigestAlgorithm::SHA1,
+        1 => pi_crypto::hmac::DigestAlgorithm::SHA256,
+        2 => pi_crypto::hmac::DigestAlgorithm::SHA384,
+        3 => pi_crypto::hmac::DigestAlgorithm::SHA512,
+        _ => panic!("enum type error")
+    };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
 
 
 
-    let result = pi_crypto::hash::checksum(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3383104515);
+	let jst2 = &v[2];
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.to_bytes();
 
+
+
+	let jst3 = &v[3];
+	if !jst3.is_uint8_array() && !jst3.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst3 = jst3.to_bytes();
+
+
+
+    let result = pi_crypto::hmac::Hmac::verify(jst0,jst1,jst2,jst3);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -1291,12 +1275,16 @@ fn drop_3223866506(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut hash_value::H512) };
 }
 
-fn drop_1176882760(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut hash_value::H160) };
+fn drop_4116332428(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::digest::DigestAlgorithm) };
 }
 
-fn drop_3383104515(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut hash_value::H32) };
+fn drop_104530634(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+}
+
+fn drop_3042099183(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::hmac::DigestAlgorithm) };
 }
 
 fn drop_1875205449(ptr: usize){
@@ -1327,10 +1315,6 @@ fn drop_3094164306(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsId) };
 }
 
-fn drop_104530634(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
-}
-
 fn drop_187111440(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsSecretKey) };
 }
@@ -1345,8 +1329,9 @@ fn drop_2886438122(ptr: usize){
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H256"), drop_fn: drop_1035403249}, 1035403249);
     mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H512"), drop_fn: drop_3223866506}, 3223866506);
-    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H160"), drop_fn: drop_1176882760}, 1176882760);
-    mgr.regist_struct_meta(StructMeta{name:String::from("hash_value::H32"), drop_fn: drop_3383104515}, 3383104515);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::digest::DigestAlgorithm"), drop_fn: drop_4116332428}, 4116332428);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::hmac::DigestAlgorithm"), drop_fn: drop_3042099183}, 3042099183);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsIdVec"), drop_fn: drop_1875205449}, 1875205449);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecKeyVec"), drop_fn: drop_2934268916}, 2934268916);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPubKeyVec"), drop_fn: drop_3840517932}, 3840517932);
@@ -1354,7 +1339,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::Curve"), drop_fn: drop_2254569071}, 2254569071);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPublicKey"), drop_fn: drop_1617625763}, 1617625763);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsId"), drop_fn: drop_3094164306}, 3094164306);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecretKey"), drop_fn: drop_187111440}, 187111440);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSignature"), drop_fn: drop_3966088300}, 3966088300);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
@@ -1362,12 +1346,9 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2282179587), 2282179587);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1005885597), 1005885597);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1115867356), 1115867356);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_1476345609), 1476345609);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2108893530), 2108893530);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_842379557), 842379557);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_1125159944), 1125159944);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_796485226), 796485226);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_235181891), 235181891);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3937242908), 3937242908);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3800356447), 3800356447);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2199666057), 2199666057);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1252421489), 1252421489);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2592527877), 2592527877);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3404883075), 3404883075);
