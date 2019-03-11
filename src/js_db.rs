@@ -16,7 +16,7 @@ use hash_value::hex::ToHex;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::pi_vm_impl::VMFactory;
 use pi_vm::bonmgr::{ptr_jstype};
-// use pi_store::lmdb_file::{DB as Lmdb};
+use pi_store::lmdb_file::{DB as Lmdb};
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
@@ -184,9 +184,19 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-// pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
-//     mgr.register(Atom::from(prefix), Arc::new(ware))
-// }
+pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
+    mgr.register(Atom::from(prefix), Arc::new(ware))
+}
+
+pub fn get_all_wares(mgr: &Mgr) -> Vec<String> {
+    mgr.ware_name_list()
+}
+
+pub fn get_tabmeta_buffer(meta: Arc<TabMeta>) -> Vec<u8> {
+    let mut bon = WriteBuffer::new();
+    meta.encode(&mut bon);
+    bon.unwrap()
+}
 
 //new TabKV
 pub fn tabkv_with_value(ware: &str, tab: &str, key: &[u8], value: &[u8]) -> TabKV {
@@ -213,6 +223,20 @@ pub fn tabkv_new(ware: &str, tab: &str, key: &[u8]) -> TabKV {
 //TabKV get_value
 pub fn tabkv_get_value(tabkv: &TabKV) -> Option<Arc<Vec<u8>>> {
     tabkv.value.clone()
+}
+
+pub fn list_all_tables(tr: &Tr, ware: String) -> Vec<String> {
+    match tr.list(&Atom::from(ware)) {
+        Some(tabs) => {
+            let mut v = vec![];
+            for t in tabs {
+                v.push(t.to_string());
+            }
+            v
+        }
+
+        None => vec![]
+    }
 }
 
 //插入元信息
