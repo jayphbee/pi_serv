@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = [""]
 
 [dependencies]
+env_logger = "0.6.1"
 fnv = "*"
 magnetic = "2.0.0"
 clap = "2.31.2"

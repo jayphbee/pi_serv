@@ -41,6 +41,9 @@ extern crate pi_store;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate env_logger;
+
 pub mod jsloader;
 pub mod depend;
 pub mod init_js;
@@ -123,6 +126,7 @@ fn args() -> clap::ArgMatches<'static> {
 }
 
 fn main() {
+    env_logger::init();
 	#[cfg(not(unix))]
     load_lib_backtrace();
     TIMER.run();
