@@ -13,8 +13,8 @@ use pi_db::mgr::{Monitor, Event, EventType, Mgr, Tr};
 use bon::{Decode, Encode, ReadBuffer, WriteBuffer, ReadBonErr};
 use atom::Atom;
 use hash_value::hex::ToHex;
-use pi_vm::adapter::{JSType, JS};
-use pi_vm::pi_vm_impl::VMFactory;
+use pi_vm::adapter::{JSType, JS, dukc_pop};
+use pi_vm::pi_vm_impl::{VMFactory, block_set_global_var, BlockError};
 use pi_vm::bonmgr::{ptr_jstype};
 use pi_store::lmdb_file::{DB as Lmdb};
 use mqtt::server::ServerNode;
@@ -43,27 +43,51 @@ impl DBIter{
     pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<JSType>, String>)>, js: &Arc<JS>) -> Option<Result<Option<JSType>, String>>{
         let js = js.clone();
         let js1 = js.clone();
+        let js2 = js.clone();
         let meta = self.1.clone();
         let meta1 = self.1.clone();
+        let cb1 = cb.clone();
         let call_back = move|r: Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>|{
+            // let meta = meta1;
+            let meta = meta.clone();
+            let cb = cb1.clone();
+            let cb1 = cb1.clone();
             match r {
                 Ok(v) => {
                     match v {
                         Some(value) => {
-                            let m = meta.clone();
-                            let arr = js.new_array();
-                            let mut k = match decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &m.k) {
-                                Ok(v) => v,
-                                Err(s) => {cb(Err(s)); return;},
-                            };
-                            js.set_index(&arr, 0, &mut k);
-                            let mut v = match decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &m.v) {
-                                Ok(v) => v,
-                                Err(s) => {cb(Err(s)); return;},
-                            };
-                            js.set_index(&arr, 1, &mut v);
-                            js.set_global_var("_$rust_r".to_string(), arr);
-                            cb(Ok(Some(js.new_undefined())));
+                            // let cb = cb1;
+                            block_set_global_var(js2.clone(), "_$rust_r".to_string(), Box::new(move |js: Arc<JS>| -> Result<JSType, String>{
+                                let arr = js.new_array();
+                                let mut k = match decode_by_type(&js, &mut ReadBuffer::new(&value.0, 0) , &meta.k) {
+                                    Ok(v) => v,
+                                    Err(s) => {
+                                        unsafe { dukc_pop(js.get_vm()) };
+                                        return Err(s);
+                                    },
+                                };
+                                js.set_index(&arr, 0, &mut k);
+                                let mut v = match decode_by_type(&js, &mut ReadBuffer::new(&value.1, 0) ,  &meta.v) {
+                                    Ok(v) => v,
+                                    Err(s) => {
+                                        unsafe { dukc_pop(js.get_vm()) };
+                                        return Err(s);
+                                    },
+                                };
+                                js.set_index(&arr, 1, &mut v);
+                                Ok(arr)
+                            }), Box::new(move |r: Result<Arc<JS>, BlockError>|{
+                                match r {
+                                    Ok(js) => {
+                                        cb1(Ok(Some(js.new_undefined())))
+                                    },
+                                    Err(s) => {
+                                        cb1(Err(format!("{:?}", s)))
+                                    },
+                                }
+                            }), Atom::from("next_elem"));
+                            // js.set_global_var("_$rust_r".to_string(), arr);
+                            // cb(Ok(Some(js.new_undefined())));
                         },
                         None => cb(Ok(None)),
                     };
@@ -81,12 +105,18 @@ impl DBIter{
                                 let arr = js1.new_array();
                                 let mut k = match decode_by_type(&js1, &mut ReadBuffer::new(&value.0, 0) , &meta1.k) {
                                     Ok(v) => v,
-                                    Err(s) => return Some(Err(s)),
+                                    Err(s) => {
+                                        unsafe { dukc_pop(js.get_vm()) };
+                                        return Some(Err(s));
+                                    },
                                 };
                                 js1.set_index(&arr, 0, &mut k);
                                 let mut v = match decode_by_type(&js1, &mut ReadBuffer::new(&value.1, 0) ,  &meta1.v) {
                                     Ok(v) => v,
-                                    Err(s) => return Some(Err(s)),
+                                    Err(s) => {
+                                        unsafe { dukc_pop(js.get_vm()) };
+                                        return Some(Err(s));
+                                    },
                                 };
                                 js1.set_index(&arr, 1, &mut v);
                                 Some(Ok(Some(arr)))
@@ -349,20 +379,39 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
 
     let js1 = js.clone();
     let tr1 = tr.clone();
-    let call_back = move|r: Result<Vec<TabKV>, String>|{
+    let call_back = move |r: Result<Vec<TabKV>, String>|{
+        let cb = cb.clone();
+        let cb1 = cb.clone();
+        let js1 = js1.clone();
+        let tr1 = tr1.clone();
         match r {
             Ok(v) => {
-                let arr = js1.new_array();
-                for i in 0..v.len(){
-                    let elem = &v[i];
-                    let mut r = match decode_by_tabkv(&js1, elem, &tr1.tab_info(&elem.ware, &elem.tab).unwrap()) {
-                        Ok(v) => v,
-                        Err(s) => {cb(Err(s)); return;},
-                    };
-                    js1.set_index(&arr, i as u32, &mut r);
-                }
-                js1.set_global_var("_$rust_r".to_string(), arr);
-                cb(Ok(js1.new_undefined()));
+                block_set_global_var(js1.clone(), "_$rust_r".to_string(), Box::new(move |js: Arc<JS>|-> Result<JSType, String>{
+                    let arr = js.new_array();
+                    for i in 0..v.len(){
+                        let elem = &v[i];
+                        let mut r = match decode_by_tabkv(&js, elem, &tr1.tab_info(&elem.ware, &elem.tab).unwrap()) {
+                            Ok(v) => v,
+                            Err(s) => {
+                                unsafe { dukc_pop(js.get_vm()) };
+                                return Err(s);
+                             },
+                        };
+                        js.set_index(&arr, i as u32, &mut r);
+                    }
+                    Ok(arr)
+                }),  Box::new(move |r: Result<Arc<JS>, BlockError>|{
+                    match r {
+                        Ok(js) => {
+                            cb1(Ok(js.new_undefined()))
+                        },
+                        Err(s) => {
+                            cb1(Err(format!("{:?}", s)))
+                        },
+                    }
+                }), Atom::from("query"));
+                // js1.set_global_var("_$rust_r".to_string(), arr);
+                // cb(Ok(js1.new_undefined()));
             },
             Err(s) => cb(Err(s)),
         }
@@ -376,7 +425,10 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
                         let elem = &v[i];
                         let mut r = match decode_by_tabkv(&js, elem, &tr.tab_info(&elem.ware, &elem.tab).unwrap()) {
                             Ok(v) => v,
-                            Err(s) => return Some(Err(s)),
+                            Err(s) => {
+                                unsafe { dukc_pop(js.get_vm()) };
+                                return Some(Err(s))
+                            },
                         };
                         js.set_index(&arr, i as u32, &mut r);
                     }

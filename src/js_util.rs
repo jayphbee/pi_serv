@@ -1,11 +1,12 @@
 use std::sync::Arc;
 use std::mem::transmute_copy;
 
-use pi_vm::adapter::{JSType, JS};
+use pi_vm::adapter::{JSType, JS, dukc_pop};
 use sinfo::{StructInfo, EnumType, EnumInfo};
 use lib_util::err_map;
 use bon::{ReadBuffer, Decode};
 use pi_db::db::{TabKV, TabMeta};
+
 
 pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -> Result<JSType, String> {
     let name = sinfo.name.as_str();
@@ -15,16 +16,33 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
             for v in sinfo.fields.iter(){
                 let name = match v.name.parse() {
                     Ok(n) => n,
-                    Err(_) => return Err(format!("String cannot be converted to digits, field:{:?}, struct:{}", v.name, name)),
+                    Err(_) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(format!("String cannot be converted to digits, field:{:?}, struct:{}", v.name, name));
+                    },
                 };
-                js.set_index(&arr, name, &mut decode_by_type(js, bon, &v.ftype)?);
+                let mut value = match decode_by_type(js, bon, &v.ftype) {
+                    Ok(v) => v,
+                    Err(s) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(s);
+                    },
+                };
+                js.set_index(&arr, name, &mut value);
             }
             return Ok(arr);
         },
         "_$Json" => {//一个普通的Json
             let obj = js.new_object();
             for v in sinfo.fields.iter(){
-                js.set_field(&obj, String::from(v.name.as_str()), &mut decode_by_type(js, bon, &v.ftype)?);
+                let mut value = match decode_by_type(js, bon, &v.ftype) {
+                    Ok(v) => v,
+                    Err(s) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(s);
+                    },
+                };
+                js.set_field(&obj, String::from(v.name.as_str()), &mut value);
             }
             return Ok(obj);
         }
@@ -40,11 +58,19 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
+        unsafe { dukc_pop(js.get_vm()) };
         return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
     }
 
     for v in sinfo.fields.iter(){
-        js.set_field(&obj, String::from(v.name.as_str()), &mut decode_by_type(js, bon, &v.ftype)?);
+        let mut value = match decode_by_type(js, bon, &v.ftype) {
+            Ok(v) => v,
+            Err(s) => {
+                unsafe { dukc_pop(js.get_vm()) };
+                return Err(s);
+            },
+        };
+        js.set_field(&obj, String::from(v.name.as_str()), &mut value);
     }
     Ok(obj)
 }
@@ -60,6 +86,7 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
+        unsafe { dukc_pop(js.get_vm()) };
         return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
     }
 
@@ -68,7 +95,14 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
     let t = &einfo.members[index - 1];
     match t {
         &Some(ref ftype) => {
-            js.set_field(&obj, String::from("value"), &mut decode_by_type(js, bon, &ftype)?);
+            let mut value = match decode_by_type(js, bon, &ftype) {
+                Ok(v) => v,
+                Err(s) => {
+                    unsafe { dukc_pop(js.get_vm()) };
+                    return Err(s);
+                },
+            };
+            js.set_field(&obj, String::from("value"), &mut value);
         },
         None => (),
     }
@@ -87,6 +121,7 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             js.new_uint8_array(8).from_bytes(&arr);
             let r = js.invoke(1);
             if r.is_none(){
+                unsafe { dukc_pop(js.get_vm()) };
                 return Err("call function error: pi_modules['pi/bigint/util'].exports.u64Merge".to_string());
             }
             r
@@ -99,6 +134,7 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             js.new_uint8_array(16).from_bytes(&arr);
             let r = js.invoke(1);
             if r.is_none(){
+                unsafe { dukc_pop(js.get_vm()) };
                 return Err("call function error: pi_modules['pi/bigint/util'].exports.u128Merge".to_string());
             }
             r
@@ -115,22 +151,32 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
         EnumType::I128 => js.new_i64(err_map(i64::decode(bon))?),
         //TODO
         EnumType::I256 => js.new_i64(err_map(i64::decode(bon))?),
-        EnumType::Isize => {js.new_i64(err_map(i64::decode(bon))?)},
+        EnumType::Isize => js.new_i64(err_map(i64::decode(bon))?),
         EnumType::F32 => js.new_f32(err_map(f32::decode(bon))?),
         EnumType::F64 => js.new_f64(err_map(f64::decode(bon))?),
         //TODO
         EnumType::BigI => js.new_i64(err_map(i64::decode(bon))?),
-        EnumType::Str => js.new_str(err_map(String::decode(bon))?),
+        EnumType::Str => {
+            let r = err_map(String::decode(bon))?;
+            js.new_str(r)
+        },
         //Bin应该有一个直接从片段new出array_buffer的方法， js未提供 TODO
         EnumType::Bin => {
             let bin = err_map(bon.read_bin())?;
             js.new_array_buffer(bin.len() as u32)
         },
         EnumType::Arr(v_type) => {
-            let arr = js.new_array();
             let len = err_map(usize::decode(bon))?;
+            let arr = js.new_array();
             for i in 0..len{
-                js.set_index(&arr, i as u32, &mut decode_by_type(js, bon, v_type)?);
+                let mut value = match decode_by_type(js, bon, v_type) {
+                    Ok(v) => v,
+                    Err(s) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(s);
+                    },
+                };
+                js.set_index(&arr, i as u32, &mut value);
             }
             arr
         },
@@ -140,10 +186,27 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             let temp = js.new_array();
             for i in 0..len{
                 let mut elem = js.new_array();
-                js.set_index(&elem, 0, &mut decode_by_type(js, bon, _k_type)?);
-                js.set_index(&elem, 1, &mut decode_by_type(js, bon, v_type)?);
+                let mut key = match decode_by_type(js, bon, _k_type) {
+                    Ok(v) => v,
+                    Err(s) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(s);
+                    },
+                };
+                js.set_index(&elem, 0, &mut key);
+                let mut value = match decode_by_type(js, bon, v_type) {
+                    Ok(v) => v,
+                    Err(s) => {
+                        unsafe { dukc_pop(js.get_vm()) };
+                        unsafe { dukc_pop(js.get_vm()) };
+                        return Err(s);
+                    },
+                };
+                js.set_index(&elem, 1, &mut value);
                 js.set_index(&temp, i as u32, &mut elem);
-            }
+
+            };
             let tmp = js.new_type("Map".to_string(), 1); //必须保证“Map”类型存在
             tmp
         },
@@ -173,12 +236,27 @@ pub fn decode_by_tabkv(js: &Arc<JS>, tabkv: &TabKV, meta: &TabMeta) -> Result<JS
     let obj = js.new_object();
     js.set_field(&obj, "ware".to_string(), &mut js.new_str(tabkv.ware.as_str().to_string()));
     js.set_field(&obj, "tab".to_string(), &mut js.new_str(tabkv.tab.as_str().to_string()));
-    js.set_field(&obj, "key".to_string(), &mut decode_by_type(js, &mut ReadBuffer::new(&tabkv.key, 0), &meta.k)?);
+    let mut key = match decode_by_type(js, &mut ReadBuffer::new(&tabkv.key, 0), &meta.k) {
+        Ok(v) => v,
+        Err(s) => {
+            unsafe { dukc_pop(js.get_vm()) };
+            return Err(s);
+        },
+    };
+    js.set_field(&obj, "key".to_string(), &mut key);
     match &tabkv.value {
         &Some(ref v) => {
-            js.set_field(&obj, "value".to_string(), &mut decode_by_type(js, &mut ReadBuffer::new(&v, 0), &meta.v)?);
+            let mut value = match decode_by_type(js, &mut ReadBuffer::new(&v, 0), &meta.v) {
+                Ok(v) => v,
+                Err(s) => {
+                    unsafe { dukc_pop(js.get_vm()) };
+                    return Err(s);
+                },
+            };
+            js.set_field(&obj, "value".to_string(), &mut value);
         },
         None => (),
     }
+
     Ok(obj)
 }

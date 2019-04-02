@@ -655,7 +655,8 @@ fn call_583163851_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let r = js_db::query(jst0,jst1,jst2,jst3,Arc::new(call_back),&js);
 	if r.is_some(){
         let r = r.unwrap();let mut r = match r{
-        Ok(r) => {  r }
+        Ok(r) => {
+             r }
         Err(v) => { 
             return Some(CallResult::Err(v + ", Result is Err"));
         }
