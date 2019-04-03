@@ -210,6 +210,7 @@ impl Depend{
 
 pub type RcFileDes = Rc<RefCell<FileDes>>;
 
+#[derive(Clone)]
 pub struct FileDes{
 	pub path: String,
 	pub sign: Option<String>,

@@ -29,7 +29,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
     let t = now_millisecond();
     println!("init_js store_depend----------------------------------{}", t - t1);
 
-    let dp = Depend::new(file_list, root.clone());
+    let dp = Depend::new(file_list.clone(), root.clone());
     let mut dir_c = Vec::from(dirs);
     push_pre(&mut dir_c);
 
@@ -90,7 +90,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
         //调用全局变量定义函数， 定义全局变量_$mgr
         js.get_js_function("_$defineGlobal".to_string());
         js.new_str(String::from("_$root"));
-        js.new_str(root);
+        js.new_str(root.clone());
         js.call(2);
     }
     for i in 1..list.len(){
@@ -110,7 +110,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
 
     println!("vm:meta运行成功！!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n");
 
-    init_shell_manager(&list, &file_map);
+    init_shell_manager(dirs, file_list, root, &file_map);
 }
 
 pub fn create_code_tab(mgr: &Mgr){
@@ -211,24 +211,59 @@ pub fn add_line_number(s: &str) -> String{
     s
 }
 
+//初始化系统shell的前置和后置代码文件
+fn init_shell_front_rear(list: &mut Vec<String>) {
+    let evn = "evn.js".to_string();
+    let core = "core.js".to_string();
+    let first = "first.js".to_string();
+    let next = "next.js".to_string();
+    let last = "last.js".to_string();
+
+    let init_shell = "pi_pt/init/init_shell.js".to_string();
+
+    list.insert(0, next);
+    list.insert(0, first);
+    list.insert(0, core);
+    list.insert(0, evn);
+    list.push(init_shell);
+    list.push(last);
+}
+
 //初始化系统shell管理器
-fn init_shell_manager(files: &Vec<String>, codes: &HashMap<String, Arc<Vec<u8>>>) {
+fn init_shell_manager(dirs: &[String], file_list: Vec<FileDes>, root: String, codes: &HashMap<String, Arc<Vec<u8>>>) {
     let mut vec: Vec<Arc<Vec<u8>>> = Vec::new();
 
+    let depend = Depend::new(file_list, root.clone()); //获取指定依赖
+    let files = Loader::list(dirs, &depend); //加载指定目录下的代码文件
+    let mut files = Loader::list_with_depend(&files, &depend); //根据依赖顺序构建代码文件
+
+    init_shell_front_rear(&mut files);
+    
     for file in files {
-        if file.ends_with(r".c.js") ||
-            file.ends_with(r".i.js") ||
-            file.ends_with(r".a.js") ||
-            file.ends_with(r".b.js") {
+        if file.ends_with(r".a.js") ||
+            file.ends_with(r".b.js") ||
+            file.ends_with(r".c.js") ||
+            file.ends_with(r".u.js") ||
+            file.ends_with(r".i.js") {
                 //忽略初始化代码
                 continue;
         } else {
-            if Path::new(file).starts_with("pi_pt/init/init.js") {
+            if Path::new(&file).starts_with("pi_pt/init/init.js") {
                 //忽略初始化代码
                 continue;
             }
 
-            if let Some(code) = codes.get(file) {
+            if Path::new(&file).starts_with("pi_pt/init/update.js") {
+                //忽略热更代码
+                continue;
+            }
+
+            if Path::new(&file).starts_with("pi_pt/init/init_shell.js") {
+                //首次，则忽略加载初始化shell代码
+                continue;
+            }
+
+            if let Some(code) = codes.get(&file) {
                 vec.push(code.clone());
             }
         }
