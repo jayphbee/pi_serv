@@ -239,6 +239,7 @@ fn init_shell_manager(dirs: &[String], file_list: Vec<FileDes>, root: String, co
 
     init_shell_front_rear(&mut files);
 
+    let mut b = true;
     for file in files {
         if file.ends_with(r".a.js") ||
             file.ends_with(r".b.js") ||
@@ -260,7 +261,10 @@ fn init_shell_manager(dirs: &[String], file_list: Vec<FileDes>, root: String, co
 
             if Path::new(&file).starts_with("pi_pt/init/init_shell.js") {
                 //首次，则忽略加载初始化shell代码
-                continue;
+                if b {
+                    b = false;
+                    continue;
+                }
             }
 
             if let Some(code) = codes.get(&file) {
