@@ -238,7 +238,7 @@ fn init_shell_manager(dirs: &[String], file_list: Vec<FileDes>, root: String, co
     let mut files = Loader::list_with_depend(&files, &depend); //根据依赖顺序构建代码文件
 
     init_shell_front_rear(&mut files);
-    
+
     for file in files {
         if file.ends_with(r".a.js") ||
             file.ends_with(r".b.js") ||
