@@ -35,7 +35,7 @@ extern crate sinfo;
 extern crate hash_value;
 extern crate timer;
 extern crate ordmap;
-extern crate pref;
+extern crate apm;
 extern crate pi_store;
 
 #[macro_use]
@@ -94,12 +94,13 @@ use lib_util::now_millisecond;
 use worker::worker_pool::WorkerPool;
 use worker::impls::{JS_TASK_POOL, STORE_TASK_POOL, NET_TASK_POOL, JS_WORKER_WALKER, STORE_WORKER_WALKER, NET_WORKER_WALKER};
 use timer::TIMER;
+use worker::worker::WorkerType;
 
 use init_js::{init_js};
 use js_base::IS_END;
 use util::{read_file_list};
 
-use pref::allocator::CounterSystemAllocator;
+use apm::allocator::CounterSystemAllocator;
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
@@ -131,13 +132,13 @@ fn main() {
     load_lib_backtrace();
     TIMER.run();
     register_native_object();
-    let worker_pool0 = Box::new(WorkerPool::new(10, 1024 * 1024, 1500, JS_WORKER_WALKER.clone()));
+    let worker_pool0 = Box::new(WorkerPool::new("JS Worker".to_string(), WorkerType::Js,  10, 1024 * 1024, 1500, JS_WORKER_WALKER.clone()));
     worker_pool0.run(JS_TASK_POOL.clone());
 
-    let worker_pool1 = Box::new(WorkerPool::new(10, 1024 * 1024, 10000, STORE_WORKER_WALKER.clone()));
+    let worker_pool1 = Box::new(WorkerPool::new("Store Worker".to_string(), WorkerType::Store,  10, 1024 * 1024, 10000, STORE_WORKER_WALKER.clone()));
     worker_pool1.run(STORE_TASK_POOL.clone());
 
-    let worker_pool = Box::new(WorkerPool::new(10, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
+    let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  10, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
 
     pi_crypto_build::register(&BON_MGR);
