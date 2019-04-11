@@ -655,8 +655,7 @@ fn call_583163851_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let r = js_db::query(jst0,jst1,jst2,jst3,Arc::new(call_back),&js);
 	if r.is_some(){
         let r = r.unwrap();let mut r = match r{
-        Ok(r) => {
-             r }
+        Ok(r) => {  r }
         Err(v) => { 
             return Some(CallResult::Err(v + ", Result is Err"));
         }
@@ -1283,6 +1282,31 @@ fn call_3557646357(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_lib::guid_gen(jst0,jst1);let mut result = js.new_str(result.to_string()); 
+    Some(CallResult::Ok)
+}
+
+
+fn call_3906048478(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in bonbuf_cmp";
+
+	let jst0 = &v[0];
+	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst0 = jst0.to_bytes();
+
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+    let result = js_lib::bonbuf_cmp(jst0,jst1);let mut result = match result{
+        Some(v) => { let mut v = js.new_i32(v);
+ v}
+        None => js.new_null()
+    };
+
     Some(CallResult::Ok)
 }
 
@@ -3033,6 +3057,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_691063210), 691063210);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3635855143), 3635855143);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3557646357), 3557646357);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3906048478), 3906048478);
     mgr.regist_fun_meta(FnMeta::Call(call_373179692), 373179692);
     mgr.regist_fun_meta(FnMeta::CallArg(call_145125716), 145125716);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2887071833), 2887071833);
