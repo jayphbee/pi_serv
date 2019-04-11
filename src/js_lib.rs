@@ -9,6 +9,8 @@ use guid::GuidGen;
 use gray::{Gray, GrayTab};
 use ordmap::sbtree::{Tree};
 use ordmap::ordmap::{Entry, ImOrdMap, Iter};
+use bon::{partial_cmp, ReadBuffer};
+use std::cmp::Ordering;
 
 //NativeObject, 灰度系统需要使用
 #[derive(Clone, Debug)]
@@ -154,3 +156,14 @@ pub fn guid_gen(guid: &GuidGen, ctrl_id: u16) -> u128 {
     guid.gen(ctrl_id).0
 } 
 
+pub fn bonbuf_cmp(b1: &[u8], b2: &[u8]) -> Option<i32> {
+    let mut b1= ReadBuffer::new(b1, 0);
+    let mut b2 = ReadBuffer::new(b2, 0);
+
+    match partial_cmp(&mut b1, &mut b2) {
+        Some(Ordering::Less) => Some(-1),
+        Some(Ordering::Equal) => Some(0),
+        Some(Ordering::Greater) => Some(1),
+        None => None
+    }
+}
