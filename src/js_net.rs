@@ -30,6 +30,7 @@ pub struct NetMgr {
     pub mgr: NetManager,
     pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>,
     Arc<Result<SocketAddr,Error>>) + Send>>>>>,
+    pub close_handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(usize, RawSocket) + Send>>>>>,
 }
 
 impl NetMgr {
@@ -37,6 +38,7 @@ impl NetMgr {
         NetMgr{
             mgr: NetManager::new(),
             handler: Arc::new(Mutex::new(FnvHashMap::default())),
+            close_handler: Arc::new(Mutex::new(FnvHashMap::default())),
         }
     }
 
@@ -44,13 +46,42 @@ impl NetMgr {
         let key = Atom::from(addr.clone() + ":" + protocol.as_str());
         let h = self.handler.clone();
         let mut r = self.handler.lock().unwrap();
+        let c_h = self.close_handler.clone();
         let key_copy = key.clone();
         let v = r.entry(key).or_insert_with(||{
+            let c_h = c_h.clone();
+            {
+                let mut close_handler = c_h.lock().unwrap();
+                close_handler.insert(key_copy.clone(), Vec::new());
+            }
             let arr = Vec::new();
-            let callback: ListenerFn = Box::new(move |peer: Result<(RawSocket, Arc<RwLock<RawStream>>),Error>, addr: Result<SocketAddr,Error>|{
-                let r = h.lock().unwrap();
+            let callback: ListenerFn = Box::new(move |peer: Result<(RawSocket, Arc<RwLock<RawStream>>),Error>, addr: Result<SocketAddr,Error>|{ 
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
+                let c_h = c_h.clone();
+
+                //设置关闭链接的回调
+                match peer.as_ref() {
+                    &Ok(ref peer) => {
+                        let socket = peer.0.clone();
+                        let key_copy = key_copy.clone();
+                        let stream = &peer.1;
+                        stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _: IOResult<()>| {
+                            let c_h = c_h.clone();
+                            let socket = socket.clone();
+                            let close_handler = c_h.lock().unwrap();
+                            let close_handler = close_handler.get(&key_copy).unwrap();
+                            //通知链接关闭处理器
+                            for h in close_handler.iter() {
+                                h(id, socket.clone());
+                            }
+                        }));
+                    } ,
+                    Err(s) => println!("{}", s),
+                };
+
+                //链接成功， 通知链接成功处理器
+                let r = h.lock().unwrap();
                 let rr = r.get(&key_copy).unwrap();
                 for v in rr.iter(){
                     v(peer.clone(),  addr.clone());
@@ -68,12 +99,20 @@ impl NetMgr {
         });
         v.push(f);
     }
+
+    fn add_close_handler(&mut self, addr: &str, protocol: &str, f: Box<Fn(usize, RawSocket) + Send>){
+        let key = Atom::from(addr.to_string() + ":" + protocol);
+        let mut close_handler = self.close_handler.lock().unwrap();
+        let mut close_handler = close_handler.get_mut(&key).unwrap();
+        close_handler.push(f);
+    }
 }
 
 pub struct TlsNetMgr {
     pub mgr: TlsManager,
     pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>,
     Arc<Result<SocketAddr,Error>>) + Send>>>>>,
+    pub close_handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(usize, TlsSocket) + Send>>>>>,
 }
 
 impl TlsNetMgr {
@@ -81,6 +120,7 @@ impl TlsNetMgr {
         TlsNetMgr{
             mgr: TlsManager::new(recv_buff_size),
             handler: Arc::new(Mutex::new(FnvHashMap::default())),
+            close_handler: Arc::new(Mutex::new(FnvHashMap::default())),
         }
     }
 
@@ -88,13 +128,42 @@ impl TlsNetMgr {
         let key = Atom::from(addr.clone() + ":" + protocol.as_str());
         let h = self.handler.clone();
         let mut r = self.handler.lock().unwrap();
+        let c_h = self.close_handler.clone();
         let key_copy = key.clone();
         let v = r.entry(key).or_insert_with(||{
+            let c_h = c_h.clone();
+            {
+                let mut close_handler = c_h.lock().unwrap();
+                close_handler.insert(key_copy.clone(), Vec::new());
+            }
             let arr = Vec::new();
             let callback = Box::new(move |peer: Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>, addr: Result<SocketAddr,Error>|{
-                let r = h.lock().unwrap();
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
+                let c_h = c_h.clone();
+
+                //设置关闭链接的回调
+                match peer.as_ref() {
+                    &Ok(ref peer) => {
+                        let socket = peer.0.clone();
+                        let key_copy = key_copy.clone();
+                        let stream = &peer.1;
+                        stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _: IOResult<()>| {
+                            let c_h = c_h.clone();
+                            let socket = socket.clone();
+                            let close_handler = c_h.lock().unwrap();
+                            let close_handler = close_handler.get(&key_copy).unwrap();
+                            //通知链接关闭处理器
+                            for h in close_handler.iter() {
+                                h(id, socket.clone());
+                            }
+                        }));
+                    } ,
+                    Err(s) => println!("{}", s),
+                };
+
+                //链接成功， 通知链接成功处理器
+                let r = h.lock().unwrap();
                 let rr = r.get(&key_copy).unwrap();
                 for v in rr.iter(){
                     v(peer.clone(),  addr.clone());
@@ -113,6 +182,13 @@ impl TlsNetMgr {
             arr
         });
         v.push(f);
+    }
+
+    fn add_close_handler(&mut self, addr: &str, protocol: &str, f: Box<Fn(usize, TlsSocket) + Send>){
+        let key = Atom::from(addr.to_string() + ":" + protocol);
+        let mut close_handler = self.close_handler.lock().unwrap();
+        let mut close_handler = close_handler.get_mut(&key).unwrap();
+        close_handler.push(f);
     }
 }
 
@@ -268,13 +344,27 @@ pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size
             Err(s) => println!("{}", s),
         };
     });
-    mgr.add_handler(addr, protocol, f);
+    mgr.add_handler(addr.clone(), protocol.clone(), f);
+    let server_copy = server.clone();
+    mgr.add_close_handler(&addr, &protocol, Box::new(move |id, socket| {
+        server_copy.handle_close(id);
+    }));
     server
 }
 
 pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handler: &NetHandler, close_handler: &NetHandler) {
     let handler = handler.clone();
     let close_handler = close_handler.clone();
+    let close_callback = Box::new(move |id: usize, socket: RawSocket| {
+        remove_queue(id);
+        let socket = Arc::new(socket);
+        match close_handler.handle(socket.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
+            Ok(_) => (),
+            Err(s) => {
+                println!("{}", s);
+            },
+        };
+    });
     let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
         match peer.as_ref() {
             &Ok(ref peer) => {
@@ -282,17 +372,17 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
                 let stream = &peer.1;
                 let id = socket.socket;
                 let socket = Arc::new(socket);
-                let socket1 = socket.clone();
-                let close_handler = close_handler.clone();
-                stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _| {
-                    remove_queue(id);
-                    match close_handler.handle(socket1.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
-                        Ok(_) => (),
-                        Err(s) => {
-                            println!("{}", s);
-                        },
-                    };
-                }));
+                // let socket1 = socket.clone();
+                // let close_handler = close_handler.clone();
+                // stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _| {
+                //     remove_queue(id);
+                //     match close_handler.handle(socket1.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
+                //         Ok(_) => (),
+                //         Err(s) => {
+                //             println!("{}", s);
+                //         },
+                //     };
+                // }));
 
                 match handler.handle(socket, Atom::from("net_connect"), Args::OneArgs(id)){
                     Ok(_) => (),
@@ -305,7 +395,8 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
         };
         
     });
-    mgr.add_handler(addr, protocol, f);
+    mgr.add_handler(addr.clone(), protocol.clone(), f);
+    mgr.add_close_handler(&addr, &protocol, close_callback);
 }
 
 //为mqtt绑定安全网络， 返回mqttserver
@@ -327,13 +418,27 @@ pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_p
             Err(s) => println!("{}", s),
         };
     });
-    mgr.add_handler(addr, protocol, cert_path, key_path, f);
+    mgr.add_handler(addr.clone(), protocol.clone(), cert_path, key_path, f);
+    let server_copy = server.clone();
+    mgr.add_close_handler(&addr, &protocol, Box::new(move |id, socket| {
+        server_copy.handle_close(id);
+    }));
     server
 }
 
 pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, handler: &NetHandler, close_handler: &NetHandler) {
     let handler = handler.clone();
     let close_handler = close_handler.clone();
+    let close_callback = Box::new(move |id: usize, socket: TlsSocket| {
+        remove_queue(id);
+        let socket = Arc::new(socket);
+        match close_handler.handle(socket.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
+            Ok(_) => (),
+            Err(s) => {
+                println!("{}", s);
+            },
+        };
+    });
     let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
         match peer.as_ref() {
             &Ok(ref peer) => {
@@ -341,17 +446,6 @@ pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String,
                 let stream = &peer.1;
                 let id = socket.socket;
                 let socket = Arc::new(socket);
-                let socket1 = socket.clone();
-                let close_handler = close_handler.clone();
-                stream.write().unwrap().set_close_callback(Box::new(move |id: usize, _| {
-                    remove_queue(id);
-                    match close_handler.handle(socket1.clone(), Atom::from("net_connect_close"), Args::OneArgs(id)) {
-                        Ok(_) => (),
-                        Err(s) => {
-                            println!("{}", s);
-                        },
-                    };
-                }));
 
                 match handler.handle(socket, Atom::from("net_connect"), Args::OneArgs(id)){
                     Ok(_) => (),
@@ -364,7 +458,8 @@ pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String,
         };
         
     });
-    mgr.add_handler(addr, protocol, cert_path, key_path, f);
+    mgr.add_handler(addr.clone(), protocol.clone(), cert_path, key_path, f);
+    mgr.add_close_handler(&addr, &protocol, close_callback);
 }
 
 pub fn clone_server_node(node: &ServerNode) -> ServerNode{
