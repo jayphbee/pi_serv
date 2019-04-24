@@ -272,8 +272,8 @@ unsafe impl Sync for TopicHandler {}
 
 impl Handler for TopicHandler {
 	type A = u8;
-    type B = Arc<Vec<u8>>;
-    type C = ();
+    type B = Option<SocketAddr>;
+    type C = Arc<Vec<u8>>;
     type D = ();
     type E = ();
     type F = ();
@@ -296,20 +296,29 @@ impl Handler for TopicHandler {
         let topic_name = topic.clone();
 		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
 			vm.new_str((*topic_name).to_string());
-			match args {
-				Args::TwoArgs(_, bin) => {
+			let peer_addr = match args {
+				Args::ThreeArgs(_, peer, bin) => {
 					let buffer = vm.new_uint8_array(bin.len() as u32);
 					buffer.from_bytes(bin.as_slice());
+                    peer
 				},
 				_ => panic!("invalid topic handler args"),
-			}
+			};
 			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
 			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
 			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
             nobjs.to_map(&vm);
             vm.new_u32(id as u32);
-			6
+            match peer_addr {
+                Some(addr) => {
+                    vm.new_str(addr.to_string());
+                },
+                None => {
+                    vm.new_undefined();
+                },
+            }
+			7
 		});
 		gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
 	}
