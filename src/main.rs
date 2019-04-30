@@ -37,6 +37,7 @@ extern crate timer;
 extern crate ordmap;
 extern crate apm;
 extern crate pi_store;
+extern crate libc;
 
 #[macro_use]
 extern crate lazy_static;
@@ -55,6 +56,8 @@ pub mod js_base;
 pub mod js_lib;
 pub mod js_async;
 pub mod hotfix;
+pub mod webshell;
+
 mod js_util;
 mod pi_crypto_build;
 mod pi_math_hash_build;
