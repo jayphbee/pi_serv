@@ -31,6 +31,7 @@ use js_httpc;
 use js_net;
 use js_async;
 use hotfix;
+use webshell;
 
 
 
@@ -2791,6 +2792,35 @@ fn call_3668445806(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_451831207(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = webshell::WebShell::new();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,937567010);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3060877404(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in exec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 937567010, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const webshell::WebShell) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = webshell::WebShell::exec(jst0,jst1);let mut result = js.new_str(result);
+
+    Some(CallResult::Ok)
+}
+
 fn drop_3289224548(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBIter) };
 }
@@ -2966,6 +2996,10 @@ fn drop_579352454(ptr: usize){
 fn drop_646865374(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut hotfix::GrayMgrMutax) };
 }
+
+fn drop_937567010(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut webshell::WebShell) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
@@ -3011,6 +3045,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Mutex<hotfix::GrayMgr>>"), drop_fn: drop_579352454}, 579352454);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgrMutax"), drop_fn: drop_646865374}, 646865374);
+    mgr.regist_struct_meta(StructMeta{name:String::from("webshell::WebShell"), drop_fn: drop_937567010}, 937567010);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3763610783_sync), 3763610783);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2701929727_sync), 2701929727);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1993779671), 1993779671);
@@ -3109,4 +3144,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_56672718), 56672718);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3591490542), 3591490542);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3668445806), 3668445806);
+    mgr.regist_fun_meta(FnMeta::Call(call_451831207), 451831207);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3060877404), 3060877404);
 }
