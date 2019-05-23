@@ -15,7 +15,7 @@ use atom::Atom;
 use sinfo::{EnumType};
 use bon::{WriteBuffer, Encode};
 use util::store_depend;
-use lib_util::now_millisecond;
+use time::now_millisecond;
 
 use depend::{Depend, FileDes};
 use jsloader::Loader;

@@ -3,7 +3,7 @@ use std::mem::transmute_copy;
 
 use pi_vm::adapter::{JSType, JS, dukc_pop};
 use sinfo::{StructInfo, EnumType, EnumInfo};
-use lib_util::err_map;
+use lib_util::err_string;
 use bon::{ReadBuffer, Decode};
 use pi_db::db::{TabKV, TabMeta};
 
@@ -90,7 +90,7 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
         return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
     }
 
-    let index = err_map(usize::decode(bon))?;
+    let index = err_string(usize::decode(bon))?;
     js.set_field(&obj, String::from("enum_type"), &mut js.new_u8(index as u8));
     let t = &einfo.members[index - 1];
     match t {
@@ -111,10 +111,10 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
 
 pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Result<JSType, String> {
     let r = match t {
-        EnumType::Bool => js.new_boolean(err_map(bool::decode(bon))?),
-        EnumType::U8 => js.new_u8(err_map(u8::decode(bon))?),
-        EnumType::U16 => js.new_u16(err_map(u16::decode(bon))?),
-        EnumType::U32 => js.new_u32(err_map(u32::decode(bon))?),
+        EnumType::Bool => js.new_boolean(err_string(bool::decode(bon))?),
+        EnumType::U8 => js.new_u8(err_string(u8::decode(bon))?),
+        EnumType::U16 => js.new_u16(err_string(u16::decode(bon))?),
+        EnumType::U32 => js.new_u32(err_string(u32::decode(bon))?),
         EnumType::U64 => {
             let arr:[u8; 8] = unsafe{transmute_copy(&u64::decode(bon))};
             js.check_function("pi_modules['pi/bigint/util'].exports.u64Merge".to_string());
@@ -140,33 +140,33 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             r
         }
         //todo
-        EnumType::U256 => js.new_u64(err_map(u64::decode(bon))?),
-        EnumType::Usize => js.new_u64(err_map(u64::decode(bon))?),
-        EnumType::I8 => js.new_i8(err_map(i8::decode(bon))?),
-        EnumType::I16 => js.new_i16(err_map(i16::decode(bon))?),
-        EnumType::I32 => js.new_i32(err_map(i32::decode(bon))?),
+        EnumType::U256 => js.new_u64(err_string(u64::decode(bon))?),
+        EnumType::Usize => js.new_u64(err_string(u64::decode(bon))?),
+        EnumType::I8 => js.new_i8(err_string(i8::decode(bon))?),
+        EnumType::I16 => js.new_i16(err_string(i16::decode(bon))?),
+        EnumType::I32 => js.new_i32(err_string(i32::decode(bon))?),
         //todo
-        EnumType::I64 => js.new_i64(err_map(i64::decode(bon))?),
+        EnumType::I64 => js.new_i64(err_string(i64::decode(bon))?),
         //todo
-        EnumType::I128 => js.new_i64(err_map(i64::decode(bon))?),
+        EnumType::I128 => js.new_i64(err_string(i64::decode(bon))?),
         //TODO
-        EnumType::I256 => js.new_i64(err_map(i64::decode(bon))?),
-        EnumType::Isize => js.new_i64(err_map(i64::decode(bon))?),
-        EnumType::F32 => js.new_f32(err_map(f32::decode(bon))?),
-        EnumType::F64 => js.new_f64(err_map(f64::decode(bon))?),
+        EnumType::I256 => js.new_i64(err_string(i64::decode(bon))?),
+        EnumType::Isize => js.new_i64(err_string(i64::decode(bon))?),
+        EnumType::F32 => js.new_f32(err_string(f32::decode(bon))?),
+        EnumType::F64 => js.new_f64(err_string(f64::decode(bon))?),
         //TODO
-        EnumType::BigI => js.new_i64(err_map(i64::decode(bon))?),
+        EnumType::BigI => js.new_i64(err_string(i64::decode(bon))?),
         EnumType::Str => {
-            let r = err_map(String::decode(bon))?;
+            let r = err_string(String::decode(bon))?;
             js.new_str(r)
         },
         //Bin应该有一个直接从片段new出array_buffer的方法， js未提供 TODO
         EnumType::Bin => {
-            let bin = err_map(bon.read_bin())?;
+            let bin = err_string(bon.read_bin())?;
             js.new_array_buffer(bin.len() as u32)
         },
         EnumType::Arr(v_type) => {
-            let len = err_map(usize::decode(bon))?;
+            let len = err_string(usize::decode(bon))?;
             let arr = js.new_array();
             for i in 0..len{
                 let mut value = match decode_by_type(js, bon, v_type) {
@@ -182,7 +182,7 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
         },
         EnumType::Map(_k_type, v_type) => {
             js.get_type("Map".to_string());
-            let len = err_map(usize::decode(bon))?;
+            let len = err_string(usize::decode(bon))?;
             let temp = js.new_array();
             for i in 0..len{
                 let mut elem = js.new_array();
@@ -214,14 +214,14 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             decode_by_sinfo(js, bon, v_type)?
         },
         EnumType::Option(v_type) => {
-            if err_map(bon.is_nil())? {
+            if err_string(bon.is_nil())? {
                 js.new_undefined()
             }else{
                 decode_by_type(js, bon, v_type)?
             }
         },
         EnumType::Enum(v_type) => {
-            if err_map(bon.is_nil())? {
+            if err_string(bon.is_nil())? {
                 js.new_undefined()
             }else{
                 decode_by_enuminfo(js, bon, v_type)?
