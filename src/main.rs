@@ -38,6 +38,7 @@ extern crate ordmap;
 extern crate apm;
 extern crate pi_store;
 extern crate libc;
+extern crate time;
 
 #[macro_use]
 extern crate lazy_static;
@@ -93,7 +94,7 @@ use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::bonmgr::BON_MGR;
 use clap::{Arg, App};
 
-use lib_util::now_millisecond;
+use time::now_millisecond;
 use worker::worker_pool::WorkerPool;
 use worker::impls::{JS_TASK_POOL, STORE_TASK_POOL, NET_TASK_POOL, JS_WORKER_WALKER, STORE_WORKER_WALKER, NET_WORKER_WALKER};
 use timer::TIMER;
