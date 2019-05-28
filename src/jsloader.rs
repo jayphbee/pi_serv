@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use depend::{Depend, RcFileDes};
 use std::path::Path;
 use std::fs::read;
+use std::convert::From;
 
 //use pi_base::util::now_millisecond;
 
@@ -118,7 +119,7 @@ impl Loader {
 				}
 			},
 			None => {
-				mod_names.push(String::from(info_ref.path.as_ref()));
+				mod_names.push(<String as From<&str>>::from(info_ref.path.as_ref()));
 			},
 		}
 	}
