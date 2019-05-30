@@ -136,7 +136,7 @@ fn main() {
     load_lib_backtrace();
     TIMER.run();
     register_native_object();
-    let worker_pool0 = Box::new(WorkerPool::new("JS Worker".to_string(), WorkerType::Js,  10, 1024 * 1024, 1500, JS_WORKER_WALKER.clone()));
+    let worker_pool0 = Box::new(WorkerPool::new("JS Worker".to_string(), WorkerType::Js,  10, 1024 * 1024, 5000, JS_WORKER_WALKER.clone()));
     worker_pool0.run(JS_TASK_POOL.clone());
 
     let worker_pool1 = Box::new(WorkerPool::new("Store Worker".to_string(), WorkerType::Store,  10, 1024 * 1024, 10000, STORE_WORKER_WALKER.clone()));
