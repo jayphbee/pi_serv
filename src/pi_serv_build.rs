@@ -180,8 +180,8 @@ fn call_1168492209(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 3334364653, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Event) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 3165549746, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut pi_db::db::Event) };
 
 
 	let jst2 = &v[2];
@@ -2845,8 +2845,8 @@ fn drop_1495847839(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::JSDBMonitor) };
 }
 
-fn drop_3334364653(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Event) };
+fn drop_3165549746(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_db::db::Event) };
 }
 
 fn drop_2976191628(ptr: usize){
@@ -3007,7 +3007,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode"), drop_fn: drop_1751456239}, 1751456239);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBToMqttMonitor"), drop_fn: drop_2627601653}, 2627601653);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::JSDBMonitor"), drop_fn: drop_1495847839}, 1495847839);
-    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Event"), drop_fn: drop_3334364653}, 3334364653);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::Event"), drop_fn: drop_3165549746}, 3165549746);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr"), drop_fn: drop_2976191628}, 2976191628);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::pi_vm_impl::VMFactory"), drop_fn: drop_730519735}, 730519735);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
