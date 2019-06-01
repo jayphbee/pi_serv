@@ -25,6 +25,18 @@ use std::io::{Result as IOResult};
 use mqtt::data::Server;
 use mqtt::session::Session;
 use js_lib::JSGray;
+use worker::task::TaskType;
+use worker::impls::cast_net_task;
+
+/*
+* RPC异步访问任务类型
+*/
+const ASYNC_RPC_TASK_TYPE: TaskType = TaskType::Async(false);
+
+/*
+* RPC异步访问任务优先级
+*/
+const ASYNC_RPC_PRIORITY: usize = 100;
 
 pub struct NetMgr {
     pub mgr: NetManager,
@@ -224,28 +236,35 @@ impl Handler for NetHandler {
         let gray_tab = self.gray_tab.read().unwrap();
         let gray = match env.get_gray() {
             Some(v) => match gray_tab.get(v) {
-                Some(g) => g,
+                Some(g) => g.clone(),
                 None => return Err(String::from("gray is not exist, version:") + v.to_string().as_str()),
             },
-            None => gray_tab.get_last(),
+            None => gray_tab.get_last().clone(),
         };
-        let mgr = gray.mgr.clone();
-        let nobjs = gray.nobjs.clone();
-        let event_name1 = event_name.clone();
-        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
-            //事件对象
-            let event = vm.new_object();
-            vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()));
-            vm.set_field(&event, String::from("connect_id"), &mut vm.new_u32(conect_id as u32));
-            //mgr
-			ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
-            //env
-			ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
-            //nobj
-            nobjs.to_map(&vm);
-			4
-		});
-		gray.factory.call(Some(id), self.handler.clone(), real_args, Atom::from((*event_name).to_string() + " net task"));
+
+        let handler_name = self.handler.clone();
+        let event_name_copy = event_name.clone();
+        let func = Box::new(move |_lock| {
+            let mgr = gray.mgr.clone();
+            let nobjs = gray.nobjs.clone();
+            let event_name1 = event_name.clone();
+            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                //事件对象
+                let event = vm.new_object();
+                vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()));
+                vm.set_field(&event, String::from("connect_id"), &mut vm.new_u32(conect_id as u32));
+                //mgr
+                ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
+                //env
+                ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
+                //nobj
+                nobjs.to_map(&vm);
+                4
+            });
+            gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
+        });
+        cast_net_task(ASYNC_RPC_TASK_TYPE, ASYNC_RPC_PRIORITY, None, func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
+
         Ok(())
 	}
 }
@@ -263,6 +282,7 @@ impl NetHandler {
 /*
 * Topic处理器
 */
+#[derive(Clone)]
 pub struct TopicHandler {
 	gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
 }
@@ -282,45 +302,50 @@ impl Handler for TopicHandler {
 	type HandleResult = ();
 
 	fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-        let gray_tab = self.gray_tab.read().unwrap();
-        let id = env.get_id();
-        let gray = match env.get_gray() {
-            Some(v) => match gray_tab.get(v) {
-                Some(g) => g,
-                None => panic!("gray is not exist, version:{}", v),
-            },
-            None => gray_tab.get_last(),
-        };
-        let mgr = gray.mgr.clone();
-        let nobjs = gray.nobjs.clone();
+        let topic_handler = self.clone();
         let topic_name = topic.clone();
-		let real_args = Box::new(move |vm: Arc<JS>| -> usize {
-			vm.new_str((*topic_name).to_string());
-			let peer_addr = match args {
-				Args::ThreeArgs(_, peer, bin) => {
-					let buffer = vm.new_uint8_array(bin.len() as u32);
-					buffer.from_bytes(bin.as_slice());
-                    peer
-				},
-				_ => panic!("invalid topic handler args"),
-			};
-			let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
-			let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-			ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
-            nobjs.to_map(&vm);
-            vm.new_u32(id as u32);
-            match peer_addr {
-                Some(addr) => {
-                    vm.new_str(addr.to_string());
+        let func = Box::new(move |_lock| {
+            let gray_tab = topic_handler.gray_tab.read().unwrap();
+            let id = env.get_id();
+            let gray = match env.get_gray() {
+                Some(v) => match gray_tab.get(v) {
+                    Some(g) => g,
+                    None => panic!("gray is not exist, version:{}", v),
                 },
-                None => {
-                    vm.new_undefined();
-                },
-            }
-			7
-		});
-		gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
+                None => gray_tab.get_last(),
+            };
+            let mgr = gray.mgr.clone();
+            let nobjs = gray.nobjs.clone();
+            let topic_name = topic.clone();
+            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                vm.new_str((*topic_name).to_string());
+                let peer_addr = match args {
+                    Args::ThreeArgs(_, peer, bin) => {
+                        let buffer = vm.new_uint8_array(bin.len() as u32);
+                        buffer.from_bytes(bin.as_slice());
+                        peer
+                    },
+                    _ => panic!("invalid topic handler args"),
+                };
+                let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
+                let ptr = Box::into_raw(Box::new(env.clone())) as usize;
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
+                nobjs.to_map(&vm);
+                vm.new_u32(id as u32);
+                match peer_addr {
+                    Some(addr) => {
+                        vm.new_str(addr.to_string());
+                    },
+                    None => {
+                        vm.new_undefined();
+                    },
+                }
+                7
+            });
+            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
+        });
+        cast_net_task(ASYNC_RPC_TASK_TYPE, ASYNC_RPC_PRIORITY, None, func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
 	}
 }
 
