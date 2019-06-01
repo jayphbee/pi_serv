@@ -39,7 +39,12 @@ fn call_4027749383(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 fn drop_568147534(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_store::lmdb_file::DB) };
 }
+
+fn drop_2325173571(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_store::file_mem_db::FileMemDB) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::file_mem_db::FileMemDB"), drop_fn: drop_2325173571}, 2325173571);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4027749383), 4027749383);
 }
