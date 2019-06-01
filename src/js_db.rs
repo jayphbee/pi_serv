@@ -17,6 +17,7 @@ use pi_vm::adapter::{JSType, JS, dukc_pop};
 use pi_vm::pi_vm_impl::{VMFactory, block_set_global_var, BlockError};
 use pi_vm::bonmgr::{ptr_jstype};
 use pi_store::lmdb_file::{DB as Lmdb};
+use pi_store::file_mem_db::FileMemDB;
 use mqtt::server::ServerNode;
 use mqtt::data::Server;
 
@@ -24,7 +25,6 @@ use mqtt::data::Server;
 //use pi_vm::adapter::dukc_top;
 
 use js_util::{decode_by_type, decode_by_tabkv};
-
 
 type DBIterTrait = Box<Iter<Item=(Bin, Bin)>>;
 /**
@@ -215,6 +215,10 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 
 // 注册文件数据库
 pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
+    mgr.register(Atom::from(prefix), Arc::new(ware))
+}
+
+pub fn register_file_mem_db(mgr: &Mgr, prefix: String, ware: FileMemDB) -> bool {
     mgr.register(Atom::from(prefix), Arc::new(ware))
 }
 
