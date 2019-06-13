@@ -10,16 +10,21 @@ fn call_2222376158(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u32() as usize;
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 510245560, true, param_error).expect("");
-	let jst1 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>)}.clone();
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
 
 
-    let result = pi_vm::pi_vm_impl::VMFactory::new(jst0,jst1);
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 510245560, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>)}.clone();
+
+
+    let result = pi_vm::pi_vm_impl::VMFactory::new(jst0,jst1,jst2);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
 
 
@@ -43,6 +48,31 @@ fn call_1487978276(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = pi_vm::pi_vm_impl::VMFactory::append(jst0,jst1);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
 
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1393151886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in produce";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 730519735, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_vm::pi_vm_impl::VMFactory) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    let result = pi_vm::pi_vm_impl::VMFactory::produce(jst0,jst1);let mut result = match result{
+        Ok(r) => { let mut r = js.new_u32(r as u32);
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
 
     Some(CallResult::Ok)
 }
@@ -79,5 +109,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::channel_map::VMChannel"), drop_fn: drop_3720506907}, 3720506907);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2222376158), 2222376158);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1487978276), 1487978276);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1393151886), 1393151886);
     mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);
 }
