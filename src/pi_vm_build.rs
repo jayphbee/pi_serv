@@ -20,11 +20,16 @@ fn call_2222376158(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 510245560, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>)}.clone();
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32() as usize;
 
 
-    let result = pi_vm::pi_vm_impl::VMFactory::new(jst0,jst1,jst2);
+	let jst3 = &v[3];
+    let ptr = jstype_ptr(&jst3, js.clone(), 510245560, true, param_error).expect("");
+	let jst3 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>)}.clone();
+
+
+    let result = pi_vm::pi_vm_impl::VMFactory::new(jst0,jst1,jst2,jst3);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,730519735);
 
 
