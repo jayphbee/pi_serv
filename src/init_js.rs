@@ -34,7 +34,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
     push_pre(&mut dir_c);
 
     let file_map = Loader::load_dir_sync(dir_c.as_slice(), &dp);
-    let js = JS::new(0, Atom::from("init js vm"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    let js = JS::new(0, Atom::from("init js vm"), 0, Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
     create_code_tab(&mgr);//创建代码表
     let global_code = bind_global(&mgr, &js);//插入全局变量定义函数的字节码
     let file_map = code_store(&mgr, file_map, &js);//插入其他所有js代码的字节码
