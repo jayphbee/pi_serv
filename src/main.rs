@@ -139,13 +139,13 @@ fn main() {
     register_native_object();
     let sys = SysStat::new();
     let processor = sys.processor_count();
-    let worker_pool0 = Box::new(WorkerPool::new("JS Worker".to_string(), WorkerType::Js,  processor * 2, 1024 * 1024, 5000, JS_WORKER_WALKER.clone()));
+    let worker_pool0 = Box::new(WorkerPool::new("JS Worker".to_string(), WorkerType::Js,  processor * 4, 1024 * 1024, 5000, JS_WORKER_WALKER.clone()));
     worker_pool0.run(JS_TASK_POOL.clone());
 
-    let worker_pool1 = Box::new(WorkerPool::new("Store Worker".to_string(), WorkerType::Store,  processor * 2, 1024 * 1024, 10000, STORE_WORKER_WALKER.clone()));
+    let worker_pool1 = Box::new(WorkerPool::new("Store Worker".to_string(), WorkerType::Store,  processor, 1024 * 1024, 10000, STORE_WORKER_WALKER.clone()));
     worker_pool1.run(STORE_TASK_POOL.clone());
 
-    let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor * 2, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
+    let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
 
     pi_crypto_build::register(&BON_MGR);
