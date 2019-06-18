@@ -206,7 +206,7 @@ fn depend_change(gray_mgr: Arc<Mutex<GrayMgr>>, path: PathBuf, list_u: &[String]
 }
 
 fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mgr: &Mgr, old_mgr: &Mgr, depend: Depend, gray_mgr: MutexGuard<GrayMgr>) {
-    let js = JS::new(0, Atom::from("hotfix start vm"), 0, Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    let js = JS::new(0, Atom::from("hotfix start vm"), 0, 0, 0, Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
     let global_code = compeil_global(&js);//插入全局变量定义函数的字节码
     js.load(&global_code);//加载全局变量定义函数的字节码
     let nobjs = gray_mgr.nobjs.clone();
@@ -364,7 +364,7 @@ fn write_depend_diff(diff: &HashMap<Atom, FileEvent>, mgr: &Mgr, path: PathBuf, 
     let ware = Atom::from("memory");
     let depend_tab = Atom::from("_$depend");
     let code_tab = Atom::from("_$code");
-    let js = JS::new(0, Atom::from("hotfix write depend diff vm"), 0, Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    let js = JS::new(0, Atom::from("hotfix write depend diff vm"), 0, 0, 0, Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
     for (mod_path, d) in diff{
         let mut key_bb = WriteBuffer::new();
         mod_path.encode(&mut key_bb);
