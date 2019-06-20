@@ -83,7 +83,7 @@ impl RPCClient {
                 Err(e) => callback(Err(e.to_string())),
                 Ok(e) => {
                     match e {
-                        Some(r) => callback(Ok(r.slice())),
+                        Some(r) => callback(Ok(Some(&r[..]))),
                         None => callback(Ok(None)),
                     };
                 },

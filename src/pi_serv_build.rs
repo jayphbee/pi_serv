@@ -2952,10 +2952,15 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
     let jscopy = js.clone();
 	let call_back = move |r: Result<Option<&[u8]>,String>| {
+        let r = match r {
+            Ok(Some(s)) => Ok(Some(Vec::from(s))),
+            Ok(_) => Ok(None),
+            Err(e) => Err(e),
+        };
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = match r{
-        Some(v) => { 
-    let v_jstype = js.new_uint8_array(v.len() as u32);v_jstype.from_bytes(v);let mut v = v_jstype;
+        Some(v) => {
+    let v_jstype = js.new_uint8_array(v.len() as u32);v_jstype.from_bytes(&v[..]);let mut v = v_jstype;
  v}
         None => js.new_null()
     };
