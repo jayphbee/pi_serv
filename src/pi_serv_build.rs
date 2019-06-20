@@ -22,7 +22,6 @@ use rpc;
 use std::io::Error;
 use net;
 use std::sync::Mutex;
-use std::io::Result;
 use gray::GrayVersion;
 use js_db;
 use depend;
@@ -2863,7 +2862,7 @@ fn call_1752410735(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
  r }
         Err(v) => { 
-            return Some(CallResult::Err(v.to_string() + "Result is Err"));
+            return Some(CallResult::Err(v + ", Result is Err"));
         }
     };
 
@@ -2905,7 +2904,7 @@ fn call_3581032719_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<Option<Vec<u8>>>| {
+	let call_back = move |r: Result<Option<Vec<u8>>,String>| {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = match r{
         Some(v) => { 
@@ -2915,7 +2914,7 @@ fn call_3581032719_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v.to_string() + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
 
@@ -2953,7 +2952,7 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<Option<Vec<u8>>>| {
+	let call_back = move |r: Result<Option<Vec<u8>>,String>| {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = match r{
         Some(v) => { 
@@ -2963,7 +2962,7 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v.to_string() + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err")
         }
     };
 
