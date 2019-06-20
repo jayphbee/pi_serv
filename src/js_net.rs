@@ -27,7 +27,6 @@ use mqtt::server::{ServerNode, ClientStub};
 use std::io::{Result as IOResult};
 use mqtt::data::Server;
 use mqtt::session::Session;
-use net::net::{NET_START_TIME, NET_RECEIVE_COUNT};
 use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::cast_net_task;
@@ -350,10 +349,6 @@ impl Handler for TopicHandler {
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
         });
         cast_net_task(ASYNC_RPC_TASK_TYPE, ASYNC_RPC_PRIORITY, None, func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
-
-        let start = NET_START_TIME.swap(0, Ordering::Relaxed);
-        let count = NET_RECEIVE_COUNT.swap(0, Ordering::Relaxed);
-        println!("===> Slow JS Topic, time: {:?}, count: {:?}, topic: {:?}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros() as usize - start, count, (&topic_name).to_string());
 	}
 }
 

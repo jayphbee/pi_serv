@@ -2997,7 +2997,7 @@ fn call_4148029508(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_net_rpc_client::RPCClient::get_gray(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_u32(v as u32);
+        Some(v) => { let mut v = js.new_u32(*v as u32);
  v}
         None => js.new_null()
     };
