@@ -40,6 +40,7 @@ extern crate apm;
 extern crate pi_store;
 extern crate libc;
 extern crate time;
+extern crate nodec;
 
 #[macro_use]
 extern crate lazy_static;
@@ -58,6 +59,7 @@ pub mod js_net_rpc_client;
 pub mod js_base;
 pub mod js_lib;
 pub mod js_async;
+pub mod js_net_rpc_client;
 pub mod hotfix;
 pub mod webshell;
 
