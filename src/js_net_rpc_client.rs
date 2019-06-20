@@ -77,11 +77,16 @@ impl RPCClient {
                    cmd: String,
                    body: &[u8],
                    timeout: u8,
-                   callback: Arc<Fn(Result<Option<Vec<u8>>, String>)>) {
+                   callback: Arc<Fn(Result<Option<&[u8]>, String>)>) {
         self.0.request(cmd, Vec::from(body), timeout, Arc::new(move |r: IOResult<Option<Vec<u8>>>| {
             match r {
                 Err(e) => callback(Err(e.to_string())),
-                Ok(e) => callback(Ok(e)),
+                Ok(e) => {
+                    match e {
+                        Some(r) => callback(Ok(r.slice())),
+                        None => callback(Ok(None)),
+                    };
+                },
             }
         }));
     }

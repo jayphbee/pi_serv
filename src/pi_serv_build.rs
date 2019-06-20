@@ -22,7 +22,6 @@ use rpc;
 use std::io::Error;
 use net;
 use std::sync::Mutex;
-use gray::GrayVersion;
 use js_db;
 use depend;
 use util;
@@ -2952,12 +2951,11 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<Option<Vec<u8>>,String>| {
+	let call_back = move |r: Result<Option<&[u8]>,String>| {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = match r{
         Some(v) => { 
-    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
-
+    let v_jstype = js.new_uint8_array(v.len() as u32);v_jstype.from_bytes(v);let mut v = v_jstype;
  v}
         None => js.new_null()
     };
@@ -2984,62 +2982,6 @@ fn call_298029700(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_net_rpc_client::RPCClient::close(jst0);
-    Some(CallResult::Ok)
-}
-
-
-fn call_4148029508(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in get_gray";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 4088898725, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const js_net_rpc_client::RPCClient) };
-
-
-    let result = js_net_rpc_client::RPCClient::get_gray(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_u32(*v as u32);
- v}
-        None => js.new_null()
-    };
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_2725242041(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in set_gray";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 4088898725, false, param_error).expect("");
-	let jst0 = unsafe { &mut *(ptr as *mut js_net_rpc_client::RPCClient) };
-
-
-	let jst1 = &v[1];
-    let jst1 = if jst1.is_undefined() || jst1.is_null(){
-        None
-    }else{
-	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_u32() as usize;
-
-        Some(jst1)
-    };
-
-
-    js_net_rpc_client::RPCClient::set_gray(jst0,jst1);
-    Some(CallResult::Ok)
-}
-
-
-fn call_2699801979(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in get_id";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 4088898725, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const js_net_rpc_client::RPCClient) };
-
-
-    let result = js_net_rpc_client::RPCClient::get_id(jst0);let mut result = js.new_u32(result as u32);
-
     Some(CallResult::Ok)
 }
 
@@ -3409,8 +3351,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3581032719_async), 3581032719);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3808530099_async), 3808530099);
     mgr.regist_fun_meta(FnMeta::CallArg(call_298029700), 298029700);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_4148029508), 4148029508);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2725242041), 2725242041);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2699801979), 2699801979);
     mgr.regist_fun_meta(FnMeta::CallArg(call_146889029), 146889029);
 }
