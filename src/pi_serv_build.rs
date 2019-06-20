@@ -2863,7 +2863,7 @@ fn call_1752410735(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
  r }
         Err(v) => { 
-            return Some(CallResult::Err(v + ", Result is Err"));
+            return Some(CallResult::Err(v.to_string() + "Result is Err"));
         }
     };
 

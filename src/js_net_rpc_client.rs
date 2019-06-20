@@ -23,7 +23,7 @@ use nodec::rpc::RPCClient as NetRPCClient;
 use nodec::mqttc::SharedMqttClient as NetSharedMqttClient;
 use net::data::ListenerFn;
 use mqtt::server::{ServerNode, ClientStub};
-use std::io::{Result as IOResult};
+use std::io::Result;
 use mqtt::data::Server;
 use mqtt::session::Session;
 use js_lib::JSGray;
@@ -45,9 +45,9 @@ pub struct RPCClient(Arc<NetRPCClient>);
 
 impl RPCClient {
     //创建一个RPC客户端
-    pub fn create(url: &str) -> Result<Self, String> {
+    pub fn create(url: &str) -> Result<Self> {
         match NetRPCClient::create(url) {
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(e),
             Ok(r) => Ok(RPCClient(Arc::new(r))),
         }
     }
@@ -58,10 +58,13 @@ impl RPCClient {
                    client_id: &str,
                    timeout: u8,
                    closed_handler: Option<CloseHandler>,
-                   connect_callback: Arc<Fn(IOResult<Option<Vec<u8>>>)>) {
+                   connect_callback: Arc<Fn(Result<Option<Vec<u8>>>)>) {
         let client = self.clone();
         self.0.connect(keep_alive, client_id, timeout, Arc::new(move |_r|{
-            closed_handler.handle(client.0.clone());
+            match closed_handler {
+                Some(r) => {r.handle(client.0.clone());},
+                None => (),
+            };
         }), connect_callback);
     }
 
@@ -70,7 +73,7 @@ impl RPCClient {
                    cmd: String,
                    body: &[u8],
                    timeout: u8,
-                   callback: Arc<Fn(IOResult<Option<Vec<u8>>>)>) {
+                   callback: Arc<Fn(Result<Option<Vec<u8>>>)>) {
         self.0.request(cmd, Vec::from(body), timeout, callback);
     }
 
@@ -122,7 +125,7 @@ impl CloseHandler {
             let nobjs = gray.nobjs.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 // RPCClient
-                ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(RPCClient(env))) as usize, 2976191628);
+                ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(RPCClient(env))) as usize, 4088898725);
                 // mgr
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                 // nobj
