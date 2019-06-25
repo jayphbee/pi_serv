@@ -59,16 +59,16 @@ impl RPCClient {
                    closed_handler: Option<CloseHandler>,
                    connect_callback: Arc<Fn(Result<Option<Vec<u8>>, String>)>) {
         let client = self.clone();
-        self.0.connect(keep_alive, client_id, timeout, Arc::new(move |_r|{
-            match &closed_handler {
-                Some(r) => {r.handle(client.0.clone());},
-                None => (),
-            };
-        }), Arc::new(move |r: IOResult<Option<Vec<u8>>>| {
+        self.0.connect(keep_alive, client_id, timeout, Arc::new(move |r: IOResult<Option<Vec<u8>>>|{
             match r {
                 Err(e) => connect_callback(Err(e.to_string())),
                 Ok(e) => connect_callback(Ok(e)),
             }
+        }), Arc::new(move |_r| {
+            match &closed_handler {
+                Some(r) => {r.handle(client.0.clone());},
+                None => (),
+            };
         }));
     }
 
