@@ -254,7 +254,7 @@ impl Handler for NetHandler {
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
                 let event = vm.new_object();
-                vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()));
+                vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()).unwrap());
                 vm.set_field(&event, String::from("connect_id"), &mut vm.new_u32(conect_id as u32));
                 //mgr
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);

@@ -589,9 +589,9 @@ impl Monitor for JSDBMonitor{
                 let tab = e.tab.clone();
                 let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                     let event = vm.new_object();
-                    vm.set_field(&event, String::from("event_name"), &mut vm.new_str("db_change".to_string()));
-                    vm.set_field(&event, String::from("ware"), &mut vm.new_str(ware.as_str().to_string()));// ware
-                    vm.set_field(&event, String::from("tab"), &mut vm.new_str(tab.as_str().to_string()));// tab
+                    vm.set_field(&event, String::from("event_name"), &mut vm.new_str("db_change".to_string()).unwrap());
+                    vm.set_field(&event, String::from("ware"), &mut vm.new_str(ware.as_str().to_string()).unwrap());// ware
+                    vm.set_field(&event, String::from("tab"), &mut vm.new_str(tab.as_str().to_string()).unwrap());// tab
                     vm.set_field(&event, String::from("key"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(k)) as usize, 2886438122));//key
                     match v {
                         Some(v) => {vm.set_field(&event, String::from("value"), &mut ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(v)) as usize, 2886438122));},//value,

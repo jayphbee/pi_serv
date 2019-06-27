@@ -1307,7 +1307,13 @@ fn call_3557646357(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u16();
 
 
-    let result = js_lib::guid_gen(jst0,jst1);let mut result = js.new_str(result.to_string()); 
+    let result = js_lib::guid_gen(jst0,jst1);
+    let mut result = match js.new_str(result.to_string()) {
+        Err(e) => {
+            return Some(CallResult::Err(e));
+        },
+        Ok(v) => v,
+    };
     Some(CallResult::Ok)
 }
 
@@ -1547,8 +1553,12 @@ fn call_2175286088(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::get_json_val(jst0,jst1);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(String::from(v.as_str()));
- v}
+        Some(v) => { match js.new_str(String::from(v.as_str())) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -1594,8 +1604,12 @@ fn call_1500292772(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::remove_json_kv(jst0,jst1);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v);
- v}
+        Some(v) => { match js.new_str(v) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -1849,7 +1863,7 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 
@@ -1941,7 +1955,7 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 
@@ -2033,7 +2047,7 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 
@@ -2125,7 +2139,7 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 
@@ -2841,7 +2855,13 @@ fn call_3060877404(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst1 = jst1.get_str();
 
 
-    let result = webshell::WebShell::exec(jst0,jst1);let mut result = js.new_str(result);
+    let result = webshell::WebShell::exec(jst0,jst1);
+    let mut result = match js.new_str(result) {
+        Err(e) => {
+            return Some(CallResult::Err(e));
+        },
+        Ok(v) => v,
+    };
 
     Some(CallResult::Ok)
 }
@@ -2913,7 +2933,7 @@ fn call_3581032719_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 
@@ -2965,7 +2985,7 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v + ", Result is Err")
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
         }
     };
 

@@ -281,7 +281,7 @@ fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mg
         let mut i = 0;
         for (key, value) in diff_list_all{
             let mut arr =  js.new_array();
-            js.set_index(&arr, 0, &mut js.new_str(key.as_str().to_string()));
+            js.set_index(&arr, 0, &mut js.new_str(key.as_str().to_string()).unwrap());
             let mut v = match value {
                 FileEvent::Create => js.new_u8(0),
                 FileEvent::Modify => js.new_u8(1),

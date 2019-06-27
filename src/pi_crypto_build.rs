@@ -492,8 +492,12 @@ fn call_2496411899(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::bls::bls_get_curve_order(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v);
- v}
+        Some(v) => { match js.new_str(v) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -510,8 +514,12 @@ fn call_755737870(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::bls::bls_get_field_order(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v);
- v}
+        Some(v) => { match js.new_str(v) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -599,8 +607,12 @@ fn call_3075954650(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::bls::bls_id_get_dec_str(jst0,jst1);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v);
- v}
+        Some(v) => { match js.new_str(v) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -622,8 +634,12 @@ fn call_3801863647(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::bls::bls_id_get_hex_str(jst0,jst1);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v);
- v}
+        Some(v) => { match js.new_str(v) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 

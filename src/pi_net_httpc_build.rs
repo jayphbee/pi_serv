@@ -132,7 +132,13 @@ fn call_3825034130(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const httpc::HttpClientResponse) };
 
 
-    let result = httpc::HttpClientResponse::url(jst0);let mut result = js.new_str((*result).clone());
+    let result = httpc::HttpClientResponse::url(jst0);
+    let mut result = match js.new_str((*result).clone()) {
+        Err(e) => {
+            return Some(CallResult::Err(e));
+        },
+        Ok(v) => v,
+    };
 
 
     Some(CallResult::Ok)
@@ -246,9 +252,12 @@ fn call_484341674(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = httpc::HttpClientResponse::status_info(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_str((*v).clone());
-
- v}
+        Some(v) => { match js.new_str((*v).clone()) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         None => js.new_null()
     };
 
@@ -324,8 +333,12 @@ fn call_2925270627(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = httpc::HttpClientResponse::text(jst0);let mut result = match result{
-        Ok(r) => { let mut r = js.new_str(r);
- r }
+        Ok(r) => { match js.new_str(r) {
+            Err(e) => {
+                return Some(CallResult::Err(e));
+            },
+            Ok(v) => v,
+        }}
         Err(v) => { 
             return Some(CallResult::Err(v.to_string() + "Result is Err"));
         }

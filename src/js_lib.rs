@@ -96,7 +96,7 @@ impl Nobjs {
         let mut i = 0;
         for Entry(k, obj) in Iter::iter(&self.nobjs, None, false){
             let mut arr = vm.new_array();
-            vm.set_index(&arr, 0, &mut vm.new_str(k.as_str().to_string()));
+            vm.set_index(&arr, 0, &mut vm.new_str(k.as_str().to_string()).unwrap());
             let name = obj.path.as_str();
             let index = match name.find("."){
                 Some(v) => v,

@@ -158,7 +158,12 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
         EnumType::BigI => js.new_i64(err_string(i64::decode(bon))?),
         EnumType::Str => {
             let r = err_string(String::decode(bon))?;
-            js.new_str(r)
+            match js.new_str(r) {
+                Err(e) => {
+                    return Err(e);
+                },
+                Ok(v) => v,
+            }
         },
         //Bin应该有一个直接从片段new出array_buffer的方法， js未提供 TODO
         EnumType::Bin => {
@@ -234,8 +239,22 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
 //将TabKV转化为js中的Json
 pub fn decode_by_tabkv(js: &Arc<JS>, tabkv: &TabKV, meta: &TabMeta) -> Result<JSType, String>{
     let obj = js.new_object();
-    js.set_field(&obj, "ware".to_string(), &mut js.new_str(tabkv.ware.as_str().to_string()));
-    js.set_field(&obj, "tab".to_string(), &mut js.new_str(tabkv.tab.as_str().to_string()));
+    match js.new_str(tabkv.ware.as_str().to_string()) {
+        Err(e) => {
+            return Err(e);
+        },
+        Ok(mut v) => {
+            js.set_field(&obj, "ware".to_string(), &mut v);
+        },
+    }
+    match js.new_str(tabkv.tab.as_str().to_string()) {
+        Err(e) => {
+            return Err(e);
+        },
+        Ok(mut v) => {
+            js.set_field(&obj, "tab".to_string(), &mut v);
+        },
+    }
     let mut key = match decode_by_type(js, &mut ReadBuffer::new(&tabkv.key, 0), &meta.k) {
         Ok(v) => v,
         Err(s) => {
