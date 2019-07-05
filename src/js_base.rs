@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicUsize};
 use rand::rngs::OsRng;
 use rand::RngCore;
 
-use pi_vm::pi_vm_impl::{VMFactory, register_async_request};
+use pi_vm::pi_vm_impl::{VMFactory, register_async_request, push_callback};
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::bonmgr::{BON_MGR};
 use atom::Atom;
@@ -79,8 +79,8 @@ pub fn sleep(ms: u32, f: Box<FnBox()>){
 	TIMER.set_timeout(FuncRuner::new(f), ms);
 }
 
-pub fn set_timeout(ms: u32, f: Box<FnBox()>) -> usize{
-	TIMER.set_timeout(FuncRuner::new(f), ms)
+pub fn set_timeout(js: Arc<JS>, args: Box<FnBox(Arc<JS>) -> usize>, callback: u32, timeout: u32, info: Atom) -> Option<isize> {
+    push_callback(js, callback, args, Some(timeout), info)
 }
 
 pub fn clear_timeout(index: usize){

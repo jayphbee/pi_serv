@@ -98,7 +98,7 @@ use clap::{Arg, App};
 
 use time::now_millisecond;
 use worker::worker_pool::WorkerPool;
-use worker::impls::{JS_TASK_POOL, STORE_TASK_POOL, NET_TASK_POOL, JS_WORKER_WALKER, STORE_WORKER_WALKER, NET_WORKER_WALKER};
+use worker::impls::{TASK_POOL_TIMER, JS_TASK_POOL, STORE_TASK_POOL, NET_TASK_POOL, JS_WORKER_WALKER, STORE_WORKER_WALKER, NET_WORKER_WALKER};
 use timer::TIMER;
 use worker::worker::WorkerType;
 
@@ -138,6 +138,7 @@ fn main() {
 	#[cfg(not(unix))]
     load_lib_backtrace();
     TIMER.run();
+    TASK_POOL_TIMER.run();
     register_native_object();
     let sys = SysStat::new();
     let processor = sys.processor_count();

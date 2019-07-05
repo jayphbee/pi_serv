@@ -1027,13 +1027,13 @@ fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-    let call_back = move || {
-		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {0}), Atom::from("call_3344344275_async2"));
-    };
 
-    let result = js_base::set_timeout(jst0,Box::new(call_back));let mut result = js.new_u32(result as u32);
-
-	Some(CallResult::Ok)
+    if let Some(result) = js_base::set_timeout(jscopy.clone(), Box::new(move |js: Arc<JS>| {0}), call_index, jst0, Atom::from("call_3344344275_async2")) {
+        let mut result = js.new_i32(result as i32);
+        Some(CallResult::Ok)
+    } else {
+        Some(CallResult::Err("set timeout failed".to_string()))
+    }
 }
 
 
