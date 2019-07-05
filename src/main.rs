@@ -91,7 +91,7 @@ use std::io::{Read, Write, Result as IOResult};
 
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
-use pi_vm::adapter::{register_native_object};
+use pi_vm::adapter::{register_native_object, set_vm_timeout, register_global_vm_heap_collect_timer};
 use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::bonmgr::BON_MGR;
 use clap::{Arg, App};
@@ -107,7 +107,7 @@ use js_base::IS_END;
 use util::{read_file_list};
 
 use apm::common::SysStat;
-use apm::allocator::CounterSystemAllocator;
+use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit};
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
@@ -150,6 +150,9 @@ fn main() {
 
     let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
+    set_vm_timeout(60000);
+    register_global_vm_heap_collect_timer(5000);
+
 
     pi_crypto_build::register(&BON_MGR);
     pi_math_hash_build::register(&BON_MGR);

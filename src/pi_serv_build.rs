@@ -1868,7 +1868,7 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
     };
 
             1
-        } ), Atom::from("call_739596726_async1"));
+        } ), None, Atom::from("call_739596726_async1"));
     };
 
     js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
@@ -1960,7 +1960,7 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
     };
 
             1
-        } ), Atom::from("call_2173630691_async1"));
+        } ), None, Atom::from("call_2173630691_async1"));
     };
 
     js_httpc::get(jst0,jst1,jst2,Box::new(call_back));
@@ -2052,7 +2052,7 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
     };
 
             1
-        } ), Atom::from("call_1358301807_async1"));
+        } ), None, Atom::from("call_1358301807_async1"));
     };
 
     js_httpc::post(jst0,jst1,jst2,Box::new(call_back));
@@ -2144,7 +2144,7 @@ js.set_index(&array, 1, &mut r_elem);    let mut r = array;
     };
 
             1
-        } ), Atom::from("call_3423707807_async1"));
+        } ), None, Atom::from("call_3423707807_async1"));
     };
 
     js_httpc::post(jst0,jst1,jst2,Box::new(call_back));
@@ -2938,7 +2938,7 @@ fn call_3581032719_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     };
 
             1
-        } ), Atom::from("call_3581032719_async1"));
+        } ), None, Atom::from("call_3581032719_async1"));
     };
 
     js_net_rpc_client::RPCClient::connect(jst0,jst1,jst2,jst3,jst4,Arc::new(call_back));
@@ -2990,7 +2990,7 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     };
 
             1
-        } ), Atom::from("call_3808530099_async1"));
+        } ), None, Atom::from("call_3808530099_async1"));
     };
 
     js_net_rpc_client::RPCClient::request(jst0,jst1,jst2,jst3,Arc::new(call_back));
