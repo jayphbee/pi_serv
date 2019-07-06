@@ -9,7 +9,7 @@ use fnv::FnvHashMap;
 use mqtt3;
 
 use pi_vm::adapter::{JS};
-use pi_vm::pi_vm_impl::{remove_queue};
+use pi_vm::pi_vm_impl::{new_queue, remove_queue};
 use pi_vm::bonmgr::{ptr_jstype};
 use handler::{Args, Handler};
 use gray::{GrayVersion, GrayTab};
@@ -30,16 +30,6 @@ use mqtt::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::cast_net_task;
-
-/*
-* RPC异步访问任务类型
-*/
-const ASYNC_RPC_TASK_TYPE: TaskType = TaskType::Async(false);
-
-/*
-* RPC异步访问任务优先级
-*/
-const ASYNC_RPC_PRIORITY: usize = 100;
 
 pub struct NetMgr {
     pub mgr: NetManager,
@@ -266,7 +256,7 @@ impl Handler for NetHandler {
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
         });
-        cast_net_task(ASYNC_RPC_TASK_TYPE, ASYNC_RPC_PRIORITY, None, func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
+        cast_net_task(TaskType::Sync(false), 0, Some(new_queue(id)), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
 
         Ok(())
 	}
@@ -307,9 +297,9 @@ impl Handler for TopicHandler {
 	fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
         let topic_handler = self.clone();
         let topic_name = topic.clone();
+        let id = env.get_id();
         let func = Box::new(move |_lock| {
             let gray_tab = topic_handler.gray_tab.read().unwrap();
-            let id = env.get_id();
             let gray = match env.get_gray() {
                 Some(v) => match gray_tab.get(v) {
                     Some(g) => g,
@@ -348,7 +338,7 @@ impl Handler for TopicHandler {
             });
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
         });
-        cast_net_task(ASYNC_RPC_TASK_TYPE, ASYNC_RPC_PRIORITY, None, func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
+        cast_net_task(TaskType::Sync(false), 0, Some(new_queue(id)), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
 	}
 }
 
