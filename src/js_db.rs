@@ -485,7 +485,7 @@ impl Monitor for DBToMqttMonitor{
             None => return,
         }
 
-        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
+//        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
 
         //否则，将该事件投递到mqtt TODO
         match &e.other {
@@ -499,7 +499,7 @@ impl Monitor for DBToMqttMonitor{
                         wb.unwrap()
                     },
                 };
-                println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
+//                println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
                 match self.mqtt_server.publish(false, QoS::AtMostOnce, Atom::from(topic), value) {
                     Ok(_) => (),
                     Err(r) => println!("db listen reponse fail:{}", r),
