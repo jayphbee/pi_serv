@@ -29,7 +29,7 @@ use mqtt::data::Server;
 use mqtt::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
-use worker::impls::cast_net_task;
+use worker::impls::{unlock_js_task_queue, cast_js_task};
 
 pub struct NetMgr {
     pub mgr: NetManager,
@@ -235,9 +235,10 @@ impl Handler for NetHandler {
             None => gray_tab.get_last().clone(),
         };
 
+        let queue = new_queue(id); //创建指定socket的同步静态队列
         let handler_name = self.handler.clone();
         let event_name_copy = event_name.clone();
-        let func = Box::new(move |_lock| {
+        let func = Box::new(move |lock: Option<isize>| {
             let mgr = gray.mgr.clone();
             let nobjs = gray.nobjs.clone();
             let event_name1 = event_name.clone();
@@ -255,8 +256,13 @@ impl Handler for NetHandler {
                 4
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
+
+            //解锁当前同步静态队列，保证虚拟机执行
+            if !unlock_js_task_queue(queue) {
+                println!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
+            }
         });
-        cast_net_task(TaskType::Sync(true), 0, Some(new_queue(id)), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
 
         Ok(())
 	}
@@ -298,7 +304,8 @@ impl Handler for TopicHandler {
         let topic_handler = self.clone();
         let topic_name = topic.clone();
         let id = env.get_id();
-        let func = Box::new(move |_lock| {
+        let queue = new_queue(id); //创建指定socket的同步静态队列
+        let func = Box::new(move |lock: Option<isize>| {
             let gray_tab = topic_handler.gray_tab.read().unwrap();
             let gray = match env.get_gray() {
                 Some(v) => match gray_tab.get(v) {
@@ -337,8 +344,13 @@ impl Handler for TopicHandler {
                 7
             });
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
+
+            //解锁当前同步静态队列，保证虚拟机执行
+            if !unlock_js_task_queue(queue) {
+                println!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+            }
         });
-        cast_net_task(TaskType::Sync(true), 0, Some(new_queue(id)), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
 	}
 }
 
