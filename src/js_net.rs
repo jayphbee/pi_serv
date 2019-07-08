@@ -256,7 +256,7 @@ impl Handler for NetHandler {
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
         });
-        cast_net_task(TaskType::Sync(false), 0, Some(new_queue(id)), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
+        cast_net_task(TaskType::Sync(true), 0, Some(new_queue(id)), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
 
         Ok(())
 	}
@@ -338,7 +338,7 @@ impl Handler for TopicHandler {
             });
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
         });
-        cast_net_task(TaskType::Sync(false), 0, Some(new_queue(id)), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
+        cast_net_task(TaskType::Sync(true), 0, Some(new_queue(id)), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
 	}
 }
 
