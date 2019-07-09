@@ -150,6 +150,8 @@ fn main() {
 
     let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
+    let (total_memory, _, _, _, _, _) = sys.memory_usage();
+    set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
     set_vm_timeout(60000);
     register_global_vm_heap_collect_timer(5000);
 
