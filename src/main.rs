@@ -155,17 +155,20 @@ fn main() {
         println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
     }
     #[cfg(any(unix))]
-    match sys.sys_virtual_memory_detal() {
-        None => {
-            //获取内存占用信息失败，则使用默认最大堆限制
-            println!("!!!> Set Max Heap Limit Failed, used default max heap limit, size: {}", get_max_alloced_limit());
-        },
-        Some(info) => {
-            //获取内存占用信息成功
-            let total_memory = info.0;
-            set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
-            println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
-        },
+    {
+        let sys = sys.sys_stat.special_platform().unwrap();
+        match sys.sys_virtual_memory_detal() {
+            None => {
+                //获取内存占用信息失败，则使用默认最大堆限制
+                println!("!!!> Set Max Heap Limit Failed, used default max heap limit, size: {}", get_max_alloced_limit());
+            },
+            Some(info) => {
+                //获取内存占用信息成功
+                let total_memory = info.0;
+                set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
+                println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
+            },
+        }
     }
     set_vm_timeout(60000);
     register_global_vm_heap_collect_timer(5000);
