@@ -1,7 +1,6 @@
 #![feature(fs_read_write)]
 #![feature(splice)]
 #![feature(generic_associated_types)]
-#![feature(fnbox)]
 #![feature(unboxed_closures)]
 #![feature(vec_remove_item)]
 #![feature(nll)]
@@ -85,7 +84,6 @@ use std::time::Duration;
 use std::path::Path;
 use std::io;
 use std::sync::Arc;
-use std::boxed::FnBox;
 use std::sync::mpsc::channel;
 use std::io::{Read, Write, Result as IOResult};
 
@@ -107,7 +105,7 @@ use js_base::IS_END;
 use util::{read_file_list};
 
 use apm::common::SysStat;
-use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit};
+use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit, get_max_alloced_limit};
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
@@ -150,8 +148,25 @@ fn main() {
 
     let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
-    let (total_memory, _, _, _, _, _) = sys.memory_usage();
-    set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
+    #[cfg(any(windows))]
+    {
+        let (total_memory, _, _, _, _, _) = sys.memory_usage();
+        set_max_alloced_limit(((total_memory * 1024) as f64 * 0.75).floor() as usize);
+        println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
+    }
+    #[cfg(any(unix))]
+    match sys.sys_virtual_memory_detal() {
+        None => {
+            //获取内存占用信息失败，则使用默认最大堆限制
+            println!("!!!> Set Max Heap Limit Failed, used default max heap limit, size: {}", get_max_alloced_limit());
+        },
+        Some(info) => {
+            //获取内存占用信息成功
+            let total_memory = info.0;
+            set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
+            println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
+        },
+    }
     set_vm_timeout(60000);
     register_global_vm_heap_collect_timer(5000);
 
@@ -197,7 +212,7 @@ fn main() {
             let (resp_sender, resp_receiver) = channel();
 
             let req_sender_copy = req_sender.clone();
-            let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnBox(Arc<Vec<u8>>)>>| {
+            let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnOnce(Arc<Vec<u8>>)>>| {
                 resp_sender.send(result);
                 req_sender.send(req);
             });
@@ -213,7 +228,7 @@ fn main() {
 
                 println!("Shell v0.1");
 
-                let mut req: Option<Box<FnBox(Arc<Vec<u8>>)>> = None;
+                let mut req: Option<Box<FnOnce(Arc<Vec<u8>>)>> = None;
                 loop {
                     print!(">");
                     io::stdout().flush();

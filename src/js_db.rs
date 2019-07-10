@@ -1,6 +1,5 @@
 use std::sync::{Arc};
 use std::collections::HashMap;
-use std::boxed::FnBox;
 use std::path::Path;
 use std::fs;
 
@@ -540,7 +539,7 @@ pub fn dump(mgr: &Mgr, ware: String, tab: String, file: String, cb: Arc<Fn(Resul
     db_dump(mgr, Atom::from(ware), Atom::from(tab), file.clone(), cb);
 }
 
-pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnBox(Result<(), String>)>){
+pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnOnce(Result<(), String>)>){
     let dir = match file.as_str().rfind("/") {
         Some(v) => &file[0..v],
         None => {panic!("restore file Invalid:{}", file);},

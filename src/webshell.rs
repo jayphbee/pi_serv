@@ -1,14 +1,13 @@
 use std::sync::mpsc::{Sender, Receiver, TryRecvError, channel};
 use std::sync::Mutex;
 use std::io::{Result as IOResult};
-use std::boxed::FnBox;
 use std::sync::Arc;
 use std::ffi::CStr;
 use libc::c_char;
 
 use pi_vm::shell::SHELL_MANAGER;
 
-type ReqCb = Option<Box<FnBox(Arc<Vec<u8>>)>>;
+type ReqCb = Option<Box<FnOnce(Arc<Vec<u8>>)>>;
 
 lazy_static! {
     static ref CONSOLE_OUTPUT_CHANNLE: Arc<Mutex<(Sender<String>, Receiver<String>)>> = Arc::new(Mutex::new(channel()));
@@ -37,7 +36,7 @@ impl WebShell {
         let req_tx_clone = req_tx.clone();
         let resp_tx_clone = resp_tx.clone();
 
-        let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnBox(Arc<Vec<u8>>)>>| {
+        let resp = Arc::new(move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnOnce(Arc<Vec<u8>>)>>| {
             let _ = resp_tx_clone.send(result);
             let _ = req_tx_clone.send(req);
         });

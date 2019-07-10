@@ -1,6 +1,5 @@
 use std::sync::{Arc, Mutex};
 use std::ops::Deref;
-use std::boxed::FnBox;
 use std::sync::atomic::{AtomicUsize};
 
 use rand::rngs::OsRng;
@@ -75,11 +74,11 @@ pub fn get_depend(dp: &Depend, path: &[String]) -> Vec<String> {
 }
 
 //休眠
-pub fn sleep(ms: u32, f: Box<FnBox()>){
+pub fn sleep(ms: u32, f: Box<FnOnce()>){
 	TIMER.set_timeout(FuncRuner::new(f), ms);
 }
 
-pub fn set_timeout(js: Arc<JS>, args: Box<FnBox(Arc<JS>) -> usize>, callback: u32, timeout: u32, info: Atom) -> Option<isize> {
+pub fn set_timeout(js: Arc<JS>, args: Box<FnOnce(Arc<JS>) -> usize>, callback: u32, timeout: u32, info: Atom) -> Option<isize> {
     push_callback(js, callback, args, Some(timeout), info)
 }
 

@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::boxed::FnBox;
 use std::io;
 
 use httpc;
@@ -134,7 +133,7 @@ pub fn create_http_client(options: HttpClientOptions) -> Result<Arc<httpc::HttpC
     }
 }
 
-pub fn get<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
+pub fn get<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnOnce( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
     let c = Box::new(|c: Arc<httpc::HttpClient>, r: io::Result<httpc::HttpClientResponse>|{
         match  r {
             Ok(v) => callback(Ok((c, v))),
@@ -144,7 +143,7 @@ pub fn get<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: At
     httpc::HttpClient::get(client, url, body.0, c);
 }
 
-pub fn post<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnBox( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
+pub fn post<T: httpc::GenHttpClientBody>(client: &Arc<httpc::HttpClient>, url: Atom, body: HttpClientBody<T>, callback: Box<FnOnce( Result<(Arc<httpc::HttpClient>, httpc::HttpClientResponse), String>)>){
     let c = Box::new(|c: Arc<httpc::HttpClient>, r: io::Result<httpc::HttpClientResponse>|{
         match  r {
             Ok(v) => callback(Ok((c, v))),
