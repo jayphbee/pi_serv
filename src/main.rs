@@ -156,7 +156,7 @@ fn main() {
     }
     #[cfg(any(unix))]
     {
-        let sys = sys.sys_stat.special_platform().unwrap();
+        let sys = sys.special_platform().unwrap();
         match sys.sys_virtual_memory_detal() {
             None => {
                 //获取内存占用信息失败，则使用默认最大堆限制
