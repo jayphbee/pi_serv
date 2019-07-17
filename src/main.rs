@@ -171,7 +171,7 @@ fn main() {
         }
     }
     set_vm_timeout(60000);
-    register_global_vm_heap_collect_timer(5000);
+    register_global_vm_heap_collect_timer(10000);
 
 
     pi_crypto_build::register(&BON_MGR);
