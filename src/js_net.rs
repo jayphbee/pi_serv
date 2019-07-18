@@ -343,7 +343,7 @@ impl Handler for TopicHandler {
                 }
                 7
             });
-            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + "rpc task"));
+            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
