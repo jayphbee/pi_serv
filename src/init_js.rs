@@ -140,10 +140,14 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
             Ok(v) => v,
             Err(_) => panic!("code from_utf8 err, path: {}", key.clone()),
         };
-        let code = Arc::new(js.compile(key.clone(), c).unwrap());
-        item.value = Some(code.clone());
-        items.push(item);
-        m.insert(key.clone(), code.clone());
+        if let Some(c) = js.compile(key.clone(), c) {
+            let code = Arc::new(c);
+            item.value = Some(code.clone());
+            items.push(item);
+            m.insert(key.clone(), code.clone());
+        } else {
+            panic!("js compile error, file: {:?}", key);
+        }
     }
     let t = now_millisecond();
     println!("code_store compile----------------------------------{}", t - t1);
