@@ -27,11 +27,17 @@ use js_util::{decode_by_type, decode_by_tabkv};
 
 type DBIterTrait = Box<Iter<Item=(Bin, Bin)>>;
 /**
- * 封装类db迭代器， 是其由traiobj转化为具体类型（构建工具暂时不支持traitobj的构建）
- * */
+* 封装类db迭代器， 是其由traiobj转化为具体类型（构建工具暂时不支持traitobj的构建）
+*/
 pub struct DBIter(DBIterTrait, Arc<TabMeta>);
 
 impl DBIter{
+    /**
+    * 迭代下一个记录
+    * @param cb 迭代下一个记录的结果的异步回调，成功返回下一个记录的键值对，如果没有下一个记录，则返回空，失败返回原因描述
+    * @returns 返回同步迭代下一个记录的结果，成功返回下一个记录的键值对，如果没有下一个记录，则返回空
+    * @throws 失败则抛出原因描述
+    */
     pub fn next(&mut self, cb: Arc<Fn(Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>)>) -> Option<Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>>{
         match self.0.next(cb.clone()) {
             Some(v) => {cb(v); None},
@@ -39,6 +45,13 @@ impl DBIter{
         }
     }
 
+    /**
+    * 迭代下一个对象
+    * @param cb 迭代下一个对象的结果的异步回调，成功返回下一个记录的反序列化对象，如果没有下一个对象，则返回空，失败返回原因描述
+    * @param js 当前虚拟机
+    * @returns 返回同步迭代下一个对象的结果的异步回调，成功返回下一个记录的反序列化对象，如果没有下一个对象，则返回空
+    * @throws 失败则抛出原因描述
+    */
     pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<JSType>, String>)>, js: &Arc<JS>) -> Option<Result<Option<JSType>, String>>{
         let js = js.clone();
         let js1 = js.clone();
@@ -171,7 +184,18 @@ impl DBIter{
 
 pub struct DBWare(Arc<Ware>);
 
-// 取到数据库的迭代器
+/**
+* 获取数据库的迭代器
+* @param tr 事务
+* @param ware 库名
+* @param tab 表名
+* @param key 启始关键字
+* @param descending 是否倒序
+* @param _filter 过滤器，暂未使用
+* @param cb 获取迭代器的结果的异步回调，成功返回数据库的迭代器，失败返回原因描述
+* @returns 返回同步获取迭代器的结果，成功返回数据库的迭代器
+* @throws 失败则抛出原因描述
+*/
 pub fn iter_db(tr: &Tr, ware: String, tab: String, key: Option<&[u8]>, descending: bool, _filter: Option<String>, cb: Arc<Fn(Result<DBIter, String>)>) -> Option<Result<DBIter, String>> {
     let ware = Atom::from(ware);
     let tab = Atom::from(tab);
@@ -272,7 +296,16 @@ pub fn list_all_tables(tr: &Tr, ware: String) -> Vec<String> {
     }
 }
 
-//插入元信息
+/**
+* 修改数据库元信息
+* @param tr 事务
+* @param ware 库名
+* @param tab 表名
+* @param meta_buf 元信息
+* @param cb 创建、修改或删除表的结果的异步回调，成功返回空，失败返回原因描述
+* @returns 返回同步创建、修改或删除表的结果，成功返回空
+* @throws 失败则抛出原因描述
+*/
 pub fn alter(tr: &Tr, ware: String, tab: String, meta_buf: Option<&[u8]>, cb: Arc<Fn(Result<(), String>)>) -> Option<Result<(), String>>{
     let meta = match meta_buf {
         Some(buf) => {
@@ -288,7 +321,16 @@ pub fn alter(tr: &Tr, ware: String, tab: String, meta_buf: Option<&[u8]>, cb: Ar
     r
 }
 
-//修改数据库数据
+/**
+* 修改数据库记录
+* @param tr 事务
+* @param items 对象数组
+* @param lock_time 修改的锁超时时长，单位毫秒
+* @param read_lock 是否读锁
+* @param cb 修改结果的异步回调，成功返回空，失败返回原因描述
+* @returns 返回同步修改结果，成功返回空
+* @throws 失败则抛出原因描述
+*/
 pub fn modify(tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool, cb: Arc<Fn(Result<(), String>)>) -> Option<Result<(), String>>{
     let param_error = String::from("param error in modify");
     if !items.is_array() {
@@ -340,7 +382,16 @@ pub fn modify(tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
     tr.modify(arr, lock_time, read_lock, cb)
 }
 
-//查询数据库
+/**
+* 查询数据库记录
+* @param tr 事务
+* @param items 关键字数组
+* @param lock_time 修改的锁超时时长，单位毫秒
+* @param read_lock 是否读锁
+* @param cb 查询结果的异步回调，成功查询到关键字对应的记录，则返回对象数组，否则返回空，失败返回原因描述
+* @returns 返回同步查询结果，成功查询到关键字对应的记录，则返回对象数组，否则返回空
+* @throws 失败则抛出原因描述
+*/
 pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool, cb: Arc<Fn(Result<JSType, String>)>, js: &Arc<JS>) -> Option<Result<JSType, String>>{
     let param_error = String::from("param error in query");
     if !items.is_array() {
@@ -444,7 +495,15 @@ pub fn query (tr: &Tr, items: &JSType, lock_time: Option<usize>, read_lock: bool
     }
 }
 
-// 表的大小
+/**
+* 获取表的记录数量
+* @param tr 事务
+* @param ware_name 库名
+* @param tab_name 表名
+* @param cb 获取表的记录数量结果的异步回调，成功返回记录数量，失败返回原因描述
+* @returns 返回同步获取表的记录数量的结果，成功返回记录数量
+* @throws 失败则抛出原因描述
+*/
 pub fn tab_size(tr: &Tr, ware_name:&str, tab_name: &str, cb: Arc<Fn(Result<usize, String>)>) -> Option<Result<usize, String>> {
     tr.tab_size(&Atom::from(ware_name), &Atom::from(tab_name), cb)
 }
@@ -527,6 +586,16 @@ impl Monitor for DBToMqttMonitor{
     }
 }
 
+/**
+* 将指定表的所有记录备份到指定的文件
+* @param mgr 表库及事务管理器
+* @param ware 库名
+* @param tab 表名
+* @param file 文件的路径
+* @param cb 将指定表的所有记录保存到指定的文件的结果的异步回调，成功返回空，失败返回原因描述
+* @returns 返回同步将指定表的所有记录保存到指定的文件的结果，成功返回空
+* @throws 失败则抛出原因描述
+*/
 pub fn dump(mgr: &Mgr, ware: String, tab: String, file: String, cb: Arc<Fn(Result<(), String>)>) {
     let dir = match file.as_str().rfind("/") {
         Some(v) => &file[0..v],
@@ -539,6 +608,16 @@ pub fn dump(mgr: &Mgr, ware: String, tab: String, file: String, cb: Arc<Fn(Resul
     db_dump(mgr, Atom::from(ware), Atom::from(tab), file.clone(), cb);
 }
 
+/**
+* 将指定表的备份文件的所有记录恢复到指定的表
+* @param mgr 表库及事务管理器
+* @param ware 库名
+* @param tab 表名
+* @param file 文件的路径
+* @param cb 将将指定表的备份文件的所有记录恢复到指定的表的结果的异步回调，成功返回空，失败返回原因描述
+* @returns 返回同步将指定表的备份文件的所有记录恢复到指定的表的结果，成功返回空
+* @throws 失败则抛出原因描述
+*/
 pub fn restore(mgr: &Mgr, ware: String, tab: String, file: String, cb: Box<FnOnce(Result<(), String>)>){
     let dir = match file.as_str().rfind("/") {
         Some(v) => &file[0..v],

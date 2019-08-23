@@ -1028,7 +1028,7 @@ fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
     let jscopy = js.clone();
 
-    if let Some(result) = js_base::set_timeout(jscopy.clone(), Box::new(move |js: Arc<JS>| {0}), call_index, jst0, Atom::from("call_3344344275_async2")) {
+    if let Some(result) = js_base::set_timeout(jscopy.clone(), call_index, jst0, Atom::from("call_3344344275_async2"), Box::new(move |js: Arc<JS>| {0})) {
         let mut result = js.new_i32(result as i32);
         Some(CallResult::Ok)
     } else {

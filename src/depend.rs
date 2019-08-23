@@ -8,6 +8,9 @@ use bon::{Decode, Encode, WriteBuffer, ReadBuffer, ReadBonErr};
 use atom::Atom;
 //use pi_base::util::now_millisecond;
 
+/**
+* 项目依赖对象
+*/
 pub struct Depend{
     pub root: String,
 	pub file_map: HashMap<String, RcFileDes>,

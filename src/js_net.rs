@@ -31,6 +31,9 @@ use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
 
+/**
+* Tcp网络管理器
+*/
 pub struct NetMgr {
     pub mgr: NetManager,
     pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>,
@@ -39,6 +42,10 @@ pub struct NetMgr {
 }
 
 impl NetMgr {
+    /**
+    * 构建Tcp网络管理器
+    * @returns 返回Tcp网络管理器
+    */
     pub fn new() -> NetMgr{
         NetMgr{
             mgr: NetManager::new(),
@@ -113,6 +120,9 @@ impl NetMgr {
     }
 }
 
+/**
+* Tls网络管理器
+*/
 pub struct TlsNetMgr {
     pub mgr: TlsManager,
     pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>,
@@ -121,6 +131,10 @@ pub struct TlsNetMgr {
 }
 
 impl TlsNetMgr {
+    /**
+    * 构建Tls网络管理器
+    * @returns 返回Tls网络管理器
+    */
     pub fn new(recv_buff_size: usize) -> TlsNetMgr{
         TlsNetMgr{
             mgr: TlsManager::new(recv_buff_size),
@@ -197,7 +211,7 @@ impl TlsNetMgr {
     }
 }
 
-/*
+/**
 * 网络连接Handler
 */
 #[derive(Clone)]
@@ -269,7 +283,12 @@ impl Handler for NetHandler {
 }
 
 impl NetHandler {
-	//构建一个处理器
+	/**
+	* 构建一个网络连接Handler
+	* @param handler 处理器名称
+	* @param gray 灰度对象
+	* @returns 返回网络连接Handler
+	*/
 	pub fn new(handler: String, gray: JSGray) -> NetHandler {
 		NetHandler {
 			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
@@ -278,7 +297,7 @@ impl NetHandler {
 	}
 }
 
-/*
+/**
 * Topic处理器
 */
 #[derive(Clone)]
@@ -355,7 +374,11 @@ impl Handler for TopicHandler {
 }
 
 impl TopicHandler {
-	//构建一个处理器
+	/**
+	* 构建一个Topic处理器
+	* @param gray 灰度对象
+	* @returns 返回Topic处理器
+	*/
 	pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
 		TopicHandler {
 			gray_tab: gray.clone()
@@ -364,7 +387,15 @@ impl TopicHandler {
 }
 
 
-//为mqtt绑定网络， 返回mqttserver
+/**
+* 为mqtt绑定Tcp网络
+* @param mgr Tcp网络管理器
+* @param addr 绑定的地址
+* @param protocol 绑定的协议名
+* @param send_buf_size 发送缓冲区大小
+* @param recv_timeout 接收超时时长，单位毫秒
+* @returns 返回Mqtt服务器
+*/
 pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
     let server = ServerNode::new();
     let copy = server.clone();
@@ -391,6 +422,14 @@ pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size
     server
 }
 
+/**
+* 设置Tcp网络连接和关闭处理器
+* @param mgr Tcp网络管理器
+* @param addr 绑定的地址
+* @param protocol 绑定的协议名
+* @param handler 连接处理器
+* @param close_handler 关闭处理器
+*/
 pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handler: &NetHandler, close_handler: &NetHandler) {
     let handler = handler.clone();
     let close_handler = close_handler.clone();
@@ -438,7 +477,15 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
     mgr.add_close_handler(&addr, &protocol, close_callback);
 }
 
-//为mqtt绑定安全网络， 返回mqttserver
+/**
+* 为mqtt绑定Tls网络
+* @param mgr Tls网络管理器
+* @param addr 绑定的地址
+* @param protocol 绑定的协议名
+* @param send_buf_size 发送缓冲区大小
+* @param recv_timeout 接收超时时长，单位毫秒
+* @returns 返回Mqtt服务器
+*/
 pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
     let server = ServerNode::new();
     let copy = server.clone();
@@ -465,6 +512,14 @@ pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_p
     server
 }
 
+/**
+* 设置Tls网络连接和关闭处理器
+* @param mgr Tls网络管理器
+* @param addr 绑定的地址
+* @param protocol 绑定的协议名
+* @param handler 连接处理器
+* @param close_handler 关闭处理器
+*/
 pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, handler: &NetHandler, close_handler: &NetHandler) {
     let handler = handler.clone();
     let close_handler = close_handler.clone();
@@ -501,14 +556,33 @@ pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String,
     mgr.add_close_handler(&addr, &protocol, close_callback);
 }
 
+/**
+* Copy指定的Mqtt服务器
+* @param node 待Copy的Mqtt服务器
+* @returns 返回已Copy的Mqtt服务器
+*/
 pub fn clone_server_node(node: &ServerNode) -> ServerNode{
     node.clone()
 }
 
+/**
+* Copy指定的RPC服务器
+* @param server 待Copy的RPC服务器
+* @returns 返回已Copy的RPC服务器
+*/
 pub fn clone_rpc_server(server: &RPCServer) -> RPCServer{
     server.clone()
 }
 
+/**
+* 为指定的Mqtt服务器设置topic
+* @param server_node Mqtt服务器
+* @param topic Topic
+* @param can_publish 是否可发布
+* @param can_subscribe 是否可订阅
+* @returns 返回是否设置成功
+* @throws 失败抛出原因描述
+*/
 pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool, can_subscribe: bool) -> Result<bool, String> {
     let topic = Atom::from(topic);
     let server_node1 = server_node.clone();
@@ -530,6 +604,13 @@ pub fn set_mqtt_topic(server_node: &ServerNode, topic: String, can_publish: bool
     } 
 }
 
+/**
+* 为指定的Mqtt服务器取消topic
+* @param server_node Mqtt服务器
+* @param topic Topic
+* @returns 返回设置结果，成功返回空
+* @throws 失败抛出原因描述
+*/
 pub fn unset_mqtt_topic(server_node: &ServerNode, topic: String) -> Result<(), String> {
     match server_node.unset_topic_meta(Atom::from(topic)) {
         Ok(r) => Ok(r),
@@ -543,6 +624,16 @@ pub enum QoS{
     ExactlyOnce = 2,
 }
 
+/**
+* 发布指定topic的消息
+* @param server Mqtt服务器
+* @param retain 是否保留Mqtt会话
+* @param qos Qos
+* @param topic Topic
+* @param payload 消息体
+* @returns 返回发布结果，成功返回空
+& @throws 失败抛出原因描述
+*/
 pub fn mqtt_publish(server: &ServerNode, retain: bool, qos: QoS, topic: String, payload: &[u8]) -> Result<(), Error>{
     let qos = match qos {
         QoS::AtMostOnce => mqtt3::QoS::AtMostOnce,
@@ -552,16 +643,26 @@ pub fn mqtt_publish(server: &ServerNode, retain: bool, qos: QoS, topic: String, 
     server.publish(retain, qos, Atom::from(topic), Vec::from(payload))
 }
 
+/**
+* 回应指定指定topic发布的消息
+* @param session Mqtt会话
+* @param topic Topic
+* @param data 回应的数据
+*/
 pub fn mqtt_respond(session: &Arc<Session>, topic: String, data: &[u8]) {
     session.respond(Atom::from(topic), Vec::from(data));
 }
 
-//为rpc注册handler
+/**
+* 为rpc注册handler
+*/
 pub fn register_rpc_handler(serv: &mut RPCServer, topic: String, sync: bool, handler: &Arc<TopicHandler>) -> Result<(), Error> {
     serv.register(Atom::from(topic), sync, handler.clone())
 }
 
-//为rpc注册handler
+/**
+* 创建一个Topic处理器的引用计数
+*/
 pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
     Arc::new(th)
 }
@@ -578,6 +679,9 @@ pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
 //     P2PManage::new(addr.parse().unwrap(), map)
 // }
 
+/**
+* 创建一个公共Socket的引用计数
+*/
 pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
     Arc::new(socket)
 }

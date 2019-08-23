@@ -76,7 +76,7 @@ pub fn register(mgr: &BonMgr){
 }
 
 
-/*
+/**
 * 异步请求处理器
 */
 pub struct AsyncRequestHandler {
@@ -148,7 +148,11 @@ impl Handler for AsyncRequestHandler {
 }
 
 impl AsyncRequestHandler {
-	//构建一个处理器
+	/**
+	* 构建异步请求处理器
+	* @param gray 灰度对象
+	* @returns 返回异步请求处理器
+	*/
 	pub fn new(gray: JSGray) -> Self {
 		AsyncRequestHandler {
 			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),

@@ -39,11 +39,19 @@ const ASYNC_RPC_TASK_TYPE: TaskType = TaskType::Async(false);
 */
 const ASYNC_RPC_PRIORITY: usize = 100;
 
+/**
+* RPC客户端
+*/
 #[derive(Clone)]
 pub struct RPCClient(Arc<NetRPCClient>);
 
 impl RPCClient {
-    //创建一个RPC客户端
+    /**
+    * 创建一个RPC客户端
+    * @param url 需要连接的RPC服务器端url
+    * @returns 返回创建结果，成功返回RPC客户端
+    * @throws 失败抛出原因描述
+    */
     pub fn create(url: &str) -> Result<Self, String> {
         match NetRPCClient::create(url) {
             Err(e) => Err(e.to_string()),
@@ -51,7 +59,14 @@ impl RPCClient {
         }
     }
 
-    //连接
+    /**
+    * 使用RPC客户端建立一个连接
+    * @param keep_alive 连接保持时长，单位秒
+    * @param client_id 客户端唯一id，相同的客户端唯一id，同一时间只可创建一个连接，如已创建连接，则忽略
+    * @param timeout 建立连接超时时长，单位秒
+    * @param closed_handler 关闭连接的异步回调
+    * @param connect_callback 建立连接的异步回调，成功返回空数组，失败返回原因描述
+    */
     pub fn connect(&self,
                    keep_alive: u16,
                    client_id: &str,
@@ -72,7 +87,13 @@ impl RPCClient {
         }));
     }
 
-    //请求
+    /**
+    * 使用RPC客户端发送请求
+    * @param cmd Topic
+    * @param body 数据
+    * @param timeout 发送请求的超时时长，单位秒
+    * @param callback 发送请求的异步回调，成功返回回应数据，失败返回原因描述
+    */
     pub fn request(&self,
                    cmd: String,
                    body: &[u8],
@@ -91,7 +112,9 @@ impl RPCClient {
         }));
     }
 
-    //关闭连接
+    /**
+    * 关闭连接
+    */
     pub fn close(&self) {
         self.0.close();
     }
