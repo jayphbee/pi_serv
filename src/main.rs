@@ -114,21 +114,16 @@ fn args() -> clap::ArgMatches<'static> {
 						.version("1.0")
 						.author("test. <test@gmail.com>")
 						.about("aboutXXXX")
-						.arg(Arg::with_name("config")
-							.short("c")
-							.long("config")
-							.value_name("FILE")
-							.help("config path")
-							.takes_value(true))
+						.args_from_usage("<root> -r --root <DIR> 'The directory where the dependent file is located'")
+                        .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
                         .arg(Arg::with_name("shell")
                             .short("s")
                             .long("shell")
                             .value_name("BOOL")
                             .takes_value(true)
                             .help("Open the console at startup"))
-						.get_matches();
+						.get_matches_from(wild::args());
 	matches
-
 }
 
 fn main() {
@@ -194,19 +189,37 @@ fn main() {
     pi_store_build::register(&BON_MGR);
 
 	let matches = args();
-	let config = matches.value_of("config").unwrap();
-	let mut dirs: Vec<String> = config.split(",").map(|e|{e.to_string()}).collect();
-    if !dirs[0].ends_with("/"){
-        dirs[0] += "/";
+    let mut root = matches.value_of("root").unwrap().to_string();
+    if !root.ends_with("/"){
+        root += "/";
+    }
+    if root.starts_with("./") {
+        root = root[2..].to_string();
     }
 
-    let file_list = read_file_list( &Path::new(&(dirs[0].clone() + ".depend")).to_path_buf());
-    if dirs.len() == 1{
-        init_js(&dirs[0..1], file_list, dirs[0].clone());
-    }else if dirs.len() > 1{
-        init_js(&dirs[1..], file_list, dirs[0].clone());
-    }else {
-        panic!("load dir is none, please start with '-c rootdir' or '-c rootdir,load module1,load module1..'");
+    let r_len = root.len();
+	let list: Vec<&str> = match matches.values_of("list"){
+        Some(r) => r.collect(),
+        None => Vec::default(),
+    };
+    println!("list: {:?}", list);
+	let mut files: Vec<String> = Vec::default();
+    for e in list.iter() {
+        println!("e:{:}", e);
+        let r = e.replace("\\", "/");
+        println!("r:{}", r);
+        let mut r = r.as_str();
+        if r.starts_with("./") {
+            r = &r[2..];
+        }
+        files.push(r[r_len..].to_string())
+    }
+
+    let file_list = read_file_list( &Path::new(&(root.clone() + ".depend")).to_path_buf());
+    if files.len() == 0{
+        init_js(&[root.clone()], file_list, root.clone());
+    }else{
+        init_js(&files[..], file_list, root.clone());
     }
 
     match matches.value_of("shell") {
