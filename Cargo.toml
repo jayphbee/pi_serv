@@ -6,6 +6,7 @@ authors = [""]
 [dependencies]
 libc = "*"
 env_logger = "0.6.1"
+wild = "2.0.2"
 fnv = "*"
 magnetic = "2.0.0"
 clap = "2.31.2"
@@ -39,4 +40,3 @@ timer = {path = "../pi_lib/timer" }
 ordmap = {path = "../pi_lib/ordmap" }
 apm = {path = "../pi_lib/apm" }
 time = { path = "../pi_lib/time"}
-wild = { path = "../pi_lib/wild"}
