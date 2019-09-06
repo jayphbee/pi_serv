@@ -13,7 +13,6 @@ toml = "0.4.6"
 json = "0.11.13" 
 lazy_static = "*"
 rand = "0.5.2"
-wild = "2.0.2"
 mqtt3 = { git = "https://github.com/tekjar/mqtt3" }
 pi_vm = { path = "../pi_vm" }
 hash_value = { path = "../pi_math/hash_value" }
@@ -40,3 +39,4 @@ timer = {path = "../pi_lib/timer" }
 ordmap = {path = "../pi_lib/ordmap" }
 apm = {path = "../pi_lib/apm" }
 time = { path = "../pi_lib/time"}
+wild = { path = "../pi_lib/wild"}
