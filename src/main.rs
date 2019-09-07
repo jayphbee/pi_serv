@@ -46,6 +46,9 @@ extern crate lazy_static;
 #[macro_use]
 extern crate env_logger;
 
+#[cfg(any(unix))]
+extern crate glob;
+
 pub mod jsloader;
 pub mod depend;
 pub mod init_js;
@@ -106,9 +109,11 @@ use util::{read_file_list};
 
 use apm::common::SysStat;
 use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit, get_max_alloced_limit};
+
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
+#[cfg(any(windows))]
 fn args() -> clap::ArgMatches<'static> {
 	let matches = App::new("pi_server")
 						.version("1.0")
@@ -124,6 +129,24 @@ fn args() -> clap::ArgMatches<'static> {
                             .help("Open the console at startup"))
 						.get_matches_from(wild::args());
 	matches
+}
+
+#[cfg(any(unix))]
+fn args() -> clap::ArgMatches<'static> {
+    let matches = App::new("pi_server")
+        .version("1.0")
+        .author("test. <test@gmail.com>")
+        .about("aboutXXXX")
+        .args_from_usage("<root> -r --root <DIR> 'The directory where the dependent file is located'")
+        .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
+        .arg(Arg::with_name("shell")
+            .short("s")
+            .long("shell")
+            .value_name("BOOL")
+            .takes_value(true)
+            .help("Open the console at startup"))
+        .get_matches();
+    matches
 }
 
 fn main() {
@@ -198,10 +221,10 @@ fn main() {
     }
 
     let r_len = root.len();
-	let list: Vec<&str> = match matches.values_of("list"){
+	let list: Vec<&str> = collect(match matches.values_of("list"){
         Some(r) => r.collect(),
         None => Vec::default(),
-    };
+    });
     println!("list: {:?}", list);
 	let mut files: Vec<String> = Vec::default();
     for e in list.iter() {
@@ -308,3 +331,34 @@ fn main() {
     //     thread::sleep(Duration::from_millis(60000));
     // }
 }
+
+#[cfg(any(unix))]
+fn collect(list: Vec<&str>) -> Vec<&str> {
+    let mut vec = Vec::with_capacity(list.len());
+
+    for p in list {
+        match glob::glob(p) {
+            Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", p, e),
+            Ok(paths) => {
+                for path in paths {
+                    match path {
+                        Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", path, e),
+                        Ok(r) => {
+                            if let Some(x) = r.as_path().to_str() {
+                                vec.push(x);
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    vec
+}
+
+#[cfg(any(windows))]
+fn collect(list: Vec<&str>) -> Vec<&str> {
+    list
+}
+
