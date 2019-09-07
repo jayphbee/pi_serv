@@ -337,8 +337,8 @@ fn collect(root: String, list: Vec<&str>) -> Vec<String> {
     let mut vec = Vec::with_capacity(list.len());
 
     for p in list {
-        let mut buf = PathBuf::from(root);
-        buf.push(&p);
+        let mut buf = PathBuf::from(&root);
+        buf.push(p);
         match glob::glob(buf.as_path().to_str().unwrap()) {
             Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", p, e),
             Ok(paths) => {
