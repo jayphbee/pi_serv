@@ -360,15 +360,9 @@ fn collect(root: String, list: Vec<&str>) -> Vec<String> {
 }
 
 #[cfg(any(windows))]
-fn collect(root: String, list: Vec<&str>) -> Vec<String> {
+fn collect(_: String, list: Vec<&str>) -> Vec<String> {
     list.iter().map(|path| {
-        let mut buf = PathBuf::from(&root);
-        buf.push(path);
-        if let Ok(x) = buf.into_os_string().into_string() {
-            x
-        } else {
-            panic!("invalid path {:?}", path)
-        }
+        path.to_string()
     }).collect()
 }
 
