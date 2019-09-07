@@ -84,7 +84,7 @@ mod pi_store_build;
 use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
@@ -221,7 +221,7 @@ fn main() {
     }
 
     let r_len = root.len();
-	let list: Vec<String> = collect(match matches.values_of("list"){
+	let list: Vec<String> = collect(root.clone(), match matches.values_of("list"){
         Some(r) => r.collect(),
         None => Vec::default(),
     });
@@ -333,11 +333,12 @@ fn main() {
 }
 
 #[cfg(any(unix))]
-fn collect(list: Vec<&str>) -> Vec<String> {
+fn collect(root: String, list: Vec<&str>) -> Vec<String> {
     let mut vec = Vec::with_capacity(list.len());
 
     for p in list {
-        match glob::glob(p) {
+        let mut buf = PathBuff::from(root);
+        match glob::glob(buf.push(p)) {
             Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", p, e),
             Ok(paths) => {
                 for path in paths {
@@ -358,7 +359,7 @@ fn collect(list: Vec<&str>) -> Vec<String> {
 }
 
 #[cfg(any(windows))]
-fn collect(list: Vec<&str>) -> Vec<String> {
+fn collect(_: String, list: Vec<&str>) -> Vec<String> {
     list.iter().map(|path| {
         path.to_string()
     }).collect()
