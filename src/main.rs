@@ -221,7 +221,7 @@ fn main() {
     }
 
     let r_len = root.len();
-	let list: Vec<&str> = collect(match matches.values_of("list"){
+	let list: Vec<String> = collect(match matches.values_of("list"){
         Some(r) => r.collect(),
         None => Vec::default(),
     });
@@ -333,7 +333,7 @@ fn main() {
 }
 
 #[cfg(any(unix))]
-fn collect(list: Vec<&str>) -> Vec<&str> {
+fn collect(list: Vec<&str>) -> Vec<String> {
     let mut vec = Vec::with_capacity(list.len());
 
     for p in list {
@@ -342,9 +342,9 @@ fn collect(list: Vec<&str>) -> Vec<&str> {
             Ok(paths) => {
                 for path in paths {
                     match path {
-                        Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", path, e),
+                        Err(ref e) => panic!("collect list args failed, path: {:?}, reason: {:?}", path, e),
                         Ok(r) => {
-                            if let Some(x) = r.as_path().to_str() {
+                            if let Ok(x) = r.into_os_string().into_string() {
                                 vec.push(x);
                             }
                         },
@@ -358,7 +358,9 @@ fn collect(list: Vec<&str>) -> Vec<&str> {
 }
 
 #[cfg(any(windows))]
-fn collect(list: Vec<&str>) -> Vec<&str> {
-    list
+fn collect(list: Vec<&str>) -> Vec<String> {
+    list.iter().map(|path| {
+        path.to_string()
+    }).collect()
 }
 
