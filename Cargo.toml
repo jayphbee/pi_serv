@@ -21,7 +21,7 @@ pi_crypto = { path = "../pi_crypto" }
 pi_db = { path = "../pi_db" }
 net = { path = "../pi_net/net" }
 nodec = { path = "../pi_net/nodec" }
-mqtt = { path = "../pi_net/mqtt" }
+mqtt_tmp = { path = "../pi_net/mqtt_tmp" }
 rpc = { path = "../pi_net/rpc" }
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
