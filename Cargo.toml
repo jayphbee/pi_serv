@@ -22,7 +22,7 @@ pi_db = { path = "../pi_db" }
 net = { path = "../pi_net/net" }
 nodec = { path = "../pi_net/nodec" }
 mqtt_tmp = { path = "../pi_net/mqtt_tmp" }
-rpc = { path = "../pi_net/rpc" }
+rpc_tmp = { path = "../pi_net/rpc_tmp" }
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
 # pi_p2p = { path = "../pi_p2p" }

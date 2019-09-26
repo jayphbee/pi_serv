@@ -16,7 +16,7 @@ extern crate fnv;
 extern crate net;
 extern crate nodec;
 extern crate mqtt_tmp as mqtt;
-extern crate rpc;
+extern crate rpc_tmp as rpc;
 extern crate magnetic;
 extern crate rand;
 // extern crate pi_p2p;
