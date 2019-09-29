@@ -25,6 +25,10 @@ mqtt_tmp = { path = "../pi_net/mqtt_tmp" }
 rpc_tmp = { path = "../pi_net/rpc_tmp" }
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
+tcp = { path = "../pi_net/tcp" }
+ws = { path = "../pi_net/ws" }
+mqtt = { path = "../pi_net/mqtt" }
+rpc = { path = "../pi_net/rpc" }
 # pi_p2p = { path = "../pi_p2p" }
 pi_store = { path = "../pi_store" }
 atom = { path = "../pi_lib/atom" }

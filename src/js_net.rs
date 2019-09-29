@@ -30,6 +30,14 @@ use mqtt::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
+use tcp::connect::TcpSocket;
+use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
+use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
+use tcp::buffer_pool::WriteBufferPool;
+use ws::server::WebsocketListenerFactory;
+use new_mqtt::{v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory},
+           broker::{MQTT_CONNECT_SYS_TOPIC, MQTT_CLOSE_SYS_TOPIC}};
+use new_rpc::{service::RpcService, connect::RpcConnect};
 
 /**
 * Tcp网络管理器
@@ -685,3 +693,97 @@ pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
 pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
     Arc::new(socket)
 }
+
+/**
+* 创建Rpc服务
+*/
+pub fn create_rpc_service() -> RpcService {
+    RpcService::new()
+}
+
+/**
+* 为指定Rpc服务设置连接事件处理器
+*/
+pub fn set_rpc_connect_event_handler(service: &mut RpcService, handler: &NetHandler) {
+    service.set_connected_handler(Arc::new(handler.clone()));
+}
+
+/**
+* 为指定Rpc服务设置关闭事件处理器
+*/
+pub fn set_rpc_close_event_handler(service: &mut RpcService, handler: &NetHandler) {
+    service.set_closed_handler(Arc::new(handler.clone()));
+}
+
+/**
+* 为指定Rpc服务设置主题服务处理器
+*/
+pub fn set_rpc_topic_handler(service: &mut RpcService, handler: &TopicHandler) {
+    service.set_request_handler(Arc::new(handler.clone()));
+}
+
+/**
+* 获取指定Rpc服务的共享指针
+*/
+pub fn get_rpc_shared(service: RpcService) -> Arc<RpcService> {
+    Arc::new(service)
+}
+
+/**
+* 为指定的Rpc主题，注册指定的Rpc服务
+*/
+pub fn register_rpc_topic(topic: String, service: &Arc<RpcService>) {
+    WS_MQTT3_BROKER.register_service(topic, service.clone());
+}
+
+/**
+* 使用指定的Rpc服务，初始化全局Mqtt服务器
+*/
+pub fn init_global_mqtt(service: &Arc<RpcService>) {
+    WS_MQTT3_BROKER.register_service(MQTT_CONNECT_SYS_TOPIC.clone(), service.clone());
+    WS_MQTT3_BROKER.register_service(MQTT_CLOSE_SYS_TOPIC.clone(), service.clone());
+}
+
+/**
+* 为指定地址的指定端口，设置指定Websocket子协议名的全局Mqtt服务器，并绑定对应的Tcp端口
+*/
+pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的本地ip地址
+                                  ports: &[u16],
+                                  recv_buffer_size: usize,          //连接的接收缓冲区，单位B
+                                  send_buffer_size: usize,          //连接的发送缓冲区，单位B
+                                  read_buffer_capacity: usize,      //连接的读缓冲区，单位B
+                                  write_buffer_capacity: usize,     //连接的写缓冲区，单位次
+                                  pool_size: usize,                 //连接池的初始容量
+                                  stack_size: usize,                //连接线程的栈大小
+                                  timeout: usize,                   //连接轮询的间隔时长，单位毫秒
+                                  protocol: String) {
+    let mut factory = AsyncPortsFactory::<TcpSocket>::new();
+    for port in ports {
+        factory.bind(port.clone(),
+                     Box::new(WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(
+                         Arc::new(WsMqtt311Factory::with_name(&protocol)))));
+    }
+
+    let mut config = SocketConfig::new(&ip, factory.bind_ports().as_slice());
+    config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
+    let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
+    match SocketListener::bind(factory, buffer, config, pool_size, stack_size, 1024, Some(timeout)) {
+        Err(e) => {
+            panic!("Mqtt bind tcp port Error, reason: {:?}", e);
+        },
+        Ok(_) => {
+            println!("===> Mqtt bind tcp port ok");
+        }
+    }
+}
+
+/**
+* 可以在运行时线程安全的，为全局Mqtt服务器增加指定的主题
+*/
+pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
+                             topic: String) {
+    WS_MQTT3_BROKER.add_topic(is_public, topic, 0, None);
+}
+
+
+
