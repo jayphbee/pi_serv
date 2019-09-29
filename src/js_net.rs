@@ -35,7 +35,7 @@ use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
 use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
 use ws::server::WebsocketListenerFactory;
-use new_mqtt::{v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory},
+use new_mqtt::{v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic},
            broker::{MQTT_CONNECT_SYS_TOPIC, MQTT_CLOSE_SYS_TOPIC}};
 use new_rpc::{service::RpcService, connect::RpcConnect};
 
@@ -782,8 +782,14 @@ pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的�
 */
 pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                              topic: String) {
-    WS_MQTT3_BROKER.add_topic(is_public, topic, 0, None);
+    add_topic(is_public, topic, 0, None);
 }
 
-
+/**
+* 可以在运行时线程安全的，在全局Mqtt服务器上发布指定主题的消息
+*/
+pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
+                                 topic: String, msg: Arc<Vec<u8>>) {
+    publish_topic(is_public, topic, 0, None, msg);
+}
 
