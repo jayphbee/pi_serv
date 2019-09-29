@@ -730,7 +730,7 @@ pub fn get_rpc_shared(service: RpcService) -> Arc<RpcService> {
 }
 
 /**
-* 为指定的Rpc主题，注册指定的Rpc服务
+* 为指定的Mqtt主题，注册指定的Rpc服务
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<RpcService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
