@@ -695,6 +695,181 @@ pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
 }
 
 /**
+* 网络事件处理器
+*/
+#[derive(Clone)]
+pub struct NetEventHandler {
+    handler: Atom, //处理函数名称（js函数）
+    gray_tab: Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+}
+
+unsafe impl Send for NetEventHandler {}
+unsafe impl Sync for NetEventHandler {}
+
+impl Handler for NetEventHandler {
+    type A = usize; //连接id
+    type B = ();
+    type C = ();
+    type D = ();
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = Result<(), String>;
+
+    fn handle(&self, env: Arc<dyn GrayVersion>, event_name: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let id = env.get_id();
+        let conect_id = match args {
+            Args::OneArgs(conect_id) => conect_id,
+            _ => return Err(String::from("invalid net event handler args")),
+        };
+        let gray_tab = self.gray_tab.read().unwrap();
+        let gray = match env.get_gray() {
+            Some(v) => match gray_tab.get(v) {
+                Some(g) => g.clone(),
+                None => return Err(String::from("gray is not exist, version:") + v.to_string().as_str()),
+            },
+            None => gray_tab.get_last().clone(),
+        };
+
+        let queue = new_queue(id); //创建指定socket的同步静态队列
+        let handler_name = self.handler.clone();
+        let event_name_copy = event_name.clone();
+        let func = Box::new(move |lock: Option<isize>| {
+            let mgr = gray.mgr.clone();
+            let nobjs = gray.nobjs.clone();
+            let event_name1 = event_name.clone();
+            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                //事件对象
+                let event = vm.new_object();
+                vm.set_field(&event, String::from("event_name"), &mut vm.new_str((*event_name1).to_string()).unwrap());
+                vm.set_field(&event, String::from("connect_id"), &mut vm.new_u32(conect_id as u32));
+                //mgr
+                ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
+                //env
+                ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
+                //nobj
+                nobjs.to_map(&vm);
+                4
+            });
+            gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
+
+            //解锁当前同步静态队列，保证虚拟机执行
+            if !unlock_js_task_queue(queue) {
+                println!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
+
+        Ok(())
+    }
+}
+
+impl NetEventHandler {
+    /**
+    * 构建一个网络事件处理器
+    * @param handler 处理器名称
+    * @param gray 灰度对象
+    * @returns 返回网络事件处理器
+    */
+    pub fn new(handler: String, gray: JSGray) -> NetHandler {
+        NetHandler {
+            gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
+            handler: Atom::from(handler),
+        }
+    }
+}
+
+/**
+* Rpc请求处理器
+*/
+#[derive(Clone)]
+pub struct RequestHandler {
+    gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+}
+
+unsafe impl Send for RequestHandler {}
+unsafe impl Sync for RequestHandler {}
+
+impl Handler for RequestHandler {
+    type A = u8;
+    type B = Option<SocketAddr>;
+    type C = Arc<Vec<u8>>;
+    type D = ();
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = ();
+
+    fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let topic_handler = self.clone();
+        let topic_name = topic.clone();
+        let id = env.get_id();
+        let queue = new_queue(id); //创建指定socket的同步静态队列
+        let func = Box::new(move |lock: Option<isize>| {
+            let gray_tab = topic_handler.gray_tab.read().unwrap();
+            let gray = match env.get_gray() {
+                Some(v) => match gray_tab.get(v) {
+                    Some(g) => g,
+                    None => panic!("gray is not exist, version:{}", v),
+                },
+                None => gray_tab.get_last(),
+            };
+            let mgr = gray.mgr.clone();
+            let nobjs = gray.nobjs.clone();
+            let topic_name = topic.clone();
+            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                vm.new_str((*topic_name).to_string());
+                let peer_addr = match args {
+                    Args::ThreeArgs(_, peer, bin) => {
+                        let buffer = vm.new_uint8_array(bin.len() as u32);
+                        buffer.from_bytes(bin.as_slice());
+                        peer
+                    },
+                    _ => panic!("invalid topic handler args"),
+                };
+                let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
+                let ptr = Box::into_raw(Box::new(env.clone())) as usize;
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
+                nobjs.to_map(&vm);
+                vm.new_u32(id as u32);
+                match peer_addr {
+                    Some(addr) => {
+                        vm.new_str(addr.to_string());
+                    },
+                    None => {
+                        vm.new_undefined();
+                    },
+                }
+                7
+            });
+            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+
+            //解锁当前同步静态队列，保证虚拟机执行
+            if !unlock_js_task_queue(queue) {
+                println!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
+    }
+}
+
+impl RequestHandler {
+    /**
+    * 构建一个Rpc请求处理器
+    * @param gray 灰度对象
+    * @returns 返回Rpc请求处理器
+    */
+    pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
+        RequestHandler {
+            gray_tab: gray.clone()
+        }
+    }
+}
+
+/**
 * 创建Rpc服务
 */
 pub fn create_rpc_service() -> RpcService {
@@ -704,21 +879,21 @@ pub fn create_rpc_service() -> RpcService {
 /**
 * 为指定Rpc服务设置连接事件处理器
 */
-pub fn set_rpc_connect_event_handler(service: &mut RpcService, handler: &NetHandler) {
+pub fn set_rpc_connect_event_handler(service: &mut RpcService, handler: &NetEventHandler) {
     service.set_connected_handler(Arc::new(handler.clone()));
 }
 
 /**
 * 为指定Rpc服务设置关闭事件处理器
 */
-pub fn set_rpc_close_event_handler(service: &mut RpcService, handler: &NetHandler) {
+pub fn set_rpc_close_event_handler(service: &mut RpcService, handler: &NetEventHandler) {
     service.set_closed_handler(Arc::new(handler.clone()));
 }
 
 /**
 * 为指定Rpc服务设置主题服务处理器
 */
-pub fn set_rpc_topic_handler(service: &mut RpcService, handler: &TopicHandler) {
+pub fn set_rpc_topic_handler(service: &mut RpcService, handler: &RequestHandler) {
     service.set_request_handler(Arc::new(handler.clone()));
 }
 
