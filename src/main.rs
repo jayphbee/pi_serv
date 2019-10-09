@@ -15,8 +15,8 @@ extern crate core;
 extern crate fnv;
 extern crate net;
 extern crate nodec;
-extern crate mqtt_tmp as mqtt;
-extern crate rpc_tmp as rpc;
+extern crate mqtt_tmp;
+extern crate rpc_tmp;
 extern crate magnetic;
 extern crate rand;
 // extern crate pi_p2p;
@@ -25,8 +25,8 @@ extern crate httpc;
 extern crate https;
 extern crate tcp;
 extern crate ws;
-extern crate mqtt as new_mqtt;
-extern crate rpc as new_rpc;
+extern crate mqtt;
+extern crate rpc;
 extern crate atom;
 extern crate handler;
 extern crate worker;
@@ -85,20 +85,21 @@ mod pi_net_httpc_build;
 mod pi_net_https_build;
 mod pi_store_build;
 
-use std::io::prelude::*;
 use std::thread;
 use std::time::Duration;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::io;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
-use std::io::{Read, Write, Result as IOResult};
+use std::io::{Write, Result as IOResult};
 
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
 use pi_vm::adapter::{register_native_object, set_vm_timeout, register_global_vm_heap_collect_timer};
 use pi_vm::shell::SHELL_MANAGER;
-use pi_vm::bonmgr::BON_MGR;
+use pi_vm::bonmgr::{BON_MGR, BonMgr, FnMeta, jstype_ptr,ptr_jstype, CallResult};
+use pi_vm::adapter::{JSType, JS};
+use pi_vm::pi_vm_impl::push_callback;
 use clap::{Arg, App};
 
 use time::now_millisecond;
@@ -106,6 +107,7 @@ use worker::worker_pool::WorkerPool;
 use worker::impls::{TASK_POOL_TIMER, JS_TASK_POOL, STORE_TASK_POOL, NET_TASK_POOL, JS_WORKER_WALKER, STORE_WORKER_WALKER, NET_WORKER_WALKER};
 use timer::TIMER;
 use worker::worker::WorkerType;
+use atom::Atom;
 
 use init_js::{init_js};
 use js_base::IS_END;
@@ -271,7 +273,7 @@ fn main() {
 
                 println!("Shell v0.1");
 
-                let mut req: Option<Box<FnOnce(Arc<Vec<u8>>)>> = None;
+                let mut req: Option<Box<dyn FnOnce(Arc<Vec<u8>>)>> = None;
                 loop {
                     print!(">");
                     io::stdout().flush();
@@ -370,3 +372,60 @@ fn collect(_: String, list: Vec<&str>) -> Vec<String> {
     }).collect()
 }
 
+/**
+* 同步的设置定时异步回调
+* @param ms 间隔的时长，单位毫秒
+* @param cb 异步回调
+* @returns 返回定时任务的编号
+*/
+fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in set_timeout";
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2884638791, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::adapter::JS>)}.clone();
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32();
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32();
+
+	let jst3 = &v[3];
+    if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst3 = Atom::from(jst3.get_str());
+
+    let call_index = &v[4];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+
+	match push_callback(
+		jscopy.clone(),
+		call_index,
+		Box::new(move |js: Arc<JS>| {
+			let ptr = Box::into_raw(Box::new(js.clone())) as usize;
+			ptr_jstype(js.get_objs(), js.clone(), ptr,2884638791);
+			1
+		}),
+		Some(jst2), 
+		Atom::from("call_3344344275_async1")
+	) {
+		Some(r) => js.new_i32(r as i32),
+		None => js.new_undefined(),
+	};
+//     let result = js_base::set_timeout(jst0,jst1,jst2,jst3,Box::new(call_back));let mut result = match result{
+//         Some(v) => { let mut v = js.new_i32(v as i32);
+//  v}
+//         None => js.new_null()
+//     };
+
+	Some(CallResult::Ok)
+}
+
+fn register(mgr: &BonMgr){
+	mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
+}

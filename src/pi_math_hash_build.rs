@@ -29,13 +29,7 @@ fn call_2655400174(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H32) };
 
 
-    let result = hash_value::H32::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H32::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -116,13 +110,7 @@ fn call_3679689648(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H48) };
 
 
-    let result = hash_value::H48::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H48::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -203,13 +191,7 @@ fn call_1290828860(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H160) };
 
 
-    let result = hash_value::H160::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H160::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -290,13 +272,7 @@ fn call_4173242765(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H256) };
 
 
-    let result = hash_value::H256::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H256::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -377,13 +353,7 @@ fn call_768602447(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H512) };
 
 
-    let result = hash_value::H512::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H512::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -464,13 +434,7 @@ fn call_1178325458(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = unsafe { &*(ptr as *const hash_value::H520) };
 
 
-    let result = hash_value::H520::tohex(jst0);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = hash_value::H520::tohex(jst0);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }

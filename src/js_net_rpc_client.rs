@@ -12,8 +12,8 @@ use handler::{Args, Handler};
 use gray::{GrayVersion, GrayTab};
 use atom::Atom;
 // use pi_p2p::manage::P2PManage;
-use rpc::traits::RPCServerTraits;
-use rpc::server::RPCServer;
+use rpc_tmp::traits::RPCServerTraits;
+use rpc_tmp::server::RPCServer;
 use net::data::{RawSocket, RawStream};
 use net::tls::{TlsSocket, TlsStream, TlsConfig};
 use net::{Config, Protocol};
@@ -22,9 +22,9 @@ use net::api::{NetManager, TlsManager};
 use nodec::rpc::RPCClient as NetRPCClient;
 use nodec::mqttc::SharedMqttClient as NetSharedMqttClient;
 use net::data::ListenerFn;
-use mqtt::server::{ServerNode, ClientStub};
-use mqtt::data::Server;
-use mqtt::session::Session;
+use mqtt_tmp::server::{ServerNode, ClientStub};
+use mqtt_tmp::data::Server;
+use mqtt_tmp::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::cast_net_task;
@@ -98,13 +98,13 @@ impl RPCClient {
                    cmd: String,
                    body: &[u8],
                    timeout: u8,
-                   callback: Arc<Fn(Result<Option<&[u8]>, String>)>) {
+                   callback: Arc<Fn(Result<Option<Vec<u8>>, String>)>) {
         self.0.request(cmd, Vec::from(body), timeout, Arc::new(move |r: IOResult<Option<Vec<u8>>>| {
             match r {
                 Err(e) => callback(Err(e.to_string())),
                 Ok(e) => {
                     match e {
-                        Some(r) => callback(Ok(Some(&r[..]))),
+                        Some(r) => callback(Ok(Some(r))),
                         None => callback(Ok(None)),
                     };
                 },

@@ -6,7 +6,7 @@ use worker::task::TaskType;
 use atom::Atom;
 use std::mem::{transmute, uninitialized};
 use pi_vm;
-use mqtt;
+use mqtt_tmp;
 use bon;
 use pi_db;
 use pi_store;
@@ -18,9 +18,9 @@ use guid;
 use atom;
 use httpc;
 use handler;
-use rpc;
+use rpc_tmp;
 use std::io::Error;
-use net;
+use rpc;
 use std::sync::Mutex;
 use js_db;
 use depend;
@@ -148,8 +148,8 @@ fn call_1993779671(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
@@ -1015,28 +1015,6 @@ fn call_1810043215_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-
-    let param_error = "param error in set_timeout";
-	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u32();
-
-    let call_index = &v[1];
-    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-    let call_index = call_index.get_u32();
-    
-    let jscopy = js.clone();
-
-    if let Some(result) = js_base::set_timeout(jscopy.clone(), call_index, jst0, Atom::from("call_3344344275_async2"), Box::new(move |js: Arc<JS>| {0})) {
-        let mut result = js.new_i32(result as i32);
-        Some(CallResult::Ok)
-    } else {
-        Some(CallResult::Err("set timeout failed".to_string()))
-    }
-}
-
-
 fn call_3285798497(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in clear_timeout";
 
@@ -1307,13 +1285,7 @@ fn call_3557646357(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst1 = jst1.get_u16();
 
 
-    let result = js_lib::guid_gen(jst0,jst1);
-    let mut result = match js.new_str(result.to_string()) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = js_lib::guid_gen(jst0,jst1);let mut result = js.new_str(result.to_string()).unwrap(); 
     Some(CallResult::Ok)
 }
 
@@ -1553,12 +1525,8 @@ fn call_2175286088(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::get_json_val(jst0,jst1);let mut result = match result{
-        Some(v) => { match js.new_str(String::from(v.as_str())) {
-            Err(e) => {
-                return Some(CallResult::Err(e));
-            },
-            Ok(v) => v,
-        }}
+        Some(v) => { let mut v = js.new_str(String::from(v.as_str())).unwrap();
+ v}
         None => js.new_null()
     };
 
@@ -1604,12 +1572,8 @@ fn call_1500292772(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_httpc::HttpClientBody::<Vec<u8>>::remove_json_kv(jst0,jst1);let mut result = match result{
-        Some(v) => { match js.new_str(v) {
-            Err(e) => {
-                return Some(CallResult::Err(e));
-            },
-            Ok(v) => v,
-        }}
+        Some(v) => { let mut v = js.new_str(v).unwrap();
+ v}
         None => js.new_null()
     };
 
@@ -2215,6 +2179,43 @@ fn call_2637800921(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3844141423(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 2566315655, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut js_lib::JSGray) };
+
+
+    let result = js_net::NetEventHandler::new(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1707332364);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3244057673(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3386914360, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<RwLock<gray::GrayTab<js_lib::JSGray>>>) };
+
+
+    let result = js_net::RequestHandler::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4208533229);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_bind";
 
@@ -2244,7 +2245,7 @@ fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_net::mqtt_bind(jst0,jst1,jst2,jst3,jst4);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1751456239);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
 
 
     Some(CallResult::Ok)
@@ -2323,7 +2324,7 @@ fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_net::mqtt_bind_tls(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1751456239);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
 
 
     Some(CallResult::Ok)
@@ -2377,12 +2378,12 @@ fn call_2248917003(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in clone_server_node";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
     let result = js_net::clone_server_node(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1751456239);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
 
 
     Some(CallResult::Ok)
@@ -2393,12 +2394,12 @@ fn call_3695051784(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in clone_rpc_server";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1285687456, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const rpc::server::RPCServer) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 3913457295, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const rpc_tmp::server::RPCServer) };
 
 
     let result = js_net::clone_rpc_server(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1285687456);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3913457295);
 
 
     Some(CallResult::Ok)
@@ -2409,8 +2410,8 @@ fn call_2482429183(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in set_mqtt_topic";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
@@ -2444,8 +2445,8 @@ fn call_2867121613(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in unset_mqtt_topic";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
@@ -2470,8 +2471,8 @@ fn call_1551231400(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_publish";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1751456239, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const mqtt::server::ServerNode) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
@@ -2517,8 +2518,8 @@ fn call_2874114884(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_respond";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 226971089, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const Arc<mqtt::session::Session>) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 717646231, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<mqtt_tmp::session::Session>) };
 
 
 	let jst1 = &v[1];
@@ -2541,8 +2542,8 @@ fn call_138660483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in register_rpc_handler";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1285687456, false, param_error).expect("");
-	let jst0 = unsafe { &mut *(ptr as *mut rpc::server::RPCServer) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 3913457295, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut rpc_tmp::server::RPCServer) };
 
 
 	let jst1 = &v[1];
@@ -2589,18 +2590,177 @@ fn call_527952504(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3781439120(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in creat_arc_sokect";
+fn call_2333272468(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in create_rpc_service";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1251467163, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut net::api::Socket) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 4208533229, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_net::RequestHandler) };
 
 
-    let result = js_net::creat_arc_sokect(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3958719350);
+    let result = js_net::create_rpc_service(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3767749329);
 
 
+    Some(CallResult::Ok)
+}
+
+
+fn call_466468899(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_rcp_listener";
+
+	let jst0 = &v[0];
+    let jst0 = if jst0.is_undefined() || jst0.is_null(){
+        None
+    }else{
+    let ptr = jstype_ptr(&jst0, js.clone(), 2899437702, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_net::NetEventHandler) };
+
+        Some(jst0)
+    };
+
+
+	let jst1 = &v[1];
+    let jst1 = if jst1.is_undefined() || jst1.is_null(){
+        None
+    }else{
+    let ptr = jstype_ptr(&jst1, js.clone(), 2899437702, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const js_net::NetEventHandler) };
+
+        Some(jst1)
+    };
+
+
+    let result = js_net::register_rcp_listener(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,619541818);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1703898312(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_rpc_topic";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 3767749329, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const Arc<rpc::service::RpcService>) };
+
+
+    js_net::register_rpc_topic(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3293246594(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in global_mqtt_bind_tcp_ports";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_array(){return Some(CallResult::Err(String::from(param_error)));}
+	let a_len = jst1.get_array_length();
+
+    let mut jst1_ = Vec::new();
+    for i in 0..a_len{
+		let jst1_e = jst1.get_index(i as u32);
+	if !jst1_e.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1_e = jst1_e.get_u16();
+    jst1_.push(jst1_e);
+    }
+    let jst1 = jst1_.as_slice();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32() as usize;
+
+
+	let jst3 = &v[3];
+	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_u32() as usize;
+
+
+	let jst4 = &v[4];
+	if !jst4.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst4 = jst4.get_u32() as usize;
+
+
+	let jst5 = &v[5];
+	if !jst5.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst5 = jst5.get_u32() as usize;
+
+
+	let jst6 = &v[6];
+	if !jst6.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst6 = jst6.get_u32() as usize;
+
+
+	let jst7 = &v[7];
+	if !jst7.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst7 = jst7.get_u32() as usize;
+
+
+	let jst8 = &v[8];
+	if !jst8.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst8 = jst8.get_u32() as usize;
+
+
+	let jst9 = &v[9];
+	if !jst9.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst9 = jst9.get_str();
+
+
+    js_net::global_mqtt_bind_tcp_ports(jst0,jst1,jst2,jst3,jst4,jst5,jst6,jst7,jst8,jst9);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3953247239(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_global_mqtt_topic";
+
+	let jst0 = &v[0];
+	if !jst0.is_boolean(){ return Some(CallResult::Err(String::from(param_error))); }
+    let jst0 = jst0.get_boolean();
+    
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    js_net::add_global_mqtt_topic(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1449642520(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in publish_global_mqtt_topic";
+
+	let jst0 = &v[0];
+	if !jst0.is_boolean(){ return Some(CallResult::Err(String::from(param_error))); }
+    let jst0 = jst0.get_boolean();
+    
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 2886438122, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>)}.clone();
+
+
+    js_net::publish_global_mqtt_topic(jst0,jst1,jst2);
     Some(CallResult::Ok)
 }
 
@@ -2855,13 +3015,7 @@ fn call_3060877404(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst1 = jst1.get_str();
 
 
-    let result = webshell::WebShell::exec(jst0,jst1);
-    let mut result = match js.new_str(result) {
-        Err(e) => {
-            return Some(CallResult::Err(e));
-        },
-        Ok(v) => v,
-    };
+    let result = webshell::WebShell::exec(jst0,jst1);let mut result = js.new_str(result).unwrap();
 
     Some(CallResult::Ok)
 }
@@ -2971,16 +3125,12 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<Option<&[u8]>,String>| {
-        let r = match r {
-            Ok(Some(s)) => Ok(Some(Vec::from(s))),
-            Ok(_) => Ok(None),
-            Err(e) => Err(e),
-        };
+	let call_back = move |r: Result<Option<Vec<u8>>,String>| {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = match r{
-        Some(v) => {
-    let v_jstype = js.new_uint8_array(v.len() as u32);v_jstype.from_bytes(&v[..]);let mut v = v_jstype;
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
  v}
         None => js.new_null()
     };
@@ -3043,8 +3193,8 @@ fn drop_4252329727(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_vm::adapter::JSType) };
 }
 
-fn drop_1751456239(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut mqtt::server::ServerNode) };
+fn drop_2484911420(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut mqtt_tmp::server::ServerNode) };
 }
 
 fn drop_2627601653(ptr: usize){
@@ -3175,28 +3325,36 @@ fn drop_15779622(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::TopicHandler) };
 }
 
-fn drop_1285687456(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut rpc::server::RPCServer) };
+fn drop_4208533229(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_net::RequestHandler) };
+}
+
+fn drop_3913457295(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut rpc_tmp::server::RPCServer) };
 }
 
 fn drop_2688700187(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::QoS) };
 }
 
-fn drop_226971089(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<mqtt::session::Session>) };
+fn drop_717646231(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<mqtt_tmp::session::Session>) };
 }
 
 fn drop_3776892844(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<js_net::TopicHandler>) };
 }
 
-fn drop_1251467163(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut net::api::Socket) };
+fn drop_3767749329(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<rpc::service::RpcService>) };
 }
 
-fn drop_3958719350(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<net::api::Socket>) };
+fn drop_2899437702(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_net::NetEventHandler) };
+}
+
+fn drop_619541818(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<rpc::service::RpcListener>) };
 }
 
 fn drop_3355816649(ptr: usize){
@@ -3226,7 +3384,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::adapter::JSType"), drop_fn: drop_4252329727}, 4252329727);
-    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt::server::ServerNode"), drop_fn: drop_1751456239}, 1751456239);
+    mgr.regist_struct_meta(StructMeta{name:String::from("mqtt_tmp::server::ServerNode"), drop_fn: drop_2484911420}, 2484911420);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBToMqttMonitor"), drop_fn: drop_2627601653}, 2627601653);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::JSDBMonitor"), drop_fn: drop_1495847839}, 1495847839);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::Event"), drop_fn: drop_3165549746}, 3165549746);
@@ -3259,12 +3417,14 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TlsNetMgr"), drop_fn: drop_4120821321}, 4120821321);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetHandler"), drop_fn: drop_1707332364}, 1707332364);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TopicHandler"), drop_fn: drop_15779622}, 15779622);
-    mgr.regist_struct_meta(StructMeta{name:String::from("rpc::server::RPCServer"), drop_fn: drop_1285687456}, 1285687456);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_net::RequestHandler"), drop_fn: drop_4208533229}, 4208533229);
+    mgr.regist_struct_meta(StructMeta{name:String::from("rpc_tmp::server::RPCServer"), drop_fn: drop_3913457295}, 3913457295);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::QoS"), drop_fn: drop_2688700187}, 2688700187);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt::session::Session>"), drop_fn: drop_226971089}, 226971089);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt_tmp::session::Session>"), drop_fn: drop_717646231}, 717646231);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_net::TopicHandler>"), drop_fn: drop_3776892844}, 3776892844);
-    mgr.regist_struct_meta(StructMeta{name:String::from("net::api::Socket"), drop_fn: drop_1251467163}, 1251467163);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<net::api::Socket>"), drop_fn: drop_3958719350}, 3958719350);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcService>"), drop_fn: drop_3767749329}, 3767749329);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetEventHandler"), drop_fn: drop_2899437702}, 2899437702);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcListener>"), drop_fn: drop_619541818}, 619541818);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Mutex<hotfix::GrayMgr>>"), drop_fn: drop_579352454}, 579352454);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgrMutax"), drop_fn: drop_646865374}, 646865374);
@@ -3303,7 +3463,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3741531906), 3741531906);
     mgr.regist_fun_meta(FnMeta::CallArg(call_509141093), 509141093);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1810043215_sync), 1810043215);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3285798497), 3285798497);
     mgr.regist_fun_meta(FnMeta::Call(call_59144274), 59144274);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3881780156), 3881780156);
@@ -3347,6 +3506,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_471202658), 471202658);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1849109725), 1849109725);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2637800921), 2637800921);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3844141423), 3844141423);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3244057673), 3244057673);
     mgr.regist_fun_meta(FnMeta::CallArg(call_357009886), 357009886);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3222050891), 3222050891);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3574413612), 3574413612);
@@ -3359,7 +3520,12 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2874114884), 2874114884);
     mgr.regist_fun_meta(FnMeta::CallArg(call_138660483), 138660483);
     mgr.regist_fun_meta(FnMeta::CallArg(call_527952504), 527952504);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3781439120), 3781439120);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2333272468), 2333272468);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_466468899), 466468899);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1703898312), 1703898312);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3293246594), 3293246594);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3953247239), 3953247239);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1449642520), 1449642520);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466051911), 466051911);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1942014446), 1942014446);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2753091108), 2753091108);

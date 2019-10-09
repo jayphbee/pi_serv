@@ -15,18 +15,18 @@ use handler::{Args, Handler};
 use gray::{GrayVersion, GrayTab};
 use atom::Atom;
 // use pi_p2p::manage::P2PManage;
-use rpc::traits::RPCServerTraits;
-use rpc::server::RPCServer;
+use rpc_tmp::traits::RPCServerTraits;
+use rpc_tmp::server::RPCServer;
 use net::data::{RawSocket, RawStream};
 use net::tls::{TlsSocket, TlsStream, TlsConfig};
 use net::{Config, Protocol};
 use net::api::{Socket, Stream};
 use net::api::{NetManager, TlsManager};
 use net::data::ListenerFn;
-use mqtt::server::{ServerNode, ClientStub};
+use mqtt_tmp::server::{ServerNode, ClientStub};
 use std::io::{Result as IOResult};
-use mqtt::data::Server;
-use mqtt::session::Session;
+use mqtt_tmp::data::Server;
+use mqtt_tmp::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
@@ -35,9 +35,9 @@ use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
 use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
 use ws::server::WebsocketListenerFactory;
-use new_mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
-use new_mqtt::broker::{MQTT_CONNECT_SYS_TOPIC, MQTT_CLOSE_SYS_TOPIC};
-use new_rpc::{service::RpcService, connect::RpcConnect};
+use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
+use rpc::service::{RpcService, RpcListener};
+use rpc::connect::RpcConnect;
 
 /**
 * Tcp网络管理器
@@ -687,12 +687,12 @@ pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
 //     P2PManage::new(addr.parse().unwrap(), map)
 // }
 
-/**
-* 创建一个公共Socket的引用计数
-*/
-pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
-    Arc::new(socket)
-}
+// /**
+// * 创建一个公共Socket的引用计数
+// */
+// pub fn creat_arc_sokect(socket: Socket ) -> Arc<Socket>{
+//     Arc::new(socket)
+// }
 
 /**
 * 网络事件处理器
@@ -803,7 +803,8 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-        let topic_handler = self.clone();
+        println!("handle1---------------------------------------");
+		let topic_handler = self.clone();
         let topic_name = topic.clone();
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
@@ -872,36 +873,27 @@ impl RequestHandler {
 /**
 * 创建Rpc服务
 */
-pub fn create_rpc_service() -> RpcService {
-    RpcService::new()
+pub fn create_rpc_service(handler: &RequestHandler) -> Arc<RpcService> {
+	let mut service = RpcService::new();
+	service.set_request_handler(Arc::new(handler.clone()));
+	let service = Arc::new(service);
+	service
 }
 
 /**
-* 为指定Rpc服务设置连接事件处理器
+* 注册网络事件监听器
 */
-pub fn set_rpc_connect_event_handler(service: &mut RpcService, handler: &NetEventHandler) {
-    service.set_connected_handler(Arc::new(handler.clone()));
-}
-
-/**
-* 为指定Rpc服务设置关闭事件处理器
-*/
-pub fn set_rpc_close_event_handler(service: &mut RpcService, handler: &NetEventHandler) {
-    service.set_closed_handler(Arc::new(handler.clone()));
-}
-
-/**
-* 为指定Rpc服务设置主题服务处理器
-*/
-pub fn set_rpc_topic_handler(service: &mut RpcService, handler: &RequestHandler) {
-    service.set_request_handler(Arc::new(handler.clone()));
-}
-
-/**
-* 获取指定Rpc服务的共享指针
-*/
-pub fn get_rpc_shared(service: RpcService) -> Arc<RpcService> {
-    Arc::new(service)
+pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_handler: Option<&NetEventHandler>) -> Arc<RpcListener> {
+	let mut service = RpcListener::new();
+	if let Some(r) = conect_handler {
+		service.set_connected_handler(Arc::new(r.clone()));
+	}
+	if let Some(r) = close_handler {
+		service.set_closed_handler(Arc::new(r.clone()));
+	}
+	let service = Arc::new(service);
+	WS_MQTT3_BROKER.register_listener(service.clone());
+	service
 }
 
 /**
@@ -909,14 +901,6 @@ pub fn get_rpc_shared(service: RpcService) -> Arc<RpcService> {
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<RpcService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
-}
-
-/**
-* 使用指定的Rpc服务，初始化全局Mqtt服务器
-*/
-pub fn init_global_mqtt(service: &Arc<RpcService>) {
-    WS_MQTT3_BROKER.register_service(MQTT_CONNECT_SYS_TOPIC.clone(), service.clone());
-    WS_MQTT3_BROKER.register_service(MQTT_CLOSE_SYS_TOPIC.clone(), service.clone());
 }
 
 /**

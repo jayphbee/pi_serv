@@ -117,18 +117,18 @@ pub fn sleep(ms: u32, f: Box<FnOnce()>){
 	TIMER.set_timeout(FuncRuner::new(f), ms);
 }
 
-/**
-* 同步的设置定时异步回调
-* @param ms 间隔的时长，单位毫秒
-* @param cb 异步回调
-* @returns 返回定时任务的编号
-*/
-pub fn set_timeout(js: Arc<JS>, callback: u32, timeout: u32, info: Atom, args: Box<FnOnce(Arc<JS>) -> usize>) -> Option<isize> {
-    push_callback(js, callback, args, Some(timeout), info)
-}
+// /**
+// * 同步的设置定时异步回调
+// * @param ms 间隔的时长，单位毫秒
+// * @param cb 异步回调
+// * @returns 返回定时任务的编号
+// */
+// pub fn set_timeout(js: Arc<JS>, callback: u32, timeout: u32, info: Atom, args: Box<FnOnce(Arc<JS>) -> usize>) -> Option<isize> {
+//     push_callback(js, callback, args, Some(timeout), info)
+// }
 
 pub fn clear_timeout(index: usize){
-	TIMER.cancel(index);
+	// TIMER.cancel(index);
 }
 
 /**
