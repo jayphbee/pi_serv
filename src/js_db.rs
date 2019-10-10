@@ -632,7 +632,7 @@ impl Monitor for DBToGlobalMqttMonitor{
                         wb.unwrap()
                     },
                 };
-//                println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
+            	// println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
                 publish_global_mqtt_topic(false, topic, Arc::new(value));
             },
             &EventType::Meta(ref info) => {
@@ -649,6 +649,7 @@ impl Monitor for DBToGlobalMqttMonitor{
                         wb.unwrap()
                     },
                 };
+				// println!("db listen1-------------------------------------------{:?}, topic:{}", value, &topic);
                 publish_global_mqtt_topic(false, topic, Arc::new(value));
             },
         }

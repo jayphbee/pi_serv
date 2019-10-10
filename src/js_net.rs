@@ -772,8 +772,8 @@ impl NetEventHandler {
     * @param gray 灰度对象
     * @returns 返回网络事件处理器
     */
-    pub fn new(handler: String, gray: JSGray) -> NetHandler {
-        NetHandler {
+    pub fn new(handler: String, gray: JSGray) -> NetEventHandler {
+        NetEventHandler {
             gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
             handler: Atom::from(handler),
         }
