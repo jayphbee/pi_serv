@@ -36,6 +36,8 @@ use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncService
 use tcp::buffer_pool::WriteBufferPool;
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
+use base::service::{BaseListener, BaseService};
+use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
 use rpc::connect::RpcConnect;
 
@@ -873,33 +875,34 @@ impl RequestHandler {
 /**
 * 创建Rpc服务
 */
-pub fn create_rpc_service(handler: &RequestHandler) -> Arc<RpcService> {
-	let mut service = RpcService::new();
-	service.set_request_handler(Arc::new(handler.clone()));
-	let service = Arc::new(service);
-	service
+pub fn create_rpc_service(handler: &RequestHandler) -> Arc<BaseService> {
+	let mut rpc_service = RpcService::new();
+    rpc_service.set_request_handler(Arc::new(handler.clone()));
+	let rpc_service = Arc::new(rpc_service);
+	Arc::new(BaseService::with_service(rpc_service))
 }
 
 /**
 * 注册网络事件监听器
 */
 pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_handler: Option<&NetEventHandler>) -> Arc<RpcListener> {
-	let mut service = RpcListener::new();
+	let mut rpc_listener = RpcListener::new();
 	if let Some(r) = conect_handler {
-		service.set_connected_handler(Arc::new(r.clone()));
+        rpc_listener.set_connected_handler(Arc::new(r.clone()));
 	}
 	if let Some(r) = close_handler {
-		service.set_closed_handler(Arc::new(r.clone()));
+        rpc_listener.set_closed_handler(Arc::new(r.clone()));
 	}
-	let service = Arc::new(service);
-	WS_MQTT3_BROKER.register_listener(service.clone());
-	service
+    let rpc_listener = Arc::new(rpc_listener);
+    let listener = Arc::new(BaseListener::with_listener(rpc_listener.clone()));
+	WS_MQTT3_BROKER.register_listener(listener);
+    rpc_listener
 }
 
 /**
 * 为指定的Mqtt主题，注册指定的Rpc服务
 */
-pub fn register_rpc_topic(topic: String, service: &Arc<RpcService>) {
+pub fn register_rpc_topic(topic: String, service: &Arc<BaseService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
 }
 
@@ -963,6 +966,8 @@ pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定
 */
 pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                                  topic: String, msg: Arc<Vec<u8>>) {
-    publish_topic(is_public, topic, 0, None, msg);
+    if let Ok(bin) = encode(0, false, 0, msg.as_slice()) {
+        publish_topic(is_public, topic, 0, None, Arc::new(bin));
+    }
 }
 

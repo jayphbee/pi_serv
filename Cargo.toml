@@ -28,6 +28,7 @@ https = { path = "../pi_net/https" }
 tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 mqtt = { path = "../pi_net/mqtt" }
+base = { path = "../pi_net/base" }
 rpc = { path = "../pi_net/rpc" }
 # pi_p2p = { path = "../pi_p2p" }
 pi_store = { path = "../pi_store" }
