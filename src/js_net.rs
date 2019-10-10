@@ -357,7 +357,7 @@ impl Handler for TopicHandler {
                 let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
                 let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 717646231);
                 nobjs.to_map(&vm);
                 vm.new_u32(id as u32);
                 match peer_addr {
