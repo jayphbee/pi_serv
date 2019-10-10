@@ -19,6 +19,7 @@ use pi_store::lmdb_file::{DB as Lmdb};
 use pi_store::file_mem_db::FileMemDB;
 use mqtt_tmp::server::ServerNode;
 use mqtt_tmp::data::Server;
+use js_net::publish_global_mqtt_topic;
 
 //use pi_base::util::now_millisecond;
 //use pi_vm::adapter::dukc_top;
@@ -581,6 +582,74 @@ impl Monitor for DBToMqttMonitor{
                     Ok(_) => (),
                     Err(r) => println!("{}", r),
                 } ;
+            },
+        }
+    }
+}
+
+//数据库监听器
+pub struct DBToGlobalMqttMonitor{
+    cfg: HashMap<Atom, HashMap<Atom, bool>>,
+}
+
+impl DBToGlobalMqttMonitor{
+    pub fn new(cfg: &[u8]) -> Result<DBToGlobalMqttMonitor, ReadBonErr>{
+        let r = HashMap::decode(&mut ReadBuffer::new(cfg, 0))?;
+        Ok(DBToGlobalMqttMonitor{
+            cfg:r,
+        })
+    }
+}
+
+pub fn register_db_to_global_mqtt_monitor(mgr: &Mgr, monitor: DBToGlobalMqttMonitor){
+    mgr.listen(Arc::new(monitor));
+}
+
+impl Monitor for DBToGlobalMqttMonitor{
+    fn notify(&self, e: Event, _mgr: Mgr){
+        //如果名单中没有对应的库和表， 忽略该事件
+        match self.cfg.get(&e.ware) {
+            Some(tabs) => {
+                match tabs.get(&e.tab){
+                    Some(_) => (),
+                    None => return,
+                }
+            },
+            None => return,
+        }
+
+//        println!("db listen1-------------------------------------------ware{:?}, tab:{:?}", &e.ware, &e.tab);
+
+        //否则，将该事件投递到mqtt TODO
+        match &e.other {
+            &EventType::Tab{key: ref k, value: ref v} => {
+                let topic = String::from(*&e.ware.as_str()) + "." + &*e.tab.as_str() + "." + k.to_hex().as_str();
+                let value = match v {
+                    Some(v) => Vec::from(v.as_slice()),
+                    None => {
+                        let mut wb = WriteBuffer::with_capacity(1);
+                        wb.write_nil();
+                        wb.unwrap()
+                    },
+                };
+//                println!("db listen-------------------------------------------{:?}, topic:{}", value, &topic);
+                publish_global_mqtt_topic(false, topic, Arc::new(value));
+            },
+            &EventType::Meta(ref info) => {
+                let topic = String::from(*&e.ware.as_str()) + "." + &*e.tab.as_str();
+                let value = match info {
+                    Some(v) => {
+                        let mut wb = WriteBuffer::with_capacity(1);
+                        v.encode(&mut wb);
+                        wb.unwrap()
+                    },
+                    None => {
+                        let mut wb = WriteBuffer::with_capacity(1);
+                        wb.write_nil();
+                        wb.unwrap()
+                    },
+                };
+                publish_global_mqtt_topic(false, topic, Arc::new(value));
             },
         }
     }

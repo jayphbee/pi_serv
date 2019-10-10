@@ -370,7 +370,7 @@ impl Handler for TopicHandler {
                 }
                 7
             });
-            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+            gray.factory.call(Some(id), Atom::from("_$rpc_tmp"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
@@ -794,8 +794,8 @@ unsafe impl Sync for RequestHandler {}
 impl Handler for RequestHandler {
     type A = u8;
     type B = Option<SocketAddr>;
-    type C = Arc<Vec<u8>>;
-    type D = ();
+    type C = u32;
+    type D = Arc<Vec<u8>>;
     type E = ();
     type F = ();
     type G = ();
@@ -803,7 +803,6 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-        println!("handle1---------------------------------------");
 		let topic_handler = self.clone();
         let topic_name = topic.clone();
         let id = env.get_id();
@@ -823,9 +822,10 @@ impl Handler for RequestHandler {
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 vm.new_str((*topic_name).to_string());
                 let peer_addr = match args {
-                    Args::ThreeArgs(_, peer, bin) => {
+                    Args::FourArgs(_, peer, rid, bin) => {
                         let buffer = vm.new_uint8_array(bin.len() as u32);
                         buffer.from_bytes(bin.as_slice());
+						vm.new_u32(rid); // rid
                         peer
                     },
                     _ => panic!("invalid topic handler args"),
@@ -833,7 +833,7 @@ impl Handler for RequestHandler {
                 let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
                 let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 226971089);
+                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
                 nobjs.to_map(&vm);
                 vm.new_u32(id as u32);
                 match peer_addr {
@@ -844,7 +844,7 @@ impl Handler for RequestHandler {
                         vm.new_undefined();
                     },
                 }
-                7
+                8
             });
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
@@ -901,6 +901,20 @@ pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_han
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<RpcService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
+}
+
+/**
+* rpc回应
+*/
+pub fn rpc_reply(connect: &Arc<RpcConnect>, rid: u32, data: &[u8]) {
+    connect.reply(rid, Vec::from(data));
+}
+
+/**
+* rpc发送
+*/
+pub fn rpc_send(connect: &Arc<RpcConnect>, topic: String, rid: u32, data: &[u8]) {
+    connect.send(topic, rid, Vec::from(data));
 }
 
 /**

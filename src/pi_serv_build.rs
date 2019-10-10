@@ -172,6 +172,29 @@ fn call_1993779671(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_4117819797(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst0 = jst0.to_bytes();
+
+
+
+    let result = js_db::DBToGlobalMqttMonitor::new(jst0);let mut result = match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,1632158050);
+
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v.to_string() + "Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1168492209(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in notify";
 
@@ -755,6 +778,24 @@ fn call_1869880364(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_db::register_db_to_mqtt_monitor(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1719526885(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_db_to_global_mqtt_monitor";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 1632158050, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut js_db::DBToGlobalMqttMonitor) };
+
+
+    js_db::register_db_to_global_mqtt_monitor(jst0,jst1);
     Some(CallResult::Ok)
 }
 
@@ -2657,6 +2698,59 @@ fn call_1703898312(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_4082873914(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in rpc_reply";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3092548949, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<rpc::connect::RpcConnect>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.to_bytes();
+
+
+
+    js_net::rpc_reply(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2617351137(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in rpc_send";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3092548949, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<rpc::connect::RpcConnect>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_uint8_array() && !jst3.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst3 = jst3.to_bytes();
+
+
+
+    js_net::rpc_send(jst0,jst1,jst2,jst3);
+    Some(CallResult::Ok)
+}
+
+
 fn call_3293246594(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in global_mqtt_bind_tcp_ports";
 
@@ -3201,6 +3295,10 @@ fn drop_2627601653(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBToMqttMonitor) };
 }
 
+fn drop_1632158050(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_db::DBToGlobalMqttMonitor) };
+}
+
 fn drop_1495847839(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::JSDBMonitor) };
 }
@@ -3357,6 +3455,10 @@ fn drop_619541818(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<rpc::service::RpcListener>) };
 }
 
+fn drop_3092548949(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<rpc::connect::RpcConnect>) };
+}
+
 fn drop_3355816649(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut hotfix::GrayMgr) };
 }
@@ -3386,6 +3488,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_vm::adapter::JSType"), drop_fn: drop_4252329727}, 4252329727);
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt_tmp::server::ServerNode"), drop_fn: drop_2484911420}, 2484911420);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBToMqttMonitor"), drop_fn: drop_2627601653}, 2627601653);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBToGlobalMqttMonitor"), drop_fn: drop_1632158050}, 1632158050);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::JSDBMonitor"), drop_fn: drop_1495847839}, 1495847839);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::Event"), drop_fn: drop_3165549746}, 3165549746);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr"), drop_fn: drop_2976191628}, 2976191628);
@@ -3425,6 +3528,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcService>"), drop_fn: drop_3767749329}, 3767749329);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetEventHandler"), drop_fn: drop_2899437702}, 2899437702);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcListener>"), drop_fn: drop_619541818}, 619541818);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::connect::RpcConnect>"), drop_fn: drop_3092548949}, 3092548949);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Mutex<hotfix::GrayMgr>>"), drop_fn: drop_579352454}, 579352454);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgrMutax"), drop_fn: drop_646865374}, 646865374);
@@ -3434,6 +3538,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3763610783_sync), 3763610783);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2701929727_sync), 2701929727);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1993779671), 1993779671);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4117819797), 4117819797);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1168492209), 1168492209);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2153620660), 2153620660);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1967373661_sync), 1967373661);
@@ -3452,6 +3557,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_583163851_sync), 583163851);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2986122496_sync), 2986122496);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1869880364), 1869880364);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1719526885), 1719526885);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4281318477_sync), 4281318477);
     mgr.regist_fun_meta(FnMeta::CallArg(call_479322726_sync), 479322726);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2176133173), 2176133173);
@@ -3523,6 +3629,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2333272468), 2333272468);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466468899), 466468899);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1703898312), 1703898312);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4082873914), 4082873914);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2617351137), 2617351137);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3293246594), 3293246594);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3953247239), 3953247239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1449642520), 1449642520);

@@ -77,6 +77,30 @@ fn call_1246857552(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_1299557669(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in close";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2855847321, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const rpc::connect::RpcConnect) };
+
+
+	let jst1 = &v[1];
+    let jst1 = if jst1.is_undefined() || jst1.is_null(){
+        None
+    }else{
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+        Some(jst1)
+    };
+
+
+    rpc::connect::RpcConnect::close(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
 fn drop_101304093(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut rpc::service::RpcListener) };
 }
@@ -96,4 +120,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_711780732), 711780732);
     mgr.regist_fun_meta(FnMeta::CallArg(call_747133793), 747133793);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1246857552), 1246857552);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1299557669), 1299557669);
 }
