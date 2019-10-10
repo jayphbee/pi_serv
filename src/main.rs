@@ -85,6 +85,7 @@ mod pi_vm_build;
 mod pi_net_httpc_build;
 mod pi_net_https_build;
 mod pi_store_build;
+mod pi_net_rpc_tmp_build;
 
 use std::thread;
 use std::time::Duration;
@@ -216,6 +217,7 @@ fn main() {
 	// pi_p2p_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
     pi_net_https_build::register(&BON_MGR);
+	pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
 
 	let matches = args();

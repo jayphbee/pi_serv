@@ -2234,7 +2234,7 @@ fn call_3844141423(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_net::NetEventHandler::new(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1707332364);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2899437702);
 
 
     Some(CallResult::Ok)
@@ -3423,6 +3423,10 @@ fn drop_15779622(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::TopicHandler) };
 }
 
+fn drop_2899437702(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_net::NetEventHandler) };
+}
+
 fn drop_4208533229(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::RequestHandler) };
 }
@@ -3445,10 +3449,6 @@ fn drop_3776892844(ptr: usize){
 
 fn drop_3767749329(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<rpc::service::RpcService>) };
-}
-
-fn drop_2899437702(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut js_net::NetEventHandler) };
 }
 
 fn drop_619541818(ptr: usize){
@@ -3520,13 +3520,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TlsNetMgr"), drop_fn: drop_4120821321}, 4120821321);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetHandler"), drop_fn: drop_1707332364}, 1707332364);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TopicHandler"), drop_fn: drop_15779622}, 15779622);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetEventHandler"), drop_fn: drop_2899437702}, 2899437702);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::RequestHandler"), drop_fn: drop_4208533229}, 4208533229);
     mgr.regist_struct_meta(StructMeta{name:String::from("rpc_tmp::server::RPCServer"), drop_fn: drop_3913457295}, 3913457295);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::QoS"), drop_fn: drop_2688700187}, 2688700187);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt_tmp::session::Session>"), drop_fn: drop_717646231}, 717646231);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_net::TopicHandler>"), drop_fn: drop_3776892844}, 3776892844);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcService>"), drop_fn: drop_3767749329}, 3767749329);
-    mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetEventHandler"), drop_fn: drop_2899437702}, 2899437702);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcListener>"), drop_fn: drop_619541818}, 619541818);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::connect::RpcConnect>"), drop_fn: drop_3092548949}, 3092548949);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
