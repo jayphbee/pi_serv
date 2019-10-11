@@ -20,6 +20,7 @@ use httpc;
 use handler;
 use rpc_tmp;
 use std::io::Error;
+use base;
 use rpc;
 use std::sync::Mutex;
 use js_db;
@@ -2640,7 +2641,7 @@ fn call_2333272468(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_net::create_rpc_service(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3767749329);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1562130667);
 
 
     Some(CallResult::Ok)
@@ -2689,8 +2690,8 @@ fn call_1703898312(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-    let ptr = jstype_ptr(&jst1, js.clone(), 3767749329, false, param_error).expect("");
-	let jst1 = unsafe { &*(ptr as *const Arc<rpc::service::RpcService>) };
+    let ptr = jstype_ptr(&jst1, js.clone(), 1562130667, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const Arc<base::service::BaseService>) };
 
 
     js_net::register_rpc_topic(jst0,jst1);
@@ -3447,8 +3448,8 @@ fn drop_3776892844(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<js_net::TopicHandler>) };
 }
 
-fn drop_3767749329(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<rpc::service::RpcService>) };
+fn drop_1562130667(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<base::service::BaseService>) };
 }
 
 fn drop_619541818(ptr: usize){
@@ -3526,7 +3527,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::QoS"), drop_fn: drop_2688700187}, 2688700187);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<mqtt_tmp::session::Session>"), drop_fn: drop_717646231}, 717646231);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_net::TopicHandler>"), drop_fn: drop_3776892844}, 3776892844);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcService>"), drop_fn: drop_3767749329}, 3767749329);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<base::service::BaseService>"), drop_fn: drop_1562130667}, 1562130667);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::service::RpcListener>"), drop_fn: drop_619541818}, 619541818);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<rpc::connect::RpcConnect>"), drop_fn: drop_3092548949}, 3092548949);
     mgr.regist_struct_meta(StructMeta{name:String::from("hotfix::GrayMgr"), drop_fn: drop_3355816649}, 3355816649);
