@@ -7,6 +7,16 @@ use mqtt_tmp;
 
 
 
+fn call_1120993554(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = mqtt_tmp::server::ServerNode::new();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3560614167(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in respond";
 
@@ -44,5 +54,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt_tmp::server::ServerNode"), drop_fn: drop_2484911420}, 2484911420);
     mgr.regist_struct_meta(StructMeta{name:String::from("mqtt_tmp::session::Session"), drop_fn: drop_2735033865}, 2735033865);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
+    mgr.regist_fun_meta(FnMeta::Call(call_1120993554), 1120993554);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3560614167), 3560614167);
 }

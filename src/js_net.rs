@@ -415,8 +415,8 @@ impl TopicHandler {
 * @param recv_timeout 接收超时时长，单位毫秒
 * @returns 返回Mqtt服务器
 */
-pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
-    let server = ServerNode::new();
+pub fn mqtt_bind(server: &ServerNode, mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize){
+    // let server = ServerNode::new();
     let copy = server.clone();
     let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
@@ -438,7 +438,6 @@ pub fn mqtt_bind(mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size
     mgr.add_close_handler(&addr, &protocol, Box::new(move |id, socket| {
         server_copy.handle_close(id);
     }));
-    server
 }
 
 /**
@@ -505,8 +504,7 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
 * @param recv_timeout 接收超时时长，单位毫秒
 * @returns 返回Mqtt服务器
 */
-pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, send_buf_size: usize, recv_timeout: usize) -> ServerNode{
-    let server = ServerNode::new();
+pub fn mqtt_bind_tls(server: &ServerNode, mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, send_buf_size: usize, recv_timeout: usize){
     let copy = server.clone();
     let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
@@ -528,7 +526,6 @@ pub fn mqtt_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_p
     mgr.add_close_handler(&addr, &protocol, Box::new(move |id, socket| {
         server_copy.handle_close(id);
     }));
-    server
 }
 
 /**
