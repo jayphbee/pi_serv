@@ -1772,11 +1772,16 @@ fn call_997239765(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_http_client";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1131624585, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientOptions) };
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
 
 
-    let result = js_httpc::create_http_client(jst0);let mut result = match result{
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 1131624585, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientOptions) };
+
+
+    let result = js_httpc::create_http_client(jst0,jst1);let mut result = match result{
         Ok(r) => { 
     let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,1107924793);
 

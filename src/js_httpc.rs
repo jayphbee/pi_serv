@@ -1,10 +1,15 @@
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::io;
+use std::sync::{Arc, Mutex};
 
 use httpc;
 use httpc::SharedHttpc;
 use atom::Atom;
+use fnv::FnvHashMap;
+
+lazy_static! {
+	pub static ref HTTP_CLIENT_CACHE: Arc<Mutex<FnvHashMap<Atom, Arc<httpc::HttpClient>>>> = Arc::new(Mutex::new(FnvHashMap::default()));
+}
 
 /**
 * http客户端选项
@@ -203,11 +208,18 @@ impl HttpClientBody<String>{
 * @returns 返回创建结果，成功返回http客户端的引用计数
 * @throws 失败抛出原因描述
 */
-pub fn create_http_client(options: HttpClientOptions) -> Result<Arc<httpc::HttpClient>, String> {
-    match httpc::HttpClient::create(options.0){
-        Ok(r) => Ok(r),
-        Err(e) => Err(e.to_string()),
-    }
+pub fn create_http_client(key: String, options: HttpClientOptions) -> Result<Arc<httpc::HttpClient>, String> {
+	let k = Atom::from(key);
+	if let Some(r) = HTTP_CLIENT_CACHE.lock().unwrap().get(&k) {
+		return Ok(r.clone());
+	}
+	match httpc::HttpClient::create(options.0){
+		Ok(r) => {
+			HTTP_CLIENT_CACHE.lock().unwrap().insert(k, r.clone());
+			Ok(r)
+		},
+		Err(e) => Err(e.to_string()),
+	}
 }
 
 /**
