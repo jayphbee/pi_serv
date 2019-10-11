@@ -2262,13 +2262,13 @@ fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_bind";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 2462173101, false, param_error).expect("");
-	let jst0 = unsafe { &mut *(ptr as *mut js_net::NetMgr) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
+    let ptr = jstype_ptr(&jst1, js.clone(), 2462173101, false, param_error).expect("");
+	let jst1 = unsafe { &mut *(ptr as *mut js_net::NetMgr) };
 
 
 	let jst2 = &v[2];
@@ -2277,8 +2277,8 @@ fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst3 = &v[3];
-	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst3 = jst3.get_u32() as usize;
+	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst3 = jst3.get_str();
 
 
 	let jst4 = &v[4];
@@ -2286,10 +2286,12 @@ fn call_357009886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst4 = jst4.get_u32() as usize;
 
 
-    let result = js_net::mqtt_bind(jst0,jst1,jst2,jst3,jst4);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
+	let jst5 = &v[5];
+	if !jst5.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst5 = jst5.get_u32() as usize;
 
 
+    js_net::mqtt_bind(jst0,jst1,jst2,jst3,jst4,jst5);
     Some(CallResult::Ok)
 }
 
@@ -2331,13 +2333,13 @@ fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in mqtt_bind_tls";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 4120821321, false, param_error).expect("");
-	let jst0 = unsafe { &mut *(ptr as *mut js_net::TlsNetMgr) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2484911420, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const mqtt_tmp::server::ServerNode) };
 
 
 	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
+    let ptr = jstype_ptr(&jst1, js.clone(), 4120821321, false, param_error).expect("");
+	let jst1 = unsafe { &mut *(ptr as *mut js_net::TlsNetMgr) };
 
 
 	let jst2 = &v[2];
@@ -2356,8 +2358,8 @@ fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst5 = &v[5];
-	if !jst5.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst5 = jst5.get_u32() as usize;
+	if !jst5.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst5 = jst5.get_str();
 
 
 	let jst6 = &v[6];
@@ -2365,10 +2367,12 @@ fn call_3574413612(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst6 = jst6.get_u32() as usize;
 
 
-    let result = js_net::mqtt_bind_tls(jst0,jst1,jst2,jst3,jst4,jst5,jst6);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2484911420);
+	let jst7 = &v[7];
+	if !jst7.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst7 = jst7.get_u32() as usize;
 
 
+    js_net::mqtt_bind_tls(jst0,jst1,jst2,jst3,jst4,jst5,jst6,jst7);
     Some(CallResult::Ok)
 }
 

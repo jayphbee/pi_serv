@@ -44,6 +44,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
     let mut list_c = Vec::new();
     let mut list_a = Vec::new();
     let mut list_b = Vec::new();
+	let mut list_e = Vec::new();
     let mut list_i = Vec::new();
     //let mut start_path = String::from("");
     for e in list.into_iter(){
@@ -55,10 +56,13 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
             list_a.push(e);
         }else if e.ends_with(".b.js"){
             list_b.push(e);
+        }else if e.ends_with(".e.js"){
+            list_e.push(e);
         }
     }
     list_c.extend_from_slice(&list_a);
     list_c.extend_from_slice(&list_b);
+	list_c.extend_from_slice(&list_e);
     list_c.extend_from_slice(&list_i);
 
     let mut list = Loader::list_with_depend(&list_c, &dp);
