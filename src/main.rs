@@ -89,7 +89,7 @@ mod pi_net_rpc_tmp_build;
 
 use std::thread;
 use std::time::Duration;
-use std::path::{Path};
+use std::path::{Path, PathBuf};
 use std::io;
 use std::sync::Arc;
 use std::sync::mpsc::channel;

@@ -41,6 +41,13 @@ use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
 use rpc::connect::RpcConnect;
 
+fn now_millis() -> isize {
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        Err(e) => -1,
+        Ok(n) => n.as_millis() as isize,
+    }
+}
+
 /**
 * Tcp网络管理器
 */
@@ -335,6 +342,7 @@ impl Handler for TopicHandler {
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
         let func = Box::new(move |lock: Option<isize>| {
+            println!("{}, net trace, run rpc task, token: {:?}, topic: {:?}", now_millis(), id, topic);
             let gray_tab = topic_handler.gray_tab.read().unwrap();
             let gray = match env.get_gray() {
                 Some(v) => match gray_tab.get(v) {
@@ -380,6 +388,7 @@ impl Handler for TopicHandler {
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
+        println!("{}, net trace, topic handle, token: {:?}, topic: {:?}", now_millis(), id, topic_name);
 	}
 }
 
