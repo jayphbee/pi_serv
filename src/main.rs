@@ -132,9 +132,8 @@ fn args() -> clap::ArgMatches<'static> {
                         .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
 						.args_from_usage("[mod] -m --mod <MOD>... 'start module(example: -m httpServer)'")
 						.args_from_usage("[httpServerPort] -p --httpServerPort <NUMBER>... 'httpServer port'")
-						.args_from_usage("[httpServerSingleFile] -s --httpServerSingleFile <DIR>... 'single file download root'")
-						.args_from_usage("[httpServerBatchFile] -b --httpServerBatchFile <DIR>... 'batch file download root'")
-						.args_from_usage("[httpServerUploadFile] -u --httpServerUploadFile <DIR>... 'file upload root'")
+						.args_from_usage("[httpServerLoadRoot] -d --httpServerLoadRoot <DIR>... 'file download root'")
+						.args_from_usage("[httpServerUploadRoot] -u --httpServerUploadRoot <DIR>... 'file upload root'")
                         .arg(Arg::with_name("shell")
                             .short("s")
                             .long("shell")
@@ -476,35 +475,23 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
 				None => 80,
 			};
 
-			let file_root = match matches.value_of("httpServerSingleFile") {
+			let down_root = match matches.value_of("httpServerLoadRoot") {
 				Some(r) => r,
 				None => "./",
 			};
 
-			let files_root = match matches.value_of("httpServerBatchFile") {
-				Some(r) => r,
-				None => "./",
-			};
-
-			let upload_root = match matches.value_of("httpServerUploadFile") {
-				Some(r) => r,
-				None => "./",
-			};
-
-			let batch_root = match matches.value_of("httpServerBatch") {
+			let upload_root = match matches.value_of("httpServerUploadRoot") {
 				Some(r) => r,
 				None => "./",
 			};
 
 			let mut mount = Mount::new();
-			let static_file = StaticFile::new(file_root);
-			let static_file_batch = StaticFileBatch::new(files_root);
 			// addGenHead(staticFile,r.gen_head);
 			// addGenHead(staticFileBatch,r.gen_head);
-			mount.mount("/", static_file);
-			mount.mount("/files", static_file_batch);
+			mount.mount("/", StaticFile::new(down_root));
+			mount.mount("/files", StaticFileBatch::new(down_root));
+			mount.mount("/batch",  FileBatch::new(down_root));
 			mount.mount("/upload",  FileUpload::new(upload_root));
-			mount.mount("/batch",  FileBatch::new(batch_root));
 			start_http(mount, Atom::from("0.0.0.0"), port, 30*1000, 20 * 1000);
 		}
 	}
