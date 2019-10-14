@@ -456,6 +456,7 @@ fn register(mgr: &BonMgr){
 use https::mount::Mount;
 use https::file::{StaticFile};
 use https::files::StaticFileBatch;
+use https::batch::FileBatch;
 use https::upload::FileUpload;
 use https::https_impl::start_http;
 
@@ -490,6 +491,10 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
 				None => "./",
 			};
 
+			let batch_root = match matches.value_of("httpServerBatch") {
+				Some(r) => r,
+				None => "./",
+			};
 
 			let mut mount = Mount::new();
 			let static_file = StaticFile::new(file_root);
@@ -499,6 +504,7 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
 			mount.mount("/", static_file);
 			mount.mount("/files", static_file_batch);
 			mount.mount("/upload",  FileUpload::new(upload_root));
+			mount.mount("/batch",  FileBatch::new(batch_root));
 			start_http(mount, Atom::from("0.0.0.0"), port, 30*1000, 20 * 1000);
 		}
 	}

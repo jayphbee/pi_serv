@@ -141,6 +141,65 @@ fn call_2098113688(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2717821527(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    let result = https::batch::FileBatch::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1770226902);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3012164796(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1770226902, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::batch::FileBatch) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = &jst2.get_str();
+
+
+    let result = https::batch::FileBatch::add_gen_resp_header(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_648785627(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_gen_resp_header";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1770226902, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::batch::FileBatch) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = &jst1.get_str();
+
+
+    let result = https::batch::FileBatch::remove_gen_resp_header(jst0,jst1);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1576795673(js: Arc<JS>) -> Option<CallResult>{
 
     let result = https::mount::Mount::new();
@@ -219,6 +278,32 @@ fn call_2869286636(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst2 = &v[2];
     let ptr = jstype_ptr(&jst2, js.clone(), 3578700762, true, param_error).expect("");
 	let jst2 = *unsafe { Box::from_raw(ptr as *mut https::upload::FileUpload) };
+
+
+    let result = https::mount::Mount::mount(jst0,jst1,jst2);
+    let ptr = result as *const https::mount::Mount as usize;let mut result = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,969075058);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1238254206(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in mount";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 969075058, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut https::mount::Mount) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = &jst1.get_str();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 1770226902, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut https::batch::FileBatch) };
 
 
     let result = https::mount::Mount::mount(jst0,jst1,jst2);
@@ -316,6 +401,10 @@ fn drop_2592534340(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::files::StaticFileBatch) };
 }
 
+fn drop_1770226902(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut https::batch::FileBatch) };
+}
+
 fn drop_969075058(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut https::mount::Mount) };
 }
@@ -323,6 +412,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("https::upload::FileUpload"), drop_fn: drop_3578700762}, 3578700762);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::file::StaticFile"), drop_fn: drop_369829824}, 369829824);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::files::StaticFileBatch"), drop_fn: drop_2592534340}, 2592534340);
+    mgr.regist_struct_meta(StructMeta{name:String::from("https::batch::FileBatch"), drop_fn: drop_1770226902}, 1770226902);
     mgr.regist_struct_meta(StructMeta{name:String::from("https::mount::Mount"), drop_fn: drop_969075058}, 969075058);
     mgr.regist_fun_meta(FnMeta::CallArg(call_170528392), 170528392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3779679042), 3779679042);
@@ -331,10 +421,14 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3011830990), 3011830990);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4071207699), 4071207699);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2098113688), 2098113688);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2717821527), 2717821527);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3012164796), 3012164796);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_648785627), 648785627);
     mgr.regist_fun_meta(FnMeta::Call(call_1576795673), 1576795673);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3977181471), 3977181471);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4128314446), 4128314446);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2869286636), 2869286636);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1238254206), 1238254206);
     mgr.regist_fun_meta(FnMeta::CallArg(call_374744388), 374744388);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3415190104), 3415190104);
 }
