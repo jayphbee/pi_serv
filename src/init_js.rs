@@ -253,7 +253,8 @@ fn init_shell_manager(dirs: &[String], file_list: Vec<FileDes>, root: String, co
             file.ends_with(r".b.js") ||
             file.ends_with(r".c.js") ||
             file.ends_with(r".u.js") ||
-            file.ends_with(r".i.js") {
+            file.ends_with(r".i.js") ||
+			file.ends_with(r".e.js") {
                 //忽略初始化代码
                 continue;
         } else {

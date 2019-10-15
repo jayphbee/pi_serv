@@ -224,6 +224,7 @@ fn main() {
     pi_net_https_build::register(&BON_MGR);
 	pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
+	register(&BON_MGR);
 
 	let matches = args();
 
@@ -395,23 +396,14 @@ fn collect(_: String, list: Vec<&str>) -> Vec<String> {
 fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let param_error = "param error in set_timeout";
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 2884638791, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::adapter::JS>)}.clone();
 
-	let jst1 = &v[1];
-	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst1 = jst1.get_u32();
+	// timeout
+	let timeout = &v[1];
+	if !timeout.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let timeout = timeout.get_u32();
 
-	let jst2 = &v[2];
-	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst2 = jst2.get_u32();
-
-	let jst3 = &v[3];
-    if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst3 = Atom::from(jst3.get_str());
-
-    let call_index = &v[4];
+	// call_index
+    let call_index = &v[1];
     if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
     let call_index = call_index.get_u32();
     
@@ -425,7 +417,7 @@ fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 			ptr_jstype(js.get_objs(), js.clone(), ptr,2884638791);
 			1
 		}),
-		Some(jst2), 
+		Some(timeout), 
 		Atom::from("call_3344344275_async1")
 	) {
 		Some(r) => js.new_i32(r as i32),
