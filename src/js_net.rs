@@ -290,7 +290,7 @@ impl Handler for NetHandler {
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
-                println!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
+                warn!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
@@ -384,7 +384,7 @@ impl Handler for TopicHandler {
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
-                println!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
@@ -764,7 +764,7 @@ impl Handler for NetEventHandler {
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
-                println!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
+                warn!("!!!> Net Handle Error, unlock task queue failed, queue: {:?}", queue);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("net ".to_string() + &self.handler + ":" + &event_name_copy + " handle task"));
@@ -858,7 +858,7 @@ impl Handler for RequestHandler {
 
             //解锁当前同步静态队列，保证虚拟机执行
             if !unlock_js_task_queue(queue) {
-                println!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
@@ -954,7 +954,7 @@ pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的�
             panic!("Mqtt bind tcp port Error, reason: {:?}", e);
         },
         Ok(_) => {
-            println!("===> Mqtt bind tcp port ok");
+            info!("===> Mqtt bind tcp port ok");
         }
     }
 }

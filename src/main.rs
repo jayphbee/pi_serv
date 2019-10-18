@@ -49,6 +49,9 @@ extern crate time;
 extern crate lazy_static;
 
 #[macro_use]
+extern crate log;
+
+#[macro_use]
 extern crate env_logger;
 
 #[cfg(any(unix))]
@@ -201,8 +204,6 @@ fn main() {
             },
         }
     }
-    set_vm_timeout(60000);
-    register_global_vm_heap_collect_timer(10000);
 
 
     pi_crypto_build::register(&BON_MGR);
@@ -265,6 +266,10 @@ fn main() {
 
 	// 启动http服务器
 	start_simple_https(&matches);
+
+    //启动全局虚拟机堆整理
+    set_vm_timeout(60000);
+    register_global_vm_heap_collect_timer(3000);
 
     match matches.value_of("shell") {
         Some("true") => {
