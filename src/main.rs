@@ -143,6 +143,12 @@ fn args() -> clap::ArgMatches<'static> {
                             .value_name("BOOL")
                             .takes_value(true)
                             .help("Open the console at startup"))
+                        .arg(Arg::with_name("max_heap")
+                            .short("H")
+                            .long("max_heap")
+                            .value_name("GByte")
+                            .takes_value(true)
+                            .help("Max heap limit on runtime"))
 						.get_matches_from(wild::args());
 	matches
 }
@@ -161,6 +167,12 @@ fn args() -> clap::ArgMatches<'static> {
             .value_name("BOOL")
             .takes_value(true)
             .help("Open the console at startup"))
+        .arg(Arg::with_name("max_heap")
+            .short("H")
+            .long("max_heap")
+            .value_name("GByte")
+            .takes_value(true)
+            .help("Max heap limit on runtime"))
         .get_matches();
     matches
 }
@@ -184,28 +196,6 @@ fn main() {
 
     let worker_pool = Box::new(WorkerPool::new("Network Worker".to_string(), WorkerType::Net,  processor, 1024 * 1024, 30000, NET_WORKER_WALKER.clone()));
     worker_pool.run(NET_TASK_POOL.clone());
-    #[cfg(any(windows))]
-    {
-        let (total_memory, _, _, _, _, _) = sys.memory_usage();
-        set_max_alloced_limit(((total_memory * 1024) as f64 * 0.75).floor() as usize);
-        println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
-    }
-    #[cfg(any(unix))]
-    {
-        let sys = sys.special_platform().unwrap();
-        match sys.sys_virtual_memory_detal() {
-            None => {
-                //获取内存占用信息失败，则使用默认最大堆限制
-                println!("!!!> Set Max Heap Limit Failed, used default max heap limit, size: {}", get_max_alloced_limit());
-            },
-            Some(info) => {
-                //获取内存占用信息成功
-                let total_memory = info.0;
-                set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
-                println!("===> Set Max Heap Limit Ok, size: {}", get_max_alloced_limit());
-            },
-        }
-    }
 
 
     pi_crypto_build::register(&BON_MGR);
@@ -230,6 +220,42 @@ fn main() {
 	register(&BON_MGR);
 
 	let matches = args();
+
+    if let Some(max_heap) = matches.value_of("max_heap") {
+        match max_heap.parse::<f64>() {
+            Err(e) => {
+                panic!("set max heap limit failed, reason: {:?}", e);
+            },
+            Ok(val) => {
+                set_max_alloced_limit((val * 1024.0 * 1024.0 * 1024.0).floor() as usize);
+                info!("===> Set Max Heap Limit Ok, size: {} B", get_max_alloced_limit());
+            },
+        }
+    } else {
+        //没有设置最大堆限制
+        #[cfg(any(windows))]
+        {
+            let (total_memory, _, _, _, _, _) = sys.memory_usage();
+            set_max_alloced_limit(((total_memory * 1024) as f64 * 0.75).floor() as usize);
+            info!("===> Set Max Heap Limit Ok, size: {} B", get_max_alloced_limit());
+        }
+        #[cfg(any(unix))]
+        {
+            let sys = sys.special_platform().unwrap();
+            match sys.sys_virtual_memory_detal() {
+                None => {
+                    //获取内存占用信息失败，则使用默认最大堆限制
+                    warn!("!!!> Set Max Heap Limit Failed, used default max heap limit, size: {}B", get_max_alloced_limit());
+                },
+                Some(info) => {
+                    //获取内存占用信息成功
+                    let total_memory = info.0;
+                    set_max_alloced_limit((total_memory as f64 * 0.75).floor() as usize);
+                    info!("===> Set Max Heap Limit Ok, size: {} B", get_max_alloced_limit());
+                },
+            }
+        }
+    }
 
 	if let Some(root) = matches.value_of("root") {
 		let mut root = root.to_string();
