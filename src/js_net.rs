@@ -18,7 +18,7 @@ use atom::Atom;
 use rpc_tmp::traits::RPCServerTraits;
 use rpc_tmp::server::RPCServer;
 use net::data::{RawSocket, RawStream};
-use net::tls::{TlsSocket, TlsStream, TlsConfig};
+use net::tls::{TlsSocket, TlsStream, TlsConfig as TlsCfg};
 use net::{Config, Protocol};
 use net::api::{Socket, Stream};
 use net::api::{NetManager, TlsManager};
@@ -34,6 +34,7 @@ use tcp::connect::TcpSocket;
 use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
 use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
+use tcp::util::TlsConfig;
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
 use base::service::{BaseListener, BaseService};
@@ -205,7 +206,7 @@ impl TlsNetMgr {
                     v(peer.clone(),  addr.clone());
                 }
             });
-            let cfg = TlsConfig::new(
+            let cfg = TlsCfg::new(
                 match protocol.as_str() {
                     "tcp" => Protocol::TCP,
                     _ => {panic!("nonsupport protocol:{}", protocol);},
@@ -949,7 +950,7 @@ pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的�
     let mut config = SocketConfig::new(&ip, factory.bind_ports().as_slice());
     config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
     let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
-    match SocketListener::bind(factory, buffer, config, pool_size, stack_size, 1024, Some(timeout)) {
+    match SocketListener::bind(factory, buffer, config, TlsConfig::empty(), pool_size, stack_size, 1024, Some(timeout)) {
         Err(e) => {
             panic!("Mqtt bind tcp port Error, reason: {:?}", e);
         },
