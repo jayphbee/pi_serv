@@ -431,7 +431,7 @@ fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let param_error = "param error in set_timeout";
 
 	// timeout
-	let timeout = &v[1];
+	let timeout = &v[0];
 	if !timeout.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
 	let timeout = timeout.get_u32();
 
@@ -442,6 +442,7 @@ fn call_3344344275_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     
     let jscopy = js.clone();
 
+	println!("index: {}, timeout: {}", call_index, timeout);
 	match push_callback(
 		jscopy.clone(),
 		call_index,
