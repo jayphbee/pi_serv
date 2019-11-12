@@ -68,8 +68,10 @@ pub mod js_net_rpc_client;
 pub mod js_base;
 pub mod js_lib;
 pub mod js_async;
+pub mod js_vm;
 pub mod hotfix;
 pub mod webshell;
+pub mod js_env;
 
 mod js_util;
 mod pi_crypto_build;
@@ -98,6 +100,7 @@ use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::io::{Write, Result as IOResult};
 use std::str::{FromStr};
+use std::env;
 
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
@@ -131,6 +134,7 @@ fn args() -> clap::ArgMatches<'static> {
 						.version("1.0")
 						.author("test. <test@gmail.com>")
 						.about("aboutXXXX")
+						.args_from_usage("[exec] -e --exec <File> 'The path where the exec javascript file is located'")
 						.args_from_usage("[root] -r --root <DIR> 'The directory where the dependent file is located'")
                         .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
 						.args_from_usage("[mod] -m --mod <MOD>... 'start module(example: -m httpServer)'")
@@ -158,7 +162,8 @@ fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
         .version("1.0")
         .author("test. <test@gmail.com>")
-        .about("aboutXXXX")
+		.about("aboutXXXX")
+		.args_from_usage("[exec] -e --exec <File> 'The path where the exec javascript file is located'")
         .args_from_usage("<root> -r --root <DIR> 'The directory where the dependent file is located'")
         .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
         .arg(Arg::with_name("shell")
@@ -178,6 +183,7 @@ fn args() -> clap::ArgMatches<'static> {
 }
 
 fn main() {
+	println!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
     env_logger::builder()
         .format_timestamp_millis()
         .init();
@@ -221,6 +227,8 @@ fn main() {
 
 	let matches = args();
 
+	println!("11111111111111111111111111111111111111111111");
+
     if let Some(max_heap) = matches.value_of("max_heap") {
         match max_heap.parse::<f64>() {
             Err(e) => {
@@ -255,7 +263,8 @@ fn main() {
                 },
             }
         }
-    }
+	}
+	println!("22222222222222222222222222222222222");
 
 	if let Some(root) = matches.value_of("root") {
 		let mut root = root.to_string();
@@ -291,6 +300,13 @@ fn main() {
 			init_js(&files[..], file_list, root.clone());
 		}
 	}
+
+	println!("33333333333333333333333333333");
+	if let Some(path) = matches.value_of("exec") {
+		println!("4444444444444444444444444444");
+		exec_js(path.to_string());
+	}
+	println!("555555555555555555555555");
 
 	// 启动http服务器
 	start_simple_https(&matches);
@@ -538,4 +554,54 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
     //         startHttpsMount(mount, r.ip, r.port, r.keep_alive_timeout, r.handle_timeout, r.certPath, r.keyPath);
     //     });
     // }
+}
+
+fn exec_js(path: String){
+	// use js_vm::{get_byte_code, compile, load_module};
+	use pi_vm::bonmgr::{NativeObjsAuth};
+	let js = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+
+	// 初始化js执行环境
+	let env_code = read_code("env.js");
+	let core_code = read_code("core.js");
+
+	let env_code = js.compile("env.js".to_string(), env_code).unwrap();
+	let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+
+	
+	load_code(&js, env_code.as_slice());
+	load_code(&js, core_code.as_slice());
+
+	let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
+	println!("path: {}, cur_dir: {}", path, cur_dir);
+	if js.get_link_function("Module.require".to_string()) {
+		js.new_str(path).unwrap();
+		js.new_str(cur_dir).unwrap();
+		js.call(2);
+	} else {
+		panic!("Module.require function is not exist");
+	}
+}
+
+use std::fs::{File};
+use std::io::Read;
+fn read_code(path: &str) -> String{
+	let mut file = match File::open(path) {
+		Ok(f) => f,
+		Err(e) => panic!("no such file {:?} exception:{}", path, e),
+	};
+	let mut str_val = String::new();
+	if let Err(e) = file.read_to_string(&mut str_val) {
+		panic!("Error Reading file: {}", e)
+	}
+	return str_val;
+}
+
+fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
+	loop {
+		if js.is_ran() {
+			return js.load(&code);
+		}
+		pi_vm::adapter::pause();
+	}
 }

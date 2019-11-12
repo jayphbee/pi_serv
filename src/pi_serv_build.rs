@@ -26,6 +26,7 @@ use std::sync::Mutex;
 use js_db;
 use depend;
 use util;
+use js_vm;
 use js_base;
 use js_lib;
 use js_httpc;
@@ -917,6 +918,82 @@ fn call_2239806005(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
 
+    Some(CallResult::Ok)
+}
+
+
+fn call_3931016483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in read_code";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_vm::read_code(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(v).unwrap();
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1263843384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in get_byte_code";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    let result = js_vm::get_byte_code(jst0);let mut result = match result{
+        Some(v) => { 
+    let ptr = v as *const Vec<u8> as usize;let mut v = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3990557411(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in compile";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = js_vm::compile(jst0,jst1);let mut result = match result{
+        Some(v) => { 
+    let ptr = v as *const Vec<u8> as usize;let mut v = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1380265392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in load_module";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Vec<u8>) };
+
+
+    js_vm::load_module(jst0,&js);
     Some(CallResult::Ok)
 }
 
@@ -3572,6 +3649,10 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_479322726_sync), 479322726);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2176133173), 2176133173);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2239806005), 2239806005);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3931016483), 3931016483);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1263843384), 1263843384);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3990557411), 3990557411);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1380265392), 1380265392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1347190475), 1347190475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3993207385), 3993207385);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
