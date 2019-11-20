@@ -72,6 +72,7 @@ pub mod js_vm;
 pub mod hotfix;
 pub mod webshell;
 pub mod js_env;
+pub mod js_file;
 
 mod js_util;
 mod pi_crypto_build;
@@ -127,6 +128,9 @@ use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit, get_max_allo
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
+
+
+
 
 #[cfg(any(windows))]
 fn args() -> clap::ArgMatches<'static> {
@@ -573,7 +577,6 @@ fn exec_js(path: String){
 	load_code(&js, core_code.as_slice());
 
 	let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
-	println!("path: {}, cur_dir: {}", path, cur_dir);
 	if js.get_link_function("Module.require".to_string()) {
 		js.new_str(path).unwrap();
 		js.new_str(cur_dir).unwrap();

@@ -218,7 +218,7 @@ fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mg
     
 
     let file_map = read_code(new_mgr, &list);
-    //"evn.js", "core.js", "first.js", "next.js", nobjs的依赖
+    //"env.js", "core.js", "first.js", "next.js", nobjs的依赖
     for i in 0..4 + nobjs_len{
         let path = &list[i];
         //println!("path-------------------------------------{}", path);

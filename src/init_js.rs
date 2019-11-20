@@ -69,7 +69,7 @@ pub fn init_js(dirs: &[String], file_list: Vec<FileDes>, root: String){
 
     push_pre(&mut list);
     {
-        let path = &list[0];//如果是"bin/evn.js", 表示self已经定义， 此时可以为self绑定变量
+        let path = &list[0];//如果是"bin/env.js", 表示self已经定义， 此时可以为self绑定变量
         let u8arr = file_map.get(path).unwrap().as_slice();
         js.load(u8arr);
 
@@ -166,7 +166,7 @@ pub fn code_store(mgr: &Mgr, map: HashMap<String, Vec<u8>>, js: &JS) -> HashMap<
 
 
 pub fn push_pre(list:&mut Vec<String>){
-    let evn = "evn.js".to_string();
+    let env = "env.js".to_string();
     let core = "core.js".to_string();
     let first = "first.js".to_string();
     let next = "next.js".to_string();
@@ -175,7 +175,7 @@ pub fn push_pre(list:&mut Vec<String>){
 	list.insert(0, next);
     list.insert(0, first);//初始js
     list.insert(0, core);//初始js
-    list.insert(0, evn);//初始js
+    list.insert(0, env);//初始js
 	list.push(last);
 }
 
@@ -221,7 +221,7 @@ pub fn add_line_number(s: &str) -> String{
 
 //初始化系统shell的前置和后置代码文件
 fn init_shell_front_rear(list: &mut Vec<String>) {
-    let evn = "evn.js".to_string();
+    let env = "env.js".to_string();
     let core = "core.js".to_string();
     let first = "first.js".to_string();
     let next = "next.js".to_string();
@@ -232,7 +232,7 @@ fn init_shell_front_rear(list: &mut Vec<String>) {
     list.insert(0, next);
     list.insert(0, first);
     list.insert(0, core);
-    list.insert(0, evn);
+    list.insert(0, env);
     list.push(init_shell);
     list.push(last);
 }

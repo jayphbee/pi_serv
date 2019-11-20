@@ -23,7 +23,7 @@ impl Depend{
             file_map.insert(v.path.clone(), Rc::new(RefCell::new(v)));
         }
 
-        file_map.insert("evn.js".to_string(), Rc::new(RefCell::new(new_path_filedes("evn.js"))));
+        file_map.insert("env.js".to_string(), Rc::new(RefCell::new(new_path_filedes("env.js"))));
         file_map.insert("core.js".to_string(), Rc::new(RefCell::new(new_path_filedes("core.js"))));
         file_map.insert("first.js".to_string(), Rc::new(RefCell::new(new_path_filedes("first.js"))));
         file_map.insert("next.js".to_string(), Rc::new(RefCell::new(new_path_filedes("next.js"))));
@@ -37,7 +37,7 @@ impl Depend{
 	pub fn new(list: Vec<FileDes>, root: String) -> Depend{
 		let mut file_map = HashMap::new();
 
-        file_map.insert("evn.js".to_string(), Rc::new(RefCell::new(new_path_filedes("evn.js"))));
+        file_map.insert("env.js".to_string(), Rc::new(RefCell::new(new_path_filedes("env.js"))));
         file_map.insert("core.js".to_string(), Rc::new(RefCell::new(new_path_filedes("core.js"))));
         file_map.insert("first.js".to_string(), Rc::new(RefCell::new(new_path_filedes("first.js"))));
         file_map.insert("next.js".to_string(), Rc::new(RefCell::new(new_path_filedes("next.js"))));
@@ -80,7 +80,7 @@ impl Depend{
 		// }else{
 		// 	String::from(path)
 		// }
-        if path == "evn.js" || path == "next.js" || path == "first.js" || path == "last.js" || path == "core.js"{
+        if path == "env.js" || path == "next.js" || path == "first.js" || path == "last.js" || path == "core.js"{
             let ce = match current_exe() {
                 Ok(p) => p,
                 Err(s) => panic!("current_exe err:{:?}", s),

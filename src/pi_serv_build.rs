@@ -11,6 +11,7 @@ use bon;
 use pi_db;
 use pi_store;
 use pi_db::mgr::Monitor;
+use std::env::VarError;
 use sinfo;
 use gray;
 use std::sync::RwLock;
@@ -27,6 +28,8 @@ use js_db;
 use depend;
 use util;
 use js_vm;
+use js_env;
+use js_file;
 use js_base;
 use js_lib;
 use js_httpc;
@@ -922,24 +925,6 @@ fn call_2239806005(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3931016483(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in read_code";
-
-	let jst0 = &v[0];
-	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst0 = &jst0.get_str();
-
-
-    let result = js_vm::read_code(jst0);let mut result = match result{
-        Some(v) => { let mut v = js.new_str(v).unwrap();
- v}
-        None => js.new_null()
-    };
-
-    Some(CallResult::Ok)
-}
-
-
 fn call_1263843384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_byte_code";
 
@@ -960,8 +945,43 @@ fn call_1263843384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3990557411(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in compile";
+fn call_3830865479_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in compile";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+    let call_index = &v[2];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<&'static Vec<u8>,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
+    let ptr = r as *const Vec<u8> as usize;let mut r = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_3830865479_async1"));
+    };
+
+    js_vm::compile(jst0,jst1,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_2450233359(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in compile_sync";
 
 	let jst0 = &v[0];
 	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
@@ -973,7 +993,7 @@ fn call_3990557411(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst1 = jst1.get_str();
 
 
-    let result = js_vm::compile(jst0,jst1);let mut result = match result{
+    let result = js_vm::compile_sync(jst0,jst1);let mut result = match result{
         Some(v) => { 
     let ptr = v as *const Vec<u8> as usize;let mut v = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
 
@@ -994,6 +1014,256 @@ fn call_1380265392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_vm::load_module(jst0,&js);
+    Some(CallResult::Ok)
+}
+
+
+fn call_4192708231(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in next";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1694133887, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_env::Args) };
+
+
+    let result = js_env::Args::next(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(v).unwrap();
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2544700472(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in next";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 591726708, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_env::EnvVars) };
+
+
+    let result = js_env::EnvVars::next(jst0);let mut result = match result{
+        Some(v) => { 
+	let array = js.new_array();
+    let mut v_elem = v.0;let mut v_elem = js.new_str(v_elem).unwrap();
+js.set_index(&array, 0, &mut v_elem);
+    let mut v_elem = v.1;let mut v_elem = js.new_str(v_elem).unwrap();
+js.set_index(&array, 1, &mut v_elem);    let mut v = array;
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_692858595(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_env::args();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1694133887);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_76907791(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_env::current_dir();let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3151666217(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in set_current_dir";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_env::set_current_dir(jst0);let mut result = match result{
+        Ok(r) => { 
+	let array = js.new_array();    let mut r = array;
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4072555389(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in set_env_var";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = &jst1.get_str();
+
+
+    js_env::set_env_var(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3300744712(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_env::current_exe();let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_341310298(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in env_var";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_env::env_var(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v.to_string() + "Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2758093424(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_env::env_vars();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,591726708);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_215229799_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in read_file_buffer";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<Vec<u8>,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_215229799_async1"));
+    };
+
+    js_file::read_file_buffer(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_3061910455_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in read_file_string";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_3061910455_async1"));
+    };
+
+    js_file::read_file_string(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_3728513126(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in read_file_buffer_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::read_file_buffer_sync(jst0);let mut result = match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2674074487(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in read_file_string_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::read_file_string_sync(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
     Some(CallResult::Ok)
 }
 
@@ -3442,6 +3712,14 @@ fn drop_1797798710(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut depend::Depend) };
 }
 
+fn drop_1694133887(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_env::Args) };
+}
+
+fn drop_591726708(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_env::EnvVars) };
+}
+
 fn drop_1846921536(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<sinfo::StructInfo>) };
 }
@@ -3590,6 +3868,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_env::Args"), drop_fn: drop_1694133887}, 1694133887);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_env::EnvVars"), drop_fn: drop_591726708}, 591726708);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_async::AsyncRequestHandler"), drop_fn: drop_259136547}, 259136547);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_async::AsyncRequestHandler>"), drop_fn: drop_374659923}, 374659923);
@@ -3649,10 +3929,23 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_479322726_sync), 479322726);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2176133173), 2176133173);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2239806005), 2239806005);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3931016483), 3931016483);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1263843384), 1263843384);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3990557411), 3990557411);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3830865479_async), 3830865479);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2450233359), 2450233359);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1380265392), 1380265392);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4192708231), 4192708231);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2544700472), 2544700472);
+    mgr.regist_fun_meta(FnMeta::Call(call_692858595), 692858595);
+    mgr.regist_fun_meta(FnMeta::Call(call_76907791), 76907791);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3151666217), 3151666217);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4072555389), 4072555389);
+    mgr.regist_fun_meta(FnMeta::Call(call_3300744712), 3300744712);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_341310298), 341310298);
+    mgr.regist_fun_meta(FnMeta::Call(call_2758093424), 2758093424);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_215229799_async), 215229799);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3061910455_async), 3061910455);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3728513126), 3728513126);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2674074487), 2674074487);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1347190475), 1347190475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3993207385), 3993207385);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
