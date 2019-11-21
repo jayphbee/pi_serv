@@ -187,7 +187,7 @@ fn args() -> clap::ArgMatches<'static> {
 }
 
 fn main() {
-	println!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+    println!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
     env_logger::builder()
         .format_timestamp_millis()
         .init();
@@ -227,7 +227,7 @@ fn main() {
     pi_net_https_build::register(&BON_MGR);
 	pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
-	register(&BON_MGR);
+    register(&BON_MGR);
 
 	let matches = args();
 
@@ -268,7 +268,12 @@ fn main() {
             }
         }
 	}
-	println!("22222222222222222222222222222222222");
+    println!("22222222222222222222222222222222222");
+    
+    use js_env::{current_dir, set_current_dir};
+    set_current_dir("../dst");
+    let p = current_dir().unwrap() + "\\pi_pt\\init.js";
+    exec_js(p);
 
 	if let Some(root) = matches.value_of("root") {
 		let mut root = root.to_string();
@@ -561,6 +566,10 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
 }
 
 fn exec_js(path: String){
+    println!("exec_js path: {:?}", path);
+    let path = path.as_str().replace("\\", "/");
+    println!("after replace: {:?}", path);
+
 	// use js_vm::{get_byte_code, compile, load_module};
 	use pi_vm::bonmgr::{NativeObjsAuth};
 	let js = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
