@@ -97,7 +97,8 @@ pub fn read_file_string_sync(path: &str) -> Result<String, String> {
 /**
  * 同步读目录里面的所有文件
  */
-pub fn walk_dir_sync(path: &Path) -> Result<Vec<String>, String> {
+pub fn walk_dir_sync(path: &str) -> Result<Vec<String>, String> {
+	let path = Path::new(path);
 	if !path.is_dir() {
 		return Ok(vec![]);
 	}
@@ -131,6 +132,6 @@ pub fn walk_dir_sync(path: &Path) -> Result<Vec<String>, String> {
 	Ok(res)
 }
 
-pub fn walk_dir(path: &Path, call_back: Arc<Box<dyn FnOnce(Result<String, String>)>>) {
-	// TODO
-}
+// pub fn walk_dir(path: &str, call_back: Arc<dyn FnOnce(Result<String, String>)>) {
+// 	// TODO
+// }
