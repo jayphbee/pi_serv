@@ -1,5 +1,7 @@
-use std::fs::File;
+use std::fs::{read_dir, File};
 use std::io::Read;
+use std::path::Path;
+use std::sync::Arc;
 
 use file::file::{AsyncFile, AsyncFileOptions};
 
@@ -91,3 +93,45 @@ pub fn read_file_string_sync(path: &str) -> Result<String, String> {
 	}
 	Ok(data)
 }
+
+/**
+ * 同步读目录里面的所有文件
+ */
+pub fn walk_dir_sync(path: &str) -> Result<Vec<String>, String> {
+	let path = Path::new(path);
+	if !path.is_dir() {
+		return Ok(vec![]);
+	}
+
+	let mut stack = vec![];
+	stack.push(path.to_str().unwrap().to_string());
+	let mut res = vec![];
+
+	loop {
+		if let Some(dir) = stack.pop() {
+			match read_dir(dir) {
+				Ok(entries) => {
+					for entry in entries {
+						if let Ok(e) = entry {
+							if e.path().is_file() {
+								res.push(e.path().to_str().unwrap().replace("\\", "/").to_string());
+							} else if e.path().is_dir() {
+								let p = e.path().to_str().unwrap().replace("\\", "/").to_string();
+								stack.push(p);
+							}
+						}
+					}
+				}
+				Err(_e) => {}
+			}
+		} else {
+			break;
+		}
+	}
+
+	Ok(res)
+}
+
+// pub fn walk_dir(path: &str, call_back: Arc<dyn FnOnce(Result<String, String>)>) {
+// 	// TODO
+// }

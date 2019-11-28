@@ -123,6 +123,8 @@ use init_js::{init_js};
 use js_base::IS_END;
 use util::{read_file_list};
 
+use js_env::{current_dir, set_current_dir, set_env_var, env_var};
+
 use apm::common::SysStat;
 use apm::allocator::{CounterSystemAllocator, set_max_alloced_limit, get_max_alloced_limit};
 
@@ -157,6 +159,17 @@ fn args() -> clap::ArgMatches<'static> {
                             .value_name("GByte")
                             .takes_value(true)
                             .help("Max heap limit on runtime"))
+                        .arg(Arg::with_name("init_file")
+                            .short("i")
+                            .long("init")
+                            .value_name("INIT_FILE")
+                            .takes_value(true))
+                        .arg(Arg::with_name("projects")
+                            .short("j")
+                            .long("projects")
+                            .multiple(true)
+                            .value_name("PROJECTS")
+                            .takes_value(true))
 						.get_matches_from(wild::args());
 	matches
 }
@@ -187,7 +200,6 @@ fn args() -> clap::ArgMatches<'static> {
 }
 
 fn main() {
-	println!("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
     env_logger::builder()
         .format_timestamp_millis()
         .init();
@@ -227,11 +239,9 @@ fn main() {
     pi_net_https_build::register(&BON_MGR);
 	pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
-	register(&BON_MGR);
+    register(&BON_MGR);
 
 	let matches = args();
-
-	println!("11111111111111111111111111111111111111111111");
 
     if let Some(max_heap) = matches.value_of("max_heap") {
         match max_heap.parse::<f64>() {
@@ -267,8 +277,28 @@ fn main() {
                 },
             }
         }
-	}
-	println!("22222222222222222222222222222222222");
+    }
+
+    if let Some(init_file) = matches.value_of("init_file") {
+        println!("init file {:?}", init_file);
+    }
+
+    let projs = match matches.values_of("projects") {
+        Some(p) => p.map(|s| s.to_string() ).collect::<Vec<String>>(),
+        None => vec![]
+    };
+    
+    // set to project root
+    let cur_dir = current_dir().unwrap();
+    let projects_root = Path::new(&cur_dir).parent().unwrap().parent().unwrap().to_str().unwrap();
+    set_env_var("PROJECTS_ROOT", projects_root);
+    set_env_var("PROJECTS", &projs.as_slice().join(" "));
+    let pipt_root = Path::new(&cur_dir).parent().unwrap().to_str().unwrap();
+    set_env_var("PIPT_ROOT", pipt_root);
+
+    let init_js_path = pipt_root.to_string() + "\\dst\\pi_pt\\init.js";
+
+    exec_js(init_js_path);
 
 	if let Some(root) = matches.value_of("root") {
 		let mut root = root.to_string();
@@ -297,20 +327,17 @@ fn main() {
 			files.push(r[r_len..].to_string())
 		}
 
-		let file_list = read_file_list( &Path::new(&(root.clone() + ".depend")).to_path_buf());
-		if files.len() == 0{
-			init_js(&[root.clone()], file_list, root.clone());
-		}else{
-			init_js(&files[..], file_list, root.clone());
-		}
+		// let file_list = read_file_list( &Path::new(&(root.clone() + ".depend")).to_path_buf());
+		// if files.len() == 0{
+		// 	init_js(&[root.clone()], file_list, root.clone());
+		// }else{
+		// 	init_js(&files[..], file_list, root.clone());
+		// }
 	}
 
-	println!("33333333333333333333333333333");
 	if let Some(path) = matches.value_of("exec") {
-		println!("4444444444444444444444444444");
 		exec_js(path.to_string());
 	}
-	println!("555555555555555555555555");
 
 	// 启动http服务器
 	start_simple_https(&matches);
@@ -561,20 +588,54 @@ fn start_simple_https(matches: &clap::ArgMatches<'static>){
 }
 
 fn exec_js(path: String){
+    use guid::{GuidGen};
+    use pi_db::mgr::{Mgr};
+    use init_js::bind_global;
+    use pi_db::memery_db::DB;
+    let path = path.as_str().replace("\\", "/");
+
+    let mgr = Mgr::new(GuidGen::new(0,0)); //创建数据库管理器
+    mgr.register(Atom::from("memory"), Arc::new(DB::new()));//注册一个内存数据库
+
 	// use js_vm::{get_byte_code, compile, load_module};
 	use pi_vm::bonmgr::{NativeObjsAuth};
-	let js = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    let js = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    
+    
+
 
 	// 初始化js执行环境
 	let env_code = read_code("env.js");
 	let core_code = read_code("core.js");
 
 	let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-	let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+    
 
-	
 	load_code(&js, env_code.as_slice());
-	load_code(&js, core_code.as_slice());
+    load_code(&js, core_code.as_slice());
+    
+    let global_code = bind_global(&mgr, &js);
+    js.load(&global_code);
+
+    //////////////
+    //调用全局变量定义函数， 定义全局变量_$mgr
+    js.get_js_function("_$defineGlobal".to_string());
+    js.new_str(String::from("_$db_mgr"));
+    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+    ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
+    js.call(2);
+
+    //调用全局变量定义函数， 定义全局变量 _$depend
+    use depend::Depend;
+    let dp = Depend::new_sample(vec![]);
+    js.get_js_function("_$defineGlobal".to_string());
+    js.new_str(String::from("_$depend"));
+    let ptr = Box::into_raw(Box::new(dp)) as usize;
+    ptr_jstype(js.get_objs(), js.clone(), ptr, 1797798710); //new native obj作为参数
+    js.call(2);
+
+    //////////////
 
 	let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
 	if js.get_link_function("Module.require".to_string()) {

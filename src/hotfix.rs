@@ -37,36 +37,36 @@ pub struct GrayMgr{
 
 impl GrayMgr {
     pub fn new(mgr: &Mgr, nobjs: &Nobjs) -> GrayMgr {
-        let depend = read_depend(&mgr); //从mgr中读到旧的文件列表
-        //println!("depend len---------------------------{}", depend.len());
-        //创建逆向的依赖表
-        let mut dependent = FnvHashMap::default();
-        for (name, v) in depend{
-            dependent.entry(name.clone()).or_insert_with(||{
-                Vec::new()
-            });
-            match v.depend {
-                Some(dp) => {
-                    let dp = match dp.get("js") {
-                        Some(v) => v,
-                        None => {continue;},
-                    };
-                    for v in dp{
-                        let elem = dependent.entry(Atom::from(v.as_str())).or_insert_with(||{
-                            Vec::new()
-                        });
-                        elem.push(name.clone());
-                    }
-                },
-                None => (),
-            }
-        }
+        // let depend = read_depend(&mgr); //从mgr中读到旧的文件列表
+        // //println!("depend len---------------------------{}", depend.len());
+        // //创建逆向的依赖表
+        // let mut dependent = FnvHashMap::default();
+        // for (name, v) in depend{
+        //     dependent.entry(name.clone()).or_insert_with(||{
+        //         Vec::new()
+        //     });
+        //     match v.depend {
+        //         Some(dp) => {
+        //             let dp = match dp.get("js") {
+        //                 Some(v) => v,
+        //                 None => {continue;},
+        //             };
+        //             for v in dp{
+        //                 let elem = dependent.entry(Atom::from(v.as_str())).or_insert_with(||{
+        //                     Vec::new()
+        //                 });
+        //                 elem.push(name.clone());
+        //             }
+        //         },
+        //         None => (),
+        //     }
+        // }
 
         //创建GrayMgr
         GrayMgr{
             last_mgr: mgr.clone(),
             map: FnvHashMap::default(),
-            dependent: dependent,
+            dependent: FnvHashMap::default(),
             nobjs: nobjs.clone()
         }
         
