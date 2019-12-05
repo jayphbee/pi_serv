@@ -335,8 +335,10 @@ fn main() {
         }
     }
 
-    if let Some(init_file) = matches.value_of("init_file") {
-        println!("init file {:?}", init_file);
+	let mut init_js_path = "";
+    if let Some(i) = matches.value_of("init_file") {
+		init_js_path = i;
+        println!("init file {:?}", i);
     }
 
     let projs = match matches.values_of("projects") {
@@ -346,28 +348,30 @@ fn main() {
         None => vec![],
     };
 
-    // set to project root
-    let cur_dir = current_dir().unwrap();
-    let projects_root = Path::new(&cur_dir)
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_str()
-        .unwrap();
-    set_env_var("PROJECTS_ROOT", &projects_root.replace("\\", "/"));
+	// set to project root
+	let current_dir = env::current_dir().unwrap();
+
+    let cur_dir = current_dir.to_str().unwrap();
+    // let projects_root = Path::new(cur_dir)
+    //     .parent()
+    //     .unwrap()
+    //     .parent()
+    //     .unwrap()
+    //     .to_str()
+	// 	.unwrap();
+    set_env_var("PROJECTS_ROOT", &cur_dir.replace("\\", "/"));
     set_env_var("PROJECTS", &projs.as_slice().join(" "));
-    let pipt_root = Path::new(&cur_dir).parent().unwrap().to_str().unwrap();
+    let pipt_root = Path::new(cur_dir).parent().unwrap().to_str().unwrap();
     set_env_var("PIPT_ROOT", &pipt_root.replace("\\", "/"));
 
-    let init_js_path = pipt_root.to_string() + "\\dst\\pi_pt\\init.js";
-    println!(
-        "init_js_path-------------------{:?}, {:?}",
-        init_js_path,
-        projs.as_slice().join(" "),
-    );
+    // let init_js_path = current_dir.join(init_file).to_str().unwrap().to_string;
+    // println!(
+    //     "init_js_path-------------------{:?}, {:?}",
+    //     init_js_path,
+    //     projs.as_slice().join(" "),
+    // );
 
-    exec_js(init_js_path);
+    exec_js(init_js_path.to_string());
 
     if let Some(root) = matches.value_of("root") {
         let mut root = root.to_string();
@@ -727,7 +731,9 @@ fn exec_js(path: String) {
     js.call(2);
 
     //////////////
-    let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
+	let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
+	let cur_dir = cur_dir.as_str().replace("\\", "/") + "/a";
+	println!("path--------------------path: {}, cur_dir:{}", path, cur_dir);
     if js.get_link_function("Module.require".to_string()) {
         js.new_str(path).unwrap();
         js.new_str(cur_dir).unwrap();

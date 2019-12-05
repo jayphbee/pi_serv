@@ -92,6 +92,16 @@ fn call_1393151886(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_54848988(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = pi_vm::bonmgr::NativeObjsAuth::with_none();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,510245560);
+
+
+    Some(CallResult::Ok)
+}
+
 fn drop_510245560(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>) };
 }
@@ -115,4 +125,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2222376158), 2222376158);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1487978276), 1487978276);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1393151886), 1393151886);
+    mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);
 }
