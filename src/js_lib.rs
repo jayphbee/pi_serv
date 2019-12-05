@@ -111,7 +111,7 @@ impl Nobjs {
                 None => panic!("illegal module name, lack '.', modName: {}", name),
             };
             let r = obj.path.split_at(index);// r.0为模块名， r.1为类型名称;
-            let type_name = String::from("pi_modules['") + r.0 + "']" + ".exports" + r.1;
+            let type_name = String::from("Module.modules['") + r.0 + "']" + ".exports" + r.1;
 
             vm.get_type(type_name.clone());
             ptr_jstype(vm.get_objs_ref(), vm.clone(), obj.ptr, obj.hash);
