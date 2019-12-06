@@ -935,7 +935,7 @@ fn call_1263843384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = js_vm::get_byte_code(jst0);let mut result = match result{
         Some(v) => { 
-    let ptr = v as *const Vec<u8> as usize;let mut v = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  v}
         None => js.new_null()
@@ -961,10 +961,10 @@ fn call_3830865479_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let call_index = call_index.get_u32();
     
     let jscopy = js.clone();
-	let call_back = move |r: Result<&'static Vec<u8>,String>| {
+	let call_back = move |r: Result<Arc<Vec<u8>>,String>| {
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { 
-    let ptr = r as *const Vec<u8> as usize;let mut r = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  r }
         Err(v) => { js.new_str(v + ", Result is Err").unwrap()
@@ -995,7 +995,7 @@ fn call_2450233359(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = js_vm::compile_sync(jst0,jst1);let mut result = match result{
         Some(v) => { 
-    let ptr = v as *const Vec<u8> as usize;let mut v = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  v}
         None => js.new_null()
@@ -1009,8 +1009,8 @@ fn call_1380265392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in load_module";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const Vec<u8>) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2886438122, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<Vec<u8>>)}.clone();
 
 
     js_vm::load_module(jst0,&js);
@@ -3219,17 +3219,17 @@ fn call_1449642520(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in publish_global_mqtt_topic";
 
 	let jst0 = &v[0];
-	if !jst0.is_boolean(){ return Some(CallResult::Err(String::from(param_error) + "1")); }
+	if !jst0.is_boolean(){ return Some(CallResult::Err(String::from(param_error))); }
     let jst0 = jst0.get_boolean();
     
 
 	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error) + "2"));}
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
     let jst1 = jst1.get_str();
 
 
 	let jst2 = &v[2];
-	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error) + "3")); }
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
     let jst2 = jst2.to_bytes();
 
 
