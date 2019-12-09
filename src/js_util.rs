@@ -6,6 +6,7 @@ use sinfo::{StructInfo, EnumType, EnumInfo};
 use lib_util::err_string;
 use bon::{ReadBuffer, Decode};
 use pi_db::db::{TabKV, TabMeta};
+use js_env::{env_var};
 
 
 pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -> Result<JSType, String> {
@@ -53,8 +54,9 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
         Some(v) => v,
         None => panic!("illegal module name, lack '.', modName: {}", name),
     };
+    let proj_root = env_var("PROJECT_ROOT").unwrap();
     let r = name.split_at(index);// r.0为模块名， r.1为类型名称;
-    let type_name = String::from("Module.modules['") + r.0 + ".struct']" + ".exports" + r.1;
+    let type_name = format!("Module.modules['{}/{}.struct.js'].exports{}", proj_root, r.0, r.1);
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
@@ -81,8 +83,9 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
         Some(v) => v,
         None => panic!("illegal module name, lack '.', modName: {}", name),
     };
+    let proj_root = env_var("PROJECT_ROOT").unwrap();
     let r = name.split_at(index);// r.0为模块名， r.1为类型名称;
-    let type_name = String::from("Module.modules['") + r.0 + ".struct']" + ".exports" + r.1;
+    let type_name = format!("Module.modules['{}/{}.struct.js'].exports{}", proj_root, r.0, r.1);
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
@@ -110,6 +113,7 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
 }
 
 pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Result<JSType, String> {
+    let proj_root = env_var("PROJECT_ROOT").unwrap();
     let r = match t {
         EnumType::Bool => js.new_boolean(err_string(bool::decode(bon))?),
         EnumType::U8 => js.new_u8(err_string(u8::decode(bon))?),
@@ -117,12 +121,12 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
         EnumType::U32 => js.new_u32(err_string(u32::decode(bon))?),
         EnumType::U64 => {
             let arr:[u8; 8] = unsafe{transmute_copy(&u64::decode(bon))};
-            js.check_function("Module.modules['pi_sys/modules/math/bigint/util'].exports.u64Merge".to_string());
+            js.check_function(format!("Module.modules['{}/pi_sys/modules/math/bigint/util.js'].exports.u64Merge", proj_root));
             js.new_uint8_array(8).from_bytes(&arr);
             let r = js.invoke(1);
             if r.is_none(){
                 unsafe { dukc_pop(js.get_vm()) };
-                return Err("call function error: Module.modules['pi_sys/modules/math/bigint/util'].exports.u64Merge".to_string());
+                return Err("call function error: Module.modules['pi_sys/modules/math/bigint/util.js'].exports.u64Merge".to_string());
             }
             r
         },
@@ -130,12 +134,12 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
             let r = u128::decode(bon);
             let arr:[u8; 16] = unsafe{transmute_copy(&r)};
             
-            js.check_function("Module.modules['pi_sys/modules/math/bigint/util'].exports.u128Merge".to_string());
+            js.check_function(format!("Module.modules['{}/pi_sys/modules/math/bigint/util.js'].exports.u128Merge", proj_root));
             js.new_uint8_array(16).from_bytes(&arr);
             let r = js.invoke(1);
             if r.is_none(){
                 unsafe { dukc_pop(js.get_vm()) };
-                return Err("call function error: Module.modules['pi_sys/modules/math/bigint/util'].exports.u128Merge".to_string());
+                return Err("call function error: Module.modules['pi_sys/modules/math/bigint/util.js'].exports.u128Merge".to_string());
             }
             r
         }
