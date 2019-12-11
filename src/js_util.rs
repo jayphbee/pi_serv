@@ -54,15 +54,15 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
         Some(v) => v,
         None => panic!("illegal module name, lack '.', modName: {}", name),
     };
-    let proj_root = env_var("PROJECT_ROOT").unwrap();
-    let r = name.split_at(index);// r.0为模块名， r.1为类型名称;
+	let proj_root = env_var("PROJECT_ROOT").unwrap();
+	let r = name.split_at(index);// r.0为模块名， r.1为类型名称;
     let type_name = format!("Module.modules['{}/{}.struct.js'].exports{}", proj_root, r.0, r.1);
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
-        unsafe { dukc_pop(js.get_vm()) };
-        return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
-    }
+		unsafe { dukc_pop(js.get_vm()) };
+		return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
+	}
 
     for v in sinfo.fields.iter(){
         let mut value = match decode_by_type(js, bon, &v.ftype) {
@@ -89,9 +89,9 @@ pub fn decode_by_enuminfo(js: &Arc<JS>, bon: &mut ReadBuffer, einfo: &EnumInfo) 
     js.get_type(type_name.clone());
     let obj = js.new_type(type_name.clone(), 0);
     if obj.is_undefined(){
-        unsafe { dukc_pop(js.get_vm()) };
-        return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
-    }
+		unsafe { dukc_pop(js.get_vm()) };
+		return Err(String::from("module is not exist, please make sure the module has been loaded, modName:")+ &type_name);
+	}
 
     let index = err_string(usize::decode(bon))?;
     js.set_field(&obj, String::from("enum_type"), &mut js.new_u8(index as u8));
