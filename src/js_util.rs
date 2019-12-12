@@ -4,7 +4,7 @@ use std::mem::transmute_copy;
 use pi_vm::adapter::{JSType, JS, dukc_pop};
 use sinfo::{StructInfo, EnumType, EnumInfo};
 use lib_util::err_string;
-use bon::{ReadBuffer, Decode};
+use bon::{ReadBuffer, Decode, ReadBonErr};
 use pi_db::db::{TabKV, TabMeta};
 use js_env::{env_var};
 
@@ -32,9 +32,9 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
                 js.set_index(&arr, name, &mut value);
             }
             return Ok(arr);
-        },
-        "_$Json" => {//一个普通的Json
-            let obj = js.new_object();
+		},
+		"_$Object" => {
+			let obj = js.new_object();
             for v in sinfo.fields.iter(){
                 let mut value = match decode_by_type(js, bon, &v.ftype) {
                     Ok(v) => v,
@@ -42,12 +42,15 @@ pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -
                         unsafe { dukc_pop(js.get_vm()) };
                         return Err(s);
                     },
-                };
-                js.set_field(&obj, String::from(v.name.as_str()), &mut value);
-            }
+				};
+				js.set_field(&obj, String::from(v.name.as_str()), &mut value);
+			}
             return Ok(obj);
-        }
-        _ => (),
+        },
+		"_$Json" => {
+			return decode_json(js, bon);
+		},//一个普通的Json 形如{...}, [...]
+		_ => (),
     };
 
     let index = match name.find("."){
@@ -238,6 +241,104 @@ pub fn decode_by_type(js: &Arc<JS>, bon: &mut ReadBuffer, t: &EnumType) -> Resul
         },
     };
     Ok(r)
+}
+
+pub fn decode_any(js: &Arc<JS>, bon: &mut ReadBuffer) -> Result<JSType, String>{
+	let r = err_string(bon.get_type())?;
+	let v = match r {
+		0 => {
+			err_string(bon.is_nil())?;
+			js.new_undefined()
+		},
+		1..3 => js.new_boolean(err_string(bool::decode(bon))?),
+		3..42 => js.new_f64(err_string(f64::decode(bon))?),
+		42..111 => js.new_str(err_string(String::decode(bon))?)?,
+		111..180 => {
+			let bin = err_string(bon.read_bin())?;
+			js.new_array_buffer(bin.len() as u32)
+		},
+		180..249 => decode_json(js, bon)?,
+		_ => return Err(format!("decode_json fail, ty:{}", r)),
+	};
+	Ok(v)
+
+	// 0=null
+// 1=false
+// 2=true
+// 3=浮点数0.0，4=浮点数1.0，5=16位浮点数，6=32位浮点数，7=64位浮点数，8=128位浮点数;
+// 9=8位负整数，10=16位负整数，11=32位负整数，12=48位负整数，13=64位负整数，14=128位负整数
+// 15~35= -1~19
+// 36=8位正整数，37=16位正整数，38=32位正整数，39=48位正整数，40=64位正整数，41=128位正整数
+
+// 42-106=0-64长度的UTF8字符串，
+// 107=8位长度的UTF8字符串，108=16位长度的UTF8字符串，109=32位长度的UTF8字符串，110=48位长度的UTF8字符串
+
+// 111-175=0-64长度的二进制数据，
+// 176=8位长度的二进制数据，177=16位长度的二进制数据，178=32位长度的二进制数据，179=48位长度的二进制数据
+
+// 180-244=0-64长度的容器，包括对象、数组和map、枚举
+// 245=8位长度的容器，246=16位长度的容器，247=32位长度的容器，248=48位长度的容器
+// 之后的一个4字节的整数表示类型。
+// 类型：
+// 	0 表示忽略
+// 	1 通用对象
+// 	2 通用数组
+// 	3 通用map
+	// if ()
+}
+
+pub fn decode_json(js: &Arc<JS>, bon: &mut ReadBuffer) -> Result<JSType, String>{
+	let callbackfn = |bb: &mut ReadBuffer, t: u32, mut l: u64| -> Result<JSType, ReadBonErr> {
+		let old_head = bb.head;
+		l = l - 4; // l包含t的长度（4字节）
+		let r;
+		if t == 2 {
+			r = js.new_array();
+			let mut i = 0;
+			loop {
+				if ((bb.head - old_head) as u64) < l {
+					let mut v = match decode_any(js, bb) {
+						Ok(v) => v,
+						Err(_s) => {
+							unsafe { dukc_pop(js.get_vm()) };
+							return Err(ReadBonErr::Other("json type error".to_string()));
+						},
+					};
+					js.set_index(&r, i as u32, &mut v);
+					i += 1;
+				}else {
+					break;
+				}
+			}
+		} else if t == 1 {
+			r = js.new_object();
+			loop {
+				if ((bb.head - old_head) as u64) < l {
+					let k = match String::decode(bb) {
+						Ok(r) => r,
+						Err(_s) => {
+							unsafe { dukc_pop(js.get_vm()) };
+							return Err(ReadBonErr::Other("json type error".to_string()));
+						}
+					};
+					let mut v = match decode_any(js, bb) {
+						Ok(v) => v,
+						Err(_s) => {
+							unsafe { dukc_pop(js.get_vm()) };
+							return Err(ReadBonErr::Other("json type error".to_string()));
+						},
+					};
+					js.set_field(&r, k, &mut v);
+				}else {
+					break;
+				}
+			}
+		} else {
+			return Err(ReadBonErr::Other("json type error".to_string()));
+		}
+		return Ok(r);
+	};
+	return err_string(bon.read_container(callbackfn));
 }
 
 //将TabKV转化为js中的Json

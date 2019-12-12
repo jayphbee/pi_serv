@@ -1,6 +1,6 @@
 #![feature(fs_read_write)]
 #![feature(splice)]
-#![feature(generic_associated_types)]
+#![feature(exclusive_range_pattern)]
 #![feature(unboxed_closures)]
 #![feature(vec_remove_item)]
 #![feature(nll)]

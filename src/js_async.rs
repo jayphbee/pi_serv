@@ -259,7 +259,6 @@ fn pid_spawn_hash(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
         || !v[1].is_string()
         || !v[2].is_string()
         || !v[3].is_string()
-        || !v[4].is_string()
     {
         return Some(CallResult::Err(param_error.to_string()));
     }
