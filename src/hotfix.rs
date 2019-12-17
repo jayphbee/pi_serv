@@ -21,7 +21,7 @@ use gray::GrayTab;
 //use pi_base::util::now_millisecond;
 
 use depend::{Depend, FileDes};
-use init_js::{push_pre, compeil_global};
+use init_js::compeil_global;
 use util::{read_file_list, read_depend, read_file_str};
 use js_lib::Nobjs;
 use jsloader::Loader;
@@ -214,8 +214,6 @@ fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mg
     let nobjs_len = Loader::list_with_depend(&list, &depend).len();
     list.extend_from_slice(&list_c);
     let mut list = Loader::list_with_depend(&list, &depend);
-    push_pre(&mut list);
-    
 
     let file_map = read_code(new_mgr, &list);
     //"env.js", "core.js", "first.js", "next.js", nobjs的依赖

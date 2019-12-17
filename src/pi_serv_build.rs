@@ -1379,36 +1379,6 @@ fn call_3741531906(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_509141093(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in get_depend";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1797798710, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const depend::Depend) };
-
-
-	let jst1 = &v[1];
-	if !jst1.is_array(){return Some(CallResult::Err(String::from(param_error)));}
-	let a_len = jst1.get_array_length();
-
-    let mut jst1_ = Vec::new();
-    for i in 0..a_len{
-		let jst1_e = jst1.get_index(i as u32);
-	if !jst1_e.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1_e = jst1_e.get_str();
-    jst1_.push(jst1_e);
-    }
-    let jst1 = jst1_.as_slice();
-
-
-    let result = js_base::get_depend(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
-
-
-    Some(CallResult::Ok)
-}
-
-
 fn call_1810043215_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in sleep";
@@ -3975,7 +3945,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3272869145), 3272869145);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3741531906), 3741531906);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_509141093), 509141093);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1810043215_sync), 1810043215);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3285798497), 3285798497);
     mgr.regist_fun_meta(FnMeta::Call(call_59144274), 59144274);
