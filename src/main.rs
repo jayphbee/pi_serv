@@ -124,7 +124,7 @@ use worker::impls::{
 use worker::worker::WorkerType;
 use worker::worker_pool::WorkerPool;
 
-use init_js::init_js;
+use init_js::exec_js;
 use js_base::IS_END;
 use util::read_file_list;
 
@@ -216,6 +216,28 @@ fn args() -> clap::ArgMatches<'static> {
         )
         .get_matches();
     matches
+}
+
+fn set_piserv_env_var(init_exec_path: &str, projs: Vec<String>) {
+    let current_dir = env::current_dir().unwrap();
+    let current_dir_parent =current_dir.parent().unwrap().to_str().unwrap();
+
+    let path = Path::new(init_exec_path)
+        .iter()
+        .filter_map(|x| if x == "." || x == ".." { None } else { Some(x) })
+        .map(|x| x.to_str().unwrap())
+        .collect::<Vec<&str>>();
+
+    let root: PathBuf = [vec![current_dir_parent], path].concat().iter().collect();
+    let project_root = root.parent().unwrap().parent().unwrap().to_str().unwrap().replace("\\", "/");
+
+    let cur_dir = current_dir.to_str().unwrap();
+    let mut cur_exe = env::current_exe().unwrap();
+    cur_exe.pop();
+
+    set_env_var("ENV_CORE_PATH", cur_exe.to_str().unwrap());
+    set_env_var("PROJECTS", &projs.as_slice().join(" "));
+    set_env_var("PROJECT_ROOT", &project_root);
 }
 
 fn main() {
@@ -336,28 +358,7 @@ fn main() {
         None => vec![],
     };
 
-    let current_dir = env::current_dir().unwrap();
-    let current_dir_parent =current_dir.parent().unwrap().to_str().unwrap();
-
-    let path = Path::new(init_exec_path)
-        .iter()
-        .filter_map(|x| if x == "." || x == ".." { None } else { Some(x) })
-        .map(|x| x.to_str().unwrap())
-        .collect::<Vec<&str>>();
-
-    let root: PathBuf = [vec![current_dir_parent], path].concat().iter().collect();
-    let project_root = root.parent().unwrap().parent().unwrap().to_str().unwrap().replace("\\", "/");
-
-    let cur_dir = current_dir.to_str().unwrap();
-    let mut cur_exe = env::current_exe().unwrap();
-    cur_exe.pop();
-
-    set_env_var("ENV_CORE_PATH", cur_exe.to_str().unwrap());
-    set_env_var("PROJECTS", &projs.as_slice().join(" "));
-    set_env_var("PROJECT_ROOT", &project_root);
-    let pipt_root = Path::new(cur_dir).parent().unwrap().to_str().unwrap();
-    set_env_var("PIPT_ROOT", &pipt_root.replace("\\", "/"));
-
+    set_piserv_env_var(init_exec_path, projs);
     exec_js(init_exec_path.to_string());
 
     //启动全局虚拟机堆整理
@@ -534,100 +535,4 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
 
 fn register(mgr: &BonMgr) {
     mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
-}
-
-fn exec_js(path: String) {
-    use guid::GuidGen;
-    use init_js::bind_global;
-    use pi_db::memery_db::DB;
-    use pi_db::mgr::Mgr;
-    use pi_vm::duk_proc::{DukProcess, DukProcessFactory};
-    use pi_vm::proc_pool::{
-        close_process, name_send, name_to_pid, pid_send, set_catcher, set_factory, set_receiver,
-        spawn_process,
-    };
-
-    let path = path.as_str().replace("\\", "/");
-    let cur_exe = env::current_exe().unwrap();
-    let auth = Arc::new(NativeObjsAuth::new(None, None));
-
-    let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
-    mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
-
-    // use js_vm::{get_byte_code, compile, load_module};
-    use pi_vm::bonmgr::NativeObjsAuth;
-    let js = JS::new(1, Atom::from("compile"), auth.clone(), None).unwrap();
-
-    // 初始化js执行环境
-    let env_code = read_code(&cur_exe.join("../env.js"));
-    let core_code = read_code(&cur_exe.join("../core.js"));
-
-    let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
-
-    load_code(&js, env_code.as_slice());
-    load_code(&js, core_code.as_slice());
-
-    //创建一个进程工厂
-    let duk_facotry_name = Atom::from("duk");
-    let duk_factory = DukProcessFactory::new(
-        duk_facotry_name.clone(),
-        auth,
-        Arc::new(vec![env_code, core_code]),
-    );
-    set_factory(Atom::from("duk"), Arc::new(duk_factory));
-
-    let global_code = bind_global(&mgr, &js);
-    js.load(&global_code);
-
-    //////////////
-    //调用全局变量定义函数， 定义全局变量_$mgr
-    js.get_js_function("_$defineGlobal".to_string());
-    js.new_str(String::from("_$db_mgr"));
-    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-    ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
-    js.call(2);
-
-    //调用全局变量定义函数， 定义全局变量 _$depend
-    use depend::Depend;
-    let dp = Depend::new_sample(vec![]);
-    js.get_js_function("_$defineGlobal".to_string());
-    js.new_str(String::from("_$depend"));
-    let ptr = Box::into_raw(Box::new(dp)) as usize;
-    ptr_jstype(js.get_objs(), js.clone(), ptr, 1797798710); //new native obj作为参数
-    js.call(2);
-
-    //////////////
-    let cur_dir = env::current_dir().unwrap().to_str().unwrap().to_string();
-    let cur_dir = cur_dir.as_str().replace("\\", "/") + "/a";
-    if js.get_link_function("Module.require".to_string()) {
-        js.new_str(path).unwrap();
-        js.new_str(cur_dir).unwrap();
-        js.call(2);
-    } else {
-        panic!("Module.require function is not exist");
-    }
-}
-
-use std::fs::File;
-use std::io::Read;
-fn read_code(path: &PathBuf) -> String {
-    let mut file = match File::open(path) {
-        Ok(f) => f,
-        Err(e) => panic!("no such file {:?} exception:{}", path, e),
-    };
-    let mut str_val = String::new();
-    if let Err(e) = file.read_to_string(&mut str_val) {
-        panic!("Error Reading file: {}", e)
-    }
-    return str_val;
-}
-
-fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
-    loop {
-        if js.is_ran() {
-            return js.load(&code);
-        }
-        pi_vm::adapter::pause();
-    }
 }
