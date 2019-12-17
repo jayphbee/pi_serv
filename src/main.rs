@@ -159,9 +159,9 @@ fn args() -> clap::ArgMatches<'static> {
                 .help("Max heap limit on runtime"),
         )
         .arg(
-            Arg::with_name("init_file")
+            Arg::with_name("exec_file")
                 .short("e")
-                .long("init")
+                .long("exec")
                 .value_name("INIT_FILE")
                 .takes_value(true),
         )
@@ -200,7 +200,7 @@ fn args() -> clap::ArgMatches<'static> {
                 .help("Max heap limit on runtime"),
         )
         .arg(
-            Arg::with_name("init_file")
+            Arg::with_name("exec_file")
                 .short("e")
                 .long("init")
                 .value_name("INIT_FILE")
@@ -328,7 +328,7 @@ fn main() {
         }
     }
 
-    let init_js_path = matches.value_of("init_file").unwrap_or("./init.js");
+    let init_exec_path = matches.value_of("exec_file").unwrap();
     let projs = match matches.values_of("projects") {
         Some(p) => p
             .map(|s| s.to_string().replace("\\", "/"))
@@ -339,7 +339,7 @@ fn main() {
     let current_dir = env::current_dir().unwrap();
     let current_dir_parent =current_dir.parent().unwrap().to_str().unwrap();
 
-    let path = Path::new(init_js_path)
+    let path = Path::new(init_exec_path)
         .iter()
         .filter_map(|x| if x == "." || x == ".." { None } else { Some(x) })
         .map(|x| x.to_str().unwrap())
@@ -358,52 +358,7 @@ fn main() {
     let pipt_root = Path::new(cur_dir).parent().unwrap().to_str().unwrap();
     set_env_var("PIPT_ROOT", &pipt_root.replace("\\", "/"));
 
-    exec_js(init_js_path.to_string());
-
-    if let Some(root) = matches.value_of("root") {
-        let mut root = root.to_string();
-        if !root.ends_with("/") {
-            root += "/";
-        }
-        if root.starts_with("./") {
-            root = root[2..].to_string();
-        }
-
-        let r_len = root.len();
-        let list: Vec<String> = collect(
-            root.clone(),
-            match matches.values_of("list") {
-                Some(r) => r.collect(),
-                None => Vec::default(),
-            },
-        );
-        println!("list: {:?}", list);
-        let mut files: Vec<String> = Vec::default();
-        for e in list.iter() {
-            println!("e:{:}", e);
-            let r = e.replace("\\", "/");
-            println!("r:{}", r);
-            let mut r = r.as_str();
-            if r.starts_with("./") {
-                r = &r[2..];
-            }
-            files.push(r[r_len..].to_string())
-        }
-
-        // let file_list = read_file_list( &Path::new(&(root.clone() + ".depend")).to_path_buf());
-        // if files.len() == 0{
-        // 	init_js(&[root.clone()], file_list, root.clone());
-        // }else{
-        // 	init_js(&files[..], file_list, root.clone());
-        // }
-    }
-
-    if let Some(path) = matches.value_of("exec") {
-        exec_js(path.to_string());
-    }
-
-    // 启动http服务器
-    start_simple_https(&matches);
+    exec_js(init_exec_path.to_string());
 
     //启动全局虚拟机堆整理
     set_vm_timeout(60000);
@@ -491,11 +446,6 @@ fn main() {
             }
         }
     }
-
-    // loop {
-    //     println!("###############loop, {}", now_millisecond());
-    //     thread::sleep(Duration::from_millis(60000));
-    // }
 }
 
 #[cfg(any(unix))]
@@ -584,76 +534,6 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
 
 fn register(mgr: &BonMgr) {
     mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
-}
-
-// import {HttpsCfg, HttpsTlsCfg} from "./server_cfg.s";
-// import { cfgMgr } from "../../pi/util/cfg";
-// import { startHttpMount, startHttpsMount } from "../rust/https/https_impl";
-// import { Mount } from "../rust/https/mount";
-// import { StaticFile } from "../rust/https/file";
-// import { StaticFileBatch } from "../rust/https/files";
-// import { FileUpload } from "../rust/https/upload";
-
-use https::batch::FileBatch;
-use https::file::StaticFile;
-use https::files::StaticFileBatch;
-use https::https_impl::start_http;
-use https::mount::Mount;
-use https::upload::FileUpload;
-
-// 启动http服务器
-fn start_simple_https(matches: &clap::ArgMatches<'static>) {
-    if let Some(m) = matches.value_of("mod") {
-        let m = m.to_string();
-        if m == "httpServer" {
-            let port = match matches.value_of("httpServerPort") {
-                Some(r) => match u16::from_str(r) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        println!("httpServer port error: {:?}, r: {}", e, r);
-                        return;
-                    }
-                },
-                None => 80,
-            };
-
-            let down_root = match matches.value_of("httpServerLoadRoot") {
-                Some(r) => r,
-                None => "./",
-            };
-
-            let upload_root = match matches.value_of("httpServerUploadRoot") {
-                Some(r) => r,
-                None => "./",
-            };
-
-            let mut mount = Mount::new();
-            // addGenHead(staticFile,r.gen_head);
-            // addGenHead(staticFileBatch,r.gen_head);
-            mount.mount("/", StaticFile::new(down_root));
-            mount.mount("/files", StaticFileBatch::new(down_root));
-            mount.mount("/batch", FileBatch::new(down_root));
-            mount.mount("/upload", FileUpload::new(upload_root));
-            start_http(mount, Atom::from("0.0.0.0"), port, 30 * 1000, 20 * 1000);
-        }
-    }
-
-    // let httpsTlsCfgs = cfgMgr.get(HttpsTlsCfg._$info.name);
-    // if(httpsTlsCfgs){
-    //     httpsTlsCfgs.forEach((r: HttpsTlsCfg,_k) => {
-    //         let mount = Mount.new();
-    //         let staticFile = StaticFile.newString(r.root);
-    //         let staticFileBatch = StaticFileBatch.newString(r.root);
-    //         addGenHead(staticFile,r.gen_head);
-    //         addGenHead(staticFileBatch,r.gen_head);
-    //         mount.mountStaticFile("/", staticFile);
-    //         mount.mountStaticFileBatch("/files", staticFileBatch);
-    //         if(r.uploadRoot){
-    //             mount.mountFileUpload("/upload",  FileUpload.newString(r.uploadRoot));
-    //         }
-    //         startHttpsMount(mount, r.ip, r.port, r.keep_alive_timeout, r.handle_timeout, r.certPath, r.keyPath);
-    //     });
-    // }
 }
 
 fn exec_js(path: String) {
