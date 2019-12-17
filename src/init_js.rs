@@ -23,9 +23,6 @@ use pi_vm::proc_pool::set_factory;
 use sinfo::EnumType;
 use time::now_millisecond;
 
-use depend::{Depend, FileDes};
-use jsloader::Loader;
-
 pub fn exec_js(path: String) {
     let path = path.as_str().replace("\\", "/");
     let cur_exe = env::current_exe().unwrap();
@@ -34,7 +31,6 @@ pub fn exec_js(path: String) {
     let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
     mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
 
-    // use js_vm::{get_byte_code, compile, load_module};
     let js = JS::new(1, Atom::from("compile"), auth.clone(), None).unwrap();
 
     // 初始化js执行环境
@@ -65,14 +61,6 @@ pub fn exec_js(path: String) {
     js.new_str(String::from("_$db_mgr"));
     let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
     ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
-    js.call(2);
-
-    //调用全局变量定义函数， 定义全局变量 _$depend
-    let dp = Depend::new_sample(vec![]);
-    js.get_js_function("_$defineGlobal".to_string());
-    js.new_str(String::from("_$depend"));
-    let ptr = Box::into_raw(Box::new(dp)) as usize;
-    ptr_jstype(js.get_objs(), js.clone(), ptr, 1797798710); //new native obj作为参数
     js.call(2);
 
     //////////////
@@ -140,76 +128,4 @@ pub fn compeil_global(js: &JS) -> Vec<u8> {
         .compile("_$define_global.js".to_string(), jscode.to_string())
         .unwrap();
     return code;
-}
-
-//初始化系统shell的前置和后置代码文件
-fn init_shell_front_rear(list: &mut Vec<String>) {
-    let env = "env.js".to_string();
-    let core = "core.js".to_string();
-    let first = "first.js".to_string();
-    let next = "next.js".to_string();
-    let last = "last.js".to_string();
-
-    let init_shell = "pi_pt/init/init_shell.js".to_string();
-
-    list.insert(0, next);
-    list.insert(0, first);
-    list.insert(0, core);
-    list.insert(0, env);
-    list.push(init_shell);
-    list.push(last);
-}
-
-//初始化系统shell管理器
-fn init_shell_manager(
-    dirs: &[String],
-    file_list: Vec<FileDes>,
-    root: String,
-    codes: &HashMap<String, Arc<Vec<u8>>>,
-) {
-    let mut vec: Vec<Arc<Vec<u8>>> = Vec::new();
-
-    let depend = Depend::new(file_list, root.clone()); //获取指定依赖
-    let files = Loader::list(dirs, &depend); //加载指定目录下的代码文件
-    let mut files = Loader::list_with_depend(&files, &depend); //根据依赖顺序构建代码文件
-
-    init_shell_front_rear(&mut files);
-
-    let mut b = true;
-    for file in files {
-        if file.ends_with(r".a.js")
-            || file.ends_with(r".b.js")
-            || file.ends_with(r".c.js")
-            || file.ends_with(r".u.js")
-            || file.ends_with(r".i.js")
-            || file.ends_with(r".e.js")
-        {
-            //忽略初始化代码
-            continue;
-        } else {
-            if Path::new(&file).starts_with("pi_pt/init/init.js") {
-                //忽略初始化代码
-                continue;
-            }
-
-            if Path::new(&file).starts_with("pi_pt/init/update.js") {
-                //忽略热更代码
-                continue;
-            }
-
-            if Path::new(&file).starts_with("pi_pt/init/init_shell.js") {
-                //首次，则忽略加载初始化shell代码
-                if b {
-                    b = false;
-                    continue;
-                }
-            }
-
-            if let Some(code) = codes.get(&file) {
-                vec.push(code.clone());
-            }
-        }
-    }
-
-    SHELL_MANAGER.write().unwrap().init(Some(vec));
 }

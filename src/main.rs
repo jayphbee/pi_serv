@@ -70,7 +70,6 @@ pub mod js_lib;
 pub mod js_net;
 pub mod js_net_rpc_client;
 pub mod js_vm;
-pub mod jsloader;
 pub mod util;
 pub mod webshell;
 

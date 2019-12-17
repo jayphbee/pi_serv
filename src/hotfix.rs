@@ -24,7 +24,6 @@ use depend::{Depend, FileDes};
 use init_js::compeil_global;
 use util::{read_file_list, read_depend, read_file_str};
 use js_lib::Nobjs;
-use jsloader::Loader;
 use js_lib::JSGray;
 
 //灰度管理器
@@ -211,10 +210,9 @@ fn start_vm(list_c: Vec<String>, diff_list_all: HashMap<Atom, FileEvent>, new_mg
     js.load(&global_code);//加载全局变量定义函数的字节码
     let nobjs = gray_mgr.nobjs.clone();
     let mut list = nobjs.get_depend();
-    let nobjs_len = Loader::list_with_depend(&list, &depend).len();
+    let nobjs_len = 0;
     list.extend_from_slice(&list_c);
-    let mut list = Loader::list_with_depend(&list, &depend);
-
+    let mut list = vec![];
     let file_map = read_code(new_mgr, &list);
     //"env.js", "core.js", "first.js", "next.js", nobjs的依赖
     for i in 0..4 + nobjs_len{
