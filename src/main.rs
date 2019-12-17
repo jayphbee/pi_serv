@@ -142,21 +142,6 @@ fn args() -> clap::ArgMatches<'static> {
         .version("1.0")
         .author("test. <test@gmail.com>")
         .about("aboutXXXX")
-        .args_from_usage(
-            "[exec] -e --exec <File> 'The path where the exec javascript file is located'",
-        )
-        .args_from_usage(
-            "[root] -r --root <DIR> 'The directory where the dependent file is located'",
-        )
-        .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
-        .args_from_usage("[mod] -m --mod <MOD>... 'start module(example: -m httpServer)'")
-        .args_from_usage("[httpServerPort] -p --httpServerPort <NUMBER>... 'httpServer port'")
-        .args_from_usage(
-            "[httpServerLoadRoot] -d --httpServerLoadRoot <DIR>... 'file download root'",
-        )
-        .args_from_usage(
-            "[httpServerUploadRoot] -u --httpServerUploadRoot <DIR>... 'file upload root'",
-        )
         .arg(
             Arg::with_name("shell")
                 .short("s")
@@ -175,14 +160,14 @@ fn args() -> clap::ArgMatches<'static> {
         )
         .arg(
             Arg::with_name("init_file")
-                .short("i")
+                .short("e")
                 .long("init")
                 .value_name("INIT_FILE")
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("projects")
-                .short("j")
+                .short("p")
                 .long("projects")
                 .multiple(true)
                 .value_name("PROJECTS")
@@ -198,13 +183,6 @@ fn args() -> clap::ArgMatches<'static> {
         .version("1.0")
         .author("test. <test@gmail.com>")
         .about("aboutXXXX")
-        .args_from_usage(
-            "[exec] -e --exec <File> 'The path where the exec javascript file is located'",
-        )
-        .args_from_usage(
-            "<root> -r --root <DIR> 'The directory where the dependent file is located'",
-        )
-        .args_from_usage("[list] -l --list <PATH>... 'Files or directories to run'")
         .arg(
             Arg::with_name("shell")
                 .short("s")
@@ -220,6 +198,21 @@ fn args() -> clap::ArgMatches<'static> {
                 .value_name("GByte")
                 .takes_value(true)
                 .help("Max heap limit on runtime"),
+        )
+        .arg(
+            Arg::with_name("init_file")
+                .short("e")
+                .long("init")
+                .value_name("INIT_FILE")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("projects")
+                .short("p")
+                .long("projects")
+                .multiple(true)
+                .value_name("PROJECTS")
+                .takes_value(true),
         )
         .get_matches();
     matches
