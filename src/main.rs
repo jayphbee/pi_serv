@@ -57,7 +57,6 @@ extern crate env_logger;
 #[cfg(any(unix))]
 extern crate glob;
 
-pub mod depend;
 pub mod hotfix;
 pub mod init_js;
 pub mod js_async;
@@ -125,7 +124,6 @@ use worker::worker_pool::WorkerPool;
 
 use init_js::exec_js;
 use js_base::IS_END;
-use util::read_file_list;
 
 use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 

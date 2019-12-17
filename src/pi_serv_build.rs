@@ -25,7 +25,6 @@ use base;
 use rpc;
 use std::sync::Mutex;
 use js_db;
-use depend;
 use util;
 use js_vm;
 use js_env;
@@ -3701,10 +3700,6 @@ fn drop_1675843967(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBWare) };
 }
 
-fn drop_1797798710(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut depend::Depend) };
-}
-
 fn drop_1694133887(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_env::Args) };
 }
@@ -3860,7 +3855,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
-    mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::Args"), drop_fn: drop_1694133887}, 1694133887);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::EnvVars"), drop_fn: drop_591726708}, 591726708);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
