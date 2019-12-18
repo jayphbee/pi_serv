@@ -101,7 +101,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use clap::{App, Arg};
+use clap::{App, Arg, ArgMatches};
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
 use pi_vm::adapter::{
@@ -133,48 +133,6 @@ use apm::common::SysStat;
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
 
-#[cfg(any(windows))]
-fn args() -> clap::ArgMatches<'static> {
-    let matches = App::new("pi_server")
-        .version("1.0")
-        .author("test. <test@gmail.com>")
-        .about("aboutXXXX")
-        .arg(
-            Arg::with_name("shell")
-                .short("s")
-                .long("shell")
-                .value_name("BOOL")
-                .takes_value(true)
-                .help("Open the console at startup"),
-        )
-        .arg(
-            Arg::with_name("max_heap")
-                .short("H")
-                .long("max_heap")
-                .value_name("GByte")
-                .takes_value(true)
-                .help("Max heap limit on runtime"),
-        )
-        .arg(
-            Arg::with_name("exec_file")
-                .short("e")
-                .long("exec")
-                .value_name("INIT_FILE")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("projects")
-                .short("p")
-                .long("projects")
-                .multiple(true)
-                .value_name("PROJECTS")
-                .takes_value(true),
-        )
-        .get_matches_from(wild::args());
-    matches
-}
-
-#[cfg(any(unix))]
 fn args() -> clap::ArgMatches<'static> {
     let matches = App::new("pi_server")
         .version("1.0")
@@ -215,9 +173,16 @@ fn args() -> clap::ArgMatches<'static> {
     matches
 }
 
-fn set_piserv_env_var(init_exec_path: &str, projs: Vec<String>) {
+fn set_piserv_env_var(matches: &ArgMatches) {
+    let init_exec_path = matches.value_of("exec_file").unwrap();
+    let projs = match matches.values_of("projects") {
+        Some(p) => p
+            .map(|s| s.to_string().replace("\\", "/"))
+            .collect::<Vec<String>>(),
+        None => vec![],
+    };
     let current_dir = env::current_dir().unwrap();
-    let current_dir_parent =current_dir.parent().unwrap().to_str().unwrap();
+    let current_dir_parent = current_dir.parent().unwrap().to_str().unwrap();
 
     let path = Path::new(init_exec_path)
         .iter()
@@ -226,7 +191,14 @@ fn set_piserv_env_var(init_exec_path: &str, projs: Vec<String>) {
         .collect::<Vec<&str>>();
 
     let root: PathBuf = [vec![current_dir_parent], path].concat().iter().collect();
-    let project_root = root.parent().unwrap().parent().unwrap().to_str().unwrap().replace("\\", "/");
+    let project_root = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace("\\", "/");
 
     let cur_dir = current_dir.to_str().unwrap();
     let mut cur_exe = env::current_exe().unwrap();
@@ -237,25 +209,8 @@ fn set_piserv_env_var(init_exec_path: &str, projs: Vec<String>) {
     set_env_var("PROJECT_ROOT", &project_root);
 }
 
-fn main() {
-    env_logger::builder().format_timestamp_millis().init();
-    #[cfg(not(unix))]
-    load_lib_backtrace();
-    TIMER.run();
-    TASK_POOL_TIMER.run();
-    register_native_object();
-    let sys = SysStat::new();
-    let processor = sys.processor_count();
-    let worker_pool0 = Box::new(WorkerPool::new(
-        "JS Worker".to_string(),
-        WorkerType::Js,
-        processor * 2,
-        1024 * 1024,
-        10000,
-        JS_WORKER_WALKER.clone(),
-    ));
-    worker_pool0.run(JS_TASK_POOL.clone());
-
+// 启动存储任务工作线程
+fn start_store_worker(processor: usize) {
     let worker_pool1 = Box::new(WorkerPool::new(
         "Store Worker".to_string(),
         WorkerType::Store,
@@ -265,7 +220,23 @@ fn main() {
         STORE_WORKER_WALKER.clone(),
     ));
     worker_pool1.run(STORE_TASK_POOL.clone());
+}
 
+// 启动js虚拟机工作线程
+fn start_js_worker(processor: usize) {
+    let worker_pool0 = Box::new(WorkerPool::new(
+        "JS Worker".to_string(),
+        WorkerType::Js,
+        processor * 2,
+        1024 * 1024,
+        10000,
+        JS_WORKER_WALKER.clone(),
+    ));
+    worker_pool0.run(JS_TASK_POOL.clone());
+}
+
+// 启动网络io工作线程
+fn start_network_worker(processor: usize) {
     let worker_pool = Box::new(WorkerPool::new(
         "Network Worker".to_string(),
         WorkerType::Net,
@@ -275,7 +246,10 @@ fn main() {
         NET_WORKER_WALKER.clone(),
     ));
     worker_pool.run(NET_TASK_POOL.clone());
+}
 
+// 注册rust暴露的函数
+fn register_bon_mgr() {
     pi_crypto_build::register(&BON_MGR);
     pi_math_hash_build::register(&BON_MGR);
     pi_db_build::register(&BON_MGR);
@@ -296,9 +270,10 @@ fn main() {
     pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
     register(&BON_MGR);
+}
 
-    let matches = args();
-
+// 处理虚拟机最大堆设置参数
+fn set_vm_max_heap(matches: &ArgMatches, sys: &SysStat) {
     if let Some(max_heap) = matches.value_of("max_heap") {
         match max_heap.parse::<f64>() {
             Err(e) => {
@@ -346,139 +321,139 @@ fn main() {
             }
         }
     }
+}
 
+// 初始化流程
+fn init_js(matches: &ArgMatches) {
     let init_exec_path = matches.value_of("exec_file").unwrap();
-    let projs = match matches.values_of("projects") {
-        Some(p) => p
-            .map(|s| s.to_string().replace("\\", "/"))
-            .collect::<Vec<String>>(),
-        None => vec![],
-    };
-
-    set_piserv_env_var(init_exec_path, projs);
     exec_js(init_exec_path.to_string());
+}
 
-    //启动全局虚拟机堆整理
+// 根据命令行参数决定是否启动shell
+fn enable_shell(matches: &ArgMatches) {
+    if let Some("true") = matches.value_of("shell") {
+        let (req_sender, req_receiver) = channel();
+        let (resp_sender, resp_receiver) = channel();
+
+        let req_sender_copy = req_sender.clone();
+        let resp = Arc::new(
+            move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnOnce(Arc<Vec<u8>>)>>| {
+                resp_sender.send(result);
+                req_sender.send(req);
+            },
+        );
+
+        let s = SHELL_MANAGER.write().unwrap().open();
+        if let Some(shell) = s {
+            let req = SHELL_MANAGER.write().unwrap().connect(shell, resp.clone());
+            if req.is_none() {
+                eprintln!("Connect Error");
+            }
+            req_sender_copy.send(req);
+
+            println!("Shell v0.1");
+
+            let mut req: Option<Box<dyn FnOnce(Arc<Vec<u8>>)>> = None;
+            loop {
+                print!(">");
+                io::stdout().flush();
+
+                let mut buffer = String::new();
+                while let Err(e) = io::stdin().read_line(&mut buffer) {
+                    eprintln!("Input Error, {:?}", e);
+                    print!(">");
+                    io::stdout().flush();
+                }
+
+                if buffer.trim().as_bytes() == b"exit" {
+                    println!("Shell closed");
+                    return;
+                }
+
+                if let None = req {
+                    //当前没有请求回调，则接收请求回调
+                    match req_receiver.recv() {
+                        Err(e) => {
+                            eprintln!("Shell Suspend, {:?}", e);
+                            return;
+                        }
+                        Ok(new) => {
+                            if new.is_none() {
+                                println!("Shell closed");
+                                return;
+                            }
+                            req = new; //更新请求回调
+                        }
+                    }
+                }
+
+                if let Some(r) = req.take() {
+                    r(Arc::new(buffer.into_bytes()));
+                }
+
+                //接收请求响应
+                match resp_receiver.recv() {
+                    Err(e) => eprintln!("Output Error, {:?}", e),
+                    Ok(result) => match result {
+                        Err(e) => eprintln!("{:?}", e),
+                        Ok(r) => println!(
+                            "{output}",
+                            output = String::from_utf8_lossy(&r[..]).as_ref()
+                        ),
+                    },
+                }
+            }
+        }
+    }
+}
+
+fn main() {
+    // 启动日志系统
+    env_logger::builder().format_timestamp_millis().init();
+
+    // 加载堆栈跟踪库
+    #[cfg(not(unix))]
+    load_lib_backtrace();
+
+    // 启动定时器
+    TIMER.run();
+    TASK_POOL_TIMER.run();
+
+    // 注册本地对象
+    register_native_object();
+
+    let sys = SysStat::new();
+    let processor = sys.processor_count();
+
+    // 启动存储任务工作线程
+    start_store_worker(processor);
+
+    // 启动js虚拟机工作线程
+    start_js_worker(processor);
+
+    // 启动网络io工作线程
+    start_network_worker(processor);
+
+    // 注册rust暴露的函数
+    register_bon_mgr();
+
+    let matches = args();
+
+    set_vm_max_heap(&matches, &sys);
+    set_piserv_env_var(&matches);
+    init_js(&matches);
+
+    // 启动全局虚拟机堆整理
     set_vm_timeout(60000);
     register_global_vm_heap_collect_timer(3000);
 
-    match matches.value_of("shell") {
-        Some("true") => {
-            let (req_sender, req_receiver) = channel();
-            let (resp_sender, resp_receiver) = channel();
+    // 根据命令行参数决定是否启动shell
+    enable_shell(&matches);
 
-            let req_sender_copy = req_sender.clone();
-            let resp = Arc::new(
-                move |result: IOResult<Arc<Vec<u8>>>, req: Option<Box<FnOnce(Arc<Vec<u8>>)>>| {
-                    resp_sender.send(result);
-                    req_sender.send(req);
-                },
-            );
-
-            let s = SHELL_MANAGER.write().unwrap().open();
-            if let Some(shell) = s {
-                let req = SHELL_MANAGER.write().unwrap().connect(shell, resp.clone());
-                if req.is_none() {
-                    eprintln!("Connect Error");
-                }
-                req_sender_copy.send(req);
-
-                println!("Shell v0.1");
-
-                let mut req: Option<Box<dyn FnOnce(Arc<Vec<u8>>)>> = None;
-                loop {
-                    print!(">");
-                    io::stdout().flush();
-
-                    let mut buffer = String::new();
-                    while let Err(e) = io::stdin().read_line(&mut buffer) {
-                        eprintln!("Input Error, {:?}", e);
-                        print!(">");
-                        io::stdout().flush();
-                    }
-
-                    if buffer.trim().as_bytes() == b"exit" {
-                        println!("Shell closed");
-                        return;
-                    }
-
-                    if let None = req {
-                        //当前没有请求回调，则接收请求回调
-                        match req_receiver.recv() {
-                            Err(e) => {
-                                eprintln!("Shell Suspend, {:?}", e);
-                                return;
-                            }
-                            Ok(new) => {
-                                if new.is_none() {
-                                    println!("Shell closed");
-                                    return;
-                                }
-                                req = new; //更新请求回调
-                            }
-                        }
-                    }
-
-                    if let Some(r) = req.take() {
-                        r(Arc::new(buffer.into_bytes()));
-                    }
-
-                    //接收请求响应
-                    match resp_receiver.recv() {
-                        Err(e) => eprintln!("Output Error, {:?}", e),
-                        Ok(result) => match result {
-                            Err(e) => eprintln!("{:?}", e),
-                            Ok(r) => println!(
-                                "{output}",
-                                output = String::from_utf8_lossy(&r[..]).as_ref()
-                            ),
-                        },
-                    }
-                }
-            }
-        }
-        _ => {
-            while !IS_END.lock().unwrap().0 {
-                println!("###############loop, {}", now_millisecond());
-                thread::sleep(Duration::from_millis(10000));
-            }
-        }
+    while !IS_END.lock().unwrap().0 {
+        println!("###############loop, {}", now_millisecond());
+        thread::sleep(Duration::from_millis(10000));
     }
-}
-
-#[cfg(any(unix))]
-fn collect(root: String, list: Vec<&str>) -> Vec<String> {
-    let mut vec = Vec::with_capacity(list.len());
-
-    for p in list {
-        let mut buf = PathBuf::from(&root);
-        buf.push(p);
-        match glob::glob(buf.as_path().to_str().unwrap()) {
-            Err(e) => panic!("collect list args failed, path: {:?}, reason: {:?}", p, e),
-            Ok(paths) => {
-                for path in paths {
-                    match path {
-                        Err(ref e) => panic!(
-                            "collect list args failed, path: {:?}, reason: {:?}",
-                            path, e
-                        ),
-                        Ok(r) => {
-                            if let Ok(x) = r.into_os_string().into_string() {
-                                vec.push(x);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    vec
-}
-
-#[cfg(any(windows))]
-fn collect(_: String, list: Vec<&str>) -> Vec<String> {
-    list.iter().map(|path| path.to_string()).collect()
 }
 
 /**
