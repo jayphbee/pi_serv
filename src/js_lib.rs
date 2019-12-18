@@ -103,7 +103,6 @@ impl Nobjs {
     }
 
     pub fn to_map(&self, vm: &Arc<JS>) -> JSType {
-        let proj_root = env_var("PROJECT_ROOT").unwrap();
         vm.get_type("Map".to_string());
         let temp = vm.new_array();
         let mut i = 0;
@@ -116,7 +115,7 @@ impl Nobjs {
                 None => panic!("illegal module name, lack '.', modName: {}", name),
             };
             let r = obj.path.split_at(index);// r.0为模块名， r.1为类型名称;
-            let type_name = format!("Module.modules['{}/{}.js'].exports{}", proj_root, r.0, r.1);
+            let type_name = format!("Module.modules['{}.js'].exports{}", r.0, r.1);
             vm.get_type(type_name.clone());
             ptr_jstype(vm.get_objs_ref(), vm.clone(), obj.ptr, obj.hash);
             let mut obj = vm.new_type(type_name.clone(), 1);
