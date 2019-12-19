@@ -135,3 +135,11 @@ pub fn walk_dir_sync(path: &str) -> Result<Vec<String>, String> {
 // pub fn walk_dir(path: &str, call_back: Arc<dyn FnOnce(Result<String, String>)>) {
 // 	// TODO
 // }
+
+pub fn is_absolute(path: &str) -> bool {
+	Path::new(path).is_absolute()
+}
+
+pub fn is_relative(path: &str) -> bool {
+	Path::new(path).is_relative()
+}

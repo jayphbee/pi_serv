@@ -173,6 +173,7 @@ fn args() -> clap::ArgMatches<'static> {
     matches
 }
 
+// 设置pi_pt需要用到的环境变量
 fn set_piserv_env_var(matches: &ArgMatches) {
     let init_exec_path = matches.value_of("exec_file").unwrap();
     let projs = match matches.values_of("projects") {

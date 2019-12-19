@@ -1289,6 +1289,34 @@ fn call_3649129955(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3007613864(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in is_absolute";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::is_absolute(jst0);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3595492395(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in is_relative";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::is_relative(jst0);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1347190475(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_sinfo";
 
@@ -3934,6 +3962,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3728513126), 3728513126);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2674074487), 2674074487);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3649129955), 3649129955);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3007613864), 3007613864);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3595492395), 3595492395);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1347190475), 1347190475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3993207385), 3993207385);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
