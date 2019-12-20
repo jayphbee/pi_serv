@@ -14,8 +14,6 @@ use bon::{ReadBuffer, Decode};
 use timer::{TIMER, FuncRuner};
 
 use js_async::AsyncRequestHandler;
-use depend::{Depend};
-use init_js::push_pre;
 use bon::ReadBonErr;
 
 lazy_static! {
@@ -85,28 +83,6 @@ pub fn arc_deref< T>(v: &Arc<T>) -> &T{
 */
 pub fn box_new<T>(v: T) -> Box<T>{
     Box::new(v)
-}
-
-/**
-* 获取指定文件数组的所有依赖
-* @param dp 项目依赖对象
-* @param path 文件路径的数组
-* @returns 所有依赖的数组
-*/
-pub fn get_depend(dp: &Depend, path: &[String]) -> Vec<String> {
-    let d = dp.depend(Vec::from(path));
-    let mut arr = Vec::new();
-    let mut arr1 = Vec::new();
-    for path in d.into_iter(){
-        if path.ends_with(".s.js"){
-            arr.push(path);
-        }else {
-            arr1.push(path);
-        }
-    }
-    arr.extend_from_slice(arr1.as_slice());
-    push_pre(&mut arr);
-    arr
 }
 
 /**

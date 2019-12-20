@@ -25,7 +25,6 @@ use base;
 use rpc;
 use std::sync::Mutex;
 use js_db;
-use depend;
 use util;
 use js_vm;
 use js_env;
@@ -1290,6 +1289,34 @@ fn call_3649129955(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3007613864(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in is_absolute";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::is_absolute(jst0);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3595492395(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in is_relative";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::is_relative(jst0);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1347190475(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_sinfo";
 
@@ -1373,36 +1400,6 @@ fn call_3741531906(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
     let result = js_base::arc_deref(jst0);
     let ptr = result as *const Vec<u8> as usize;let mut result = ptr_jstype(js.get_objs_ref(), js.clone(), ptr,104530634);
-
-
-    Some(CallResult::Ok)
-}
-
-
-fn call_509141093(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in get_depend";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 1797798710, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const depend::Depend) };
-
-
-	let jst1 = &v[1];
-	if !jst1.is_array(){return Some(CallResult::Err(String::from(param_error)));}
-	let a_len = jst1.get_array_length();
-
-    let mut jst1_ = Vec::new();
-    for i in 0..a_len{
-		let jst1_e = jst1.get_index(i as u32);
-	if !jst1_e.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1_e = jst1_e.get_str();
-    jst1_.push(jst1_e);
-    }
-    let jst1 = jst1_.as_slice();
-
-
-    let result = js_base::get_depend(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
 
 
     Some(CallResult::Ok)
@@ -3731,10 +3728,6 @@ fn drop_1675843967(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBWare) };
 }
 
-fn drop_1797798710(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut depend::Depend) };
-}
-
 fn drop_1694133887(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_env::Args) };
 }
@@ -3890,7 +3883,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabKV"), drop_fn: drop_4000136370}, 4000136370);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
-    mgr.regist_struct_meta(StructMeta{name:String::from("depend::Depend"), drop_fn: drop_1797798710}, 1797798710);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::Args"), drop_fn: drop_1694133887}, 1694133887);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::EnvVars"), drop_fn: drop_591726708}, 591726708);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
@@ -3970,12 +3962,13 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3728513126), 3728513126);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2674074487), 2674074487);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3649129955), 3649129955);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3007613864), 3007613864);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3595492395), 3595492395);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1347190475), 1347190475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3993207385), 3993207385);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3272869145), 3272869145);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3741531906), 3741531906);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_509141093), 509141093);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1810043215_sync), 1810043215);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3285798497), 3285798497);
     mgr.regist_fun_meta(FnMeta::Call(call_59144274), 59144274);
