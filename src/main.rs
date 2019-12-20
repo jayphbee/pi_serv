@@ -202,10 +202,7 @@ fn set_piserv_env_var(matches: &ArgMatches) {
         .replace("\\", "/");
 
     let cur_dir = current_dir.to_str().unwrap();
-    let mut cur_exe = env::current_exe().unwrap();
-    cur_exe.pop();
 
-    set_env_var("ENV_CORE_PATH", cur_exe.to_str().unwrap());
     set_env_var("PROJECTS", &projs.as_slice().join(" "));
     set_env_var("PROJECT_ROOT", &project_root);
 }
