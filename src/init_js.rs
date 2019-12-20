@@ -20,6 +20,8 @@ use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::duk_proc::{DukProcess, DukProcessFactory};
 use pi_vm::proc_pool::set_factory;
 
+use js_env::{env_var, set_current_dir, current_dir};
+
 use sinfo::EnumType;
 use time::now_millisecond;
 
@@ -32,6 +34,10 @@ pub fn exec_js(path: String) {
     mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
 
     let js = JS::new(1, Atom::from("compile"), auth.clone(), None).unwrap();
+
+    // 设置当前运行目录
+    let build_out_root = env_var("PROJECT_ROOT").unwrap();
+    set_current_dir(&build_out_root);
 
     // 初始化js执行环境
     let env_code = read_code(&cur_exe.join("../env.js"));
