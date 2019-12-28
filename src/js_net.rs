@@ -812,6 +812,7 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        println!("Request handler topic {:?}", topic);
 		let topic_handler = self.clone();
         let topic_name = topic.clone();
         let id = env.get_id();

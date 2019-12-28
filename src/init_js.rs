@@ -25,6 +25,19 @@ use js_env::{env_var, set_current_dir, current_dir};
 use sinfo::EnumType;
 use time::now_millisecond;
 
+pub fn load_core_env(js: &Arc<JS>) {
+    let cur_exe = env::current_exe().unwrap();
+    // 初始化js执行环境
+    let env_code = read_code(&cur_exe.join("../env.js"));
+    let core_code = read_code(&cur_exe.join("../core.js"));
+
+    let env_code = js.compile("env.js".to_string(), env_code).unwrap();
+    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+
+    load_code(&js, env_code.as_slice());
+    load_code(&js, core_code.as_slice());
+}
+
 pub fn exec_js(path: String) {
     let path = path.as_str().replace("\\", "/");
     let cur_exe = env::current_exe().unwrap();
@@ -82,7 +95,7 @@ pub fn exec_js(path: String) {
 }
 
 
-fn read_code(path: &PathBuf) -> String {
+pub fn read_code(path: &PathBuf) -> String {
     let mut file = match File::open(path) {
         Ok(f) => f,
         Err(e) => panic!("no such file {:?} exception:{}", path, e),
@@ -94,7 +107,7 @@ fn read_code(path: &PathBuf) -> String {
     return str_val;
 }
 
-fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
+pub fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
     loop {
         if js.is_ran() {
             return js.load(&code);

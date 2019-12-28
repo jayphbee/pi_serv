@@ -122,6 +122,7 @@ impl RPCClient {
 
 impl GrayVersion for RPCClient {
     fn get_gray(&self) -> &Option<usize> {
+        println!("GrayVersion rpcclient ");
         &None
     }
     fn set_gray(&mut self, gray: Option<usize>) {

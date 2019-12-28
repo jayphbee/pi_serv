@@ -25,6 +25,15 @@ pub fn get_byte_code(name: String) -> Option<Arc<Vec<u8>>> {
 }
 
 /**
+ * 删除缓存的字节码
+ */
+pub fn remove_byte_code_cache(name: String) {
+	let lock = BYTE_CODE_CATCH.lock().unwrap();
+	let mut b = lock.borrow_mut();
+	b.remove(&name);
+}
+
+/**
  * 异步编译， 从源码编译为二进制码
  */
 pub fn compile(name: String, source_code: String, call_back: Box<dyn FnOnce(Result<Arc<Vec<u8>>, String>)>) {
