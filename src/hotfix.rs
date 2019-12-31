@@ -22,7 +22,6 @@ use init_js::{read_code, load_core_env};
 
 //灰度管理器
 pub struct GrayMgr{
-    pub last_mgr: Mgr,
     map: FnvHashMap<Atom, Arc<RwLock<GrayTab<JSGray>>>>, //所有灰度表的汇总
     nobjs: Nobjs,
 }
@@ -31,11 +30,9 @@ impl GrayMgr {
     pub fn new(mgr: &Mgr, nobjs: &Nobjs) -> GrayMgr {
         //创建GrayMgr
         GrayMgr{
-            last_mgr: mgr.clone(),
             map: FnvHashMap::default(),
             nobjs: nobjs.clone()
         }
-        
     }
 
     pub fn update_gray(&mut self, key: &str, mgr: &Mgr, factor: VMFactory) -> bool{
