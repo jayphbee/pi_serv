@@ -108,9 +108,9 @@ pub fn hotfix_listen(gray_mgr: Arc<Mutex<GrayMgr>>, path: String) {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 let vmf_names = gray_mgr.lock().unwrap().get_all_vmf_names();
 
-                vmf_names.iter().for_each(|k| {
-                    if is_depend(&js, &gray_mgr, k, &mod_id) {
-                        debug!("{} is depend for vmf {:?}", mod_id.clone(), k);
+                vmf_names.iter().for_each(|vmf_name| {
+                    if is_depend(&js, &gray_mgr, vmf_name, &mod_id) {
+                        debug!("{} is depend for vmf {:?}", mod_id.clone(), vmf_name);
 
                         let cur_exe = env::current_exe().unwrap();
                         let env_code = read_code(&cur_exe.join("../env.js"));
@@ -119,28 +119,32 @@ pub fn hotfix_listen(gray_mgr: Arc<Mutex<GrayMgr>>, path: String) {
                         let env_code = js.compile("env.js".to_string(), env_code).unwrap();
                         let core_code = js.compile("core.js".to_string(), core_code).unwrap();
 
-                        let mgr = gray_mgr.lock().unwrap().get_gray_tab(k).unwrap().read().unwrap().get_last().mgr.clone();
+                        let mgr = gray_mgr.lock().unwrap().get_gray_tab(vmf_name).unwrap().read().unwrap().get_last().mgr.clone();
                         let auth = Arc::new(NativeObjsAuth::new(None, None));
-                        let mut vmf = VMFactory::new(k, 128, 2, 33554432, 33554432, auth);
+                        let mut vmf = VMFactory::new(vmf_name, 128, 2, 33554432, 33554432, auth);
 
+                        // env.js / core.js 代码
                         vmf = vmf.append(Arc::new(env_code));
                         vmf = vmf.append(Arc::new(core_code));
 
                         let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
 
-                        remove_byte_code_cache(k.clone().to_string());
+                        // 移除当前vmf的代码缓存，否则 Module.require 还会使用原来的代码
+                        remove_byte_code_cache(vmf_name.clone().to_string());
 
                         let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-                        let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
+                        let extra_code = extra_code + format!("Module.require(\'{}\', '');", vmf_name.clone().to_string()).as_str();
                         let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
 
+                        // rpc 功能依赖的代码，和实际处理rpc需要的代码
                         vmf = vmf.append(Arc::new(extra_code));
                         vmf.produce(2);
 
-                        if gray_mgr.lock().unwrap().update_gray(k, &mgr, vmf) {
-                            debug!("update gray for {:?} success", k);
+                        // 更新灰度
+                        if gray_mgr.lock().unwrap().update_gray(vmf_name, &mgr, vmf) {
+                            debug!("update gray for {:?} success", vmf_name);
                         } else {
-                            error!("update gray for {:?} failed", k);
+                            error!("update gray for {:?} failed", vmf_name);
                         }
                     }
                 });
