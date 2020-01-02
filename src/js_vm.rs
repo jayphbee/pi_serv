@@ -34,6 +34,18 @@ pub fn remove_byte_code_cache(name: String) {
 }
 
 /**
+ * 重命名模块名字
+ */
+pub fn rename_byte_code_cache(old_name: String, new_name: String) {
+	let lock = BYTE_CODE_CACHE.lock().unwrap();
+	let mut b = lock.borrow_mut();
+
+	if let Some(old) = b.remove(&old_name) {
+		b.insert(new_name, old);
+	}
+}
+
+/**
  * 异步编译， 从源码编译为二进制码
  */
 pub fn compile(name: String, source_code: String, call_back: Box<dyn FnOnce(Result<Arc<Vec<u8>>, String>)>) {

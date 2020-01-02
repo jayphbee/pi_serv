@@ -152,10 +152,10 @@ impl JSGray {
     * @param nobjs 本地对象表
     * @returns 返回灰度对象
     */
-    pub fn new(mgr: &Mgr, factory: VMFactory, name: &str, nobjs: &Nobjs) -> Self{
+    pub fn new(mgr: &Mgr, factory: Arc<VMFactory>, name: &str, nobjs: &Nobjs) -> Self{
         JSGray{
             mgr: mgr.clone(),
-            factory: Arc::new(factory),
+            factory: factory,
             nobjs: nobjs.clone(),
             name: Atom::from(name),
         }
@@ -176,6 +176,10 @@ impl Gray for JSGray {}
 */
 pub fn create_gray_tab(gray: JSGray) -> Arc<RwLock<GrayTab<JSGray>>>{
     Arc::new(RwLock::new(GrayTab::new(gray)))
+}
+
+pub fn create_arc_vmfactory(vmf: VMFactory) -> Arc<VMFactory> {
+    Arc::new(vmf)
 }
 
 /**
