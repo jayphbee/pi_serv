@@ -160,15 +160,12 @@ impl CloseHandler {
         let handler_name = self.handler.clone();
         let func = Box::new(move |_lock| {
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 // RPCClient
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(RPCClient(env))) as usize, 4088898725);
                 // mgr
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
-                // nobj
-                nobjs.to_map(&vm);
-                2
+                1
             });
             gray.factory.call(None, handler_name, real_args, Atom::from("rpc client close task"));
         });

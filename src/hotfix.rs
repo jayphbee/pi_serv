@@ -21,9 +21,53 @@ use js_vm::{ remove_byte_code_cache, rename_byte_code_cache, compile_sync, load_
 use js_env::env_var;
 use init_js::{read_code, load_core_env};
 
-//灰度管理器
-pub struct GrayMgr{
-    map: FnvHashMap<Atom, Arc<RwLock<GrayTab<JSGray>>>>, //所有灰度表的汇总
+
+lazy_static! {
+	pub static ref GRAY_TABLE: Arc<RwLock<GrayTable>> = Arc::new(RwLock::new(GrayTable::new()));
+}
+
+pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
+    GRAY_TABLE.clone()
+}
+
+pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>, jsgray: JSGray) {
+    let mut gray_tab = gray_tab.write().unwrap();
+    let name = jsgray.name.clone();
+    let last_version = gray_tab.last_version;
+    match version {
+        Some(ver) => {
+            gray_tab.jsgrays.insert((ver, name), Arc::new(jsgray));
+        }
+        None => {
+            gray_tab.jsgrays.insert((last_version, name), Arc::new(jsgray));
+        }
+    }
+}
+
+
+pub struct GrayTable {
+    // 最新版本号
+    pub last_version: usize,
+    // 每个灰度版本的字节码缓存
+    pub byte_code_cache: FnvHashMap<(usize, String), Arc<Vec<Arc<Vec<u8>>>>>,
+    // 每个灰度版本的所有 jsgray
+    pub jsgrays: FnvHashMap<(usize, Atom), Arc<JSGray>>,
+}
+
+impl GrayTable {
+    pub fn new() -> Self {
+        GrayTable {
+            last_version: 0,
+            byte_code_cache: FnvHashMap::default(),
+            jsgrays: FnvHashMap::default(),
+        }
+    }
+}
+
+
+//灰度表结构
+pub struct GrayMgr {
+    map: FnvHashMap<Atom, Arc<RwLock<GrayTab<JSGray>>>>,
     nobjs: Nobjs,
 }
 
@@ -32,7 +76,7 @@ impl GrayMgr {
         //创建GrayMgr
         GrayMgr{
             map: FnvHashMap::default(),
-            nobjs: nobjs.clone()
+            nobjs: nobjs.clone(),
         }
     }
 
@@ -40,11 +84,11 @@ impl GrayMgr {
         match self.map.get(&Atom::from(key)) {
             Some(v) => {
                 let mut v = v.write().unwrap();
-                let (name, nobjs) = {
+                let name = {
                     let last = v.get_last();
-                    (last.name.clone(), last.nobjs.clone())
+                    last.name.clone()
                 };
-                v.add(JSGray::new(&mgr, factor, name.as_str(), &nobjs));
+                v.add(JSGray::new(&mgr, factor, name.as_str()));
                 true
             },
             None => false,
@@ -93,6 +137,11 @@ impl GrayMgr {
 pub fn graymgr_to_arc(gray_mgr: GrayMgr) -> Arc<Mutex<GrayMgr>>{
     Arc::new(Mutex::new(gray_mgr))
 }
+
+pub fn gray_table_to_arc(gray_tab: GrayTable) -> Arc<RwLock<GrayTable>> {
+    Arc::new(RwLock::new(gray_tab))
+}
+
 
 pub fn hotfix_listen(gray_mgr: Arc<Mutex<GrayMgr>>, path: String) {
     let listener = FSListener(Arc::new(move |event: FSChangeEvent| {

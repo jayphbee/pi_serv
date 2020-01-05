@@ -140,7 +140,6 @@ impl Nobjs {
 pub struct JSGray {
     pub mgr: Mgr, //数据库管理器
     pub factory: Arc<VMFactory>, //虚拟机工厂
-    pub nobjs: Nobjs, //本地对象
     pub name: Atom,//为灰度取一个名称， 所有灰度不能重复
 }
 
@@ -152,20 +151,12 @@ impl JSGray {
     * @param nobjs 本地对象表
     * @returns 返回灰度对象
     */
-    pub fn new(mgr: &Mgr, factory: Arc<VMFactory>, name: &str, nobjs: &Nobjs) -> Self{
+    pub fn new(mgr: &Mgr, factory: Arc<VMFactory>, name: &str) -> Self{
         JSGray{
             mgr: mgr.clone(),
             factory: factory,
-            nobjs: nobjs.clone(),
             name: Atom::from(name),
         }
-    }
-
-    /**
-    * 设置NativeObject， obj应该是本地对象的所有权, 如果灰度表中存在名为key的对象， 将会覆盖
-    */
-    pub fn set_obj(&mut self, key: String, obj: &JSType, path: String, name: String, js: &Arc<JS>) -> Result<bool, String> {
-        self.nobjs.set_obj(key, obj, path, name, js)
     }
 }
 

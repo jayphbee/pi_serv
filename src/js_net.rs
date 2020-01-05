@@ -272,7 +272,6 @@ impl Handler for NetHandler {
         let event_name_copy = event_name.clone();
         let func = Box::new(move |lock: Option<isize>| {
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let event_name1 = event_name.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
@@ -283,9 +282,7 @@ impl Handler for NetHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                 //env
                 ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
-                //nobj
-                nobjs.to_map(&vm);
-                4
+                3
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
 
@@ -353,7 +350,6 @@ impl Handler for TopicHandler {
                 None => gray_tab.get_last(),
             };
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let topic_name = topic.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 vm.new_str((*topic_name).to_string());
@@ -369,7 +365,6 @@ impl Handler for TopicHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
                 let ptr = Box::into_raw(Box::new(env.clone())) as usize;
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 717646231);
-                nobjs.to_map(&vm);
                 vm.new_u32(id as u32);
                 match peer_addr {
                     Some(addr) => {
@@ -379,7 +374,7 @@ impl Handler for TopicHandler {
                         vm.new_undefined();
                     },
                 }
-                7
+                6
             });
             gray.factory.call(Some(id), Atom::from("_$rpc_tmp"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
@@ -746,7 +741,6 @@ impl Handler for NetEventHandler {
         let event_name_copy = event_name.clone();
         let func = Box::new(move |lock: Option<isize>| {
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let event_name1 = event_name.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
@@ -757,9 +751,7 @@ impl Handler for NetEventHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                 //env
                 ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
-                //nobj
-                nobjs.to_map(&vm);
-                4
+                3
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
 
@@ -789,12 +781,14 @@ impl NetEventHandler {
     }
 }
 
+use hotfix::GrayTable;
+
 /**
 * Rpc请求处理器
 */
 #[derive(Clone)]
 pub struct RequestHandler {
-    gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+    gray_tab: 	Arc<RwLock<GrayTable>>,
 }
 
 unsafe impl Send for RequestHandler {}
@@ -812,21 +806,30 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        println!("topic ---- {:?}", topic);
 		let topic_handler = self.clone();
         let topic_name = topic.clone();
+
+        let jsgray_name = topic.clone().to_string().split(".").collect::<Vec<&str>>()[0].to_string() + ".event.js";
+
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
         let func = Box::new(move |lock: Option<isize>| {
             let gray_tab = topic_handler.gray_tab.read().unwrap();
             let gray = match env.get_gray() {
-                Some(v) => match gray_tab.get(v) {
+                Some(v) => match gray_tab.jsgrays.get(&(v.clone(), Atom::from(jsgray_name))) {
                     Some(g) => g,
                     None => panic!("gray is not exist, version:{}", v),
-                },
-                None => gray_tab.get_last(),
+                }
+                None => {
+                    match gray_tab.jsgrays.get(&(gray_tab.last_version, Atom::from(jsgray_name))) {
+                        Some(g) => g,
+                        None => panic!("gray is not exist, version:{}", gray_tab.last_version),
+                    }
+                }
             };
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
+            println!("gray name ---- {:?}", gray.name);
             let topic_name = topic.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 vm.new_str((*topic_name).to_string());
@@ -843,7 +846,6 @@ impl Handler for RequestHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
                 let ptr = Box::into_raw(Box::new(env.clone())) as usize;
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
-                nobjs.to_map(&vm);
                 vm.new_u32(id as u32);
                 match peer_addr {
                     Some(addr) => {
@@ -853,7 +855,7 @@ impl Handler for RequestHandler {
                         vm.new_undefined();
                     },
                 }
-                8
+                7
             });
             gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
@@ -872,7 +874,7 @@ impl RequestHandler {
     * @param gray 灰度对象
     * @returns 返回Rpc请求处理器
     */
-    pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
         RequestHandler {
             gray_tab: gray.clone()
         }
