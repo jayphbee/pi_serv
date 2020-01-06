@@ -14,7 +14,6 @@ use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
 use pi_db::mgr::Mgr;
 use gray::GrayTab;
 
-use js_lib::Nobjs;
 use js_lib::JSGray;
 use js_vm::{ remove_byte_code_cache, rename_byte_code_cache, compile_sync, load_module };
 
@@ -68,15 +67,13 @@ impl GrayTable {
 //灰度表结构
 pub struct GrayMgr {
     map: FnvHashMap<Atom, Arc<RwLock<GrayTab<JSGray>>>>,
-    nobjs: Nobjs,
 }
 
 impl GrayMgr {
-    pub fn new(mgr: &Mgr, nobjs: &Nobjs) -> GrayMgr {
+    pub fn new() -> GrayMgr {
         //创建GrayMgr
         GrayMgr{
             map: FnvHashMap::default(),
-            nobjs: nobjs.clone(),
         }
     }
 
@@ -127,10 +124,6 @@ impl GrayMgr {
 
     pub fn remove_gray(&self, _version: usize) -> bool {
         true
-    }
-
-    pub fn set_obj(&mut self, key: String, obj: &JSType, path: String, name: String, js: &Arc<JS>) -> Result<bool, String>{
-        self.nobjs.set_obj(key, obj, path, name, js)
     }
 }
 

@@ -822,6 +822,7 @@ impl Handler for RequestHandler {
                     None => panic!("gray is not exist, version:{}", v),
                 }
                 None => {
+                    println!("get last version ---- ");
                     match gray_tab.jsgrays.get(&(gray_tab.last_version, Atom::from(jsgray_name))) {
                         Some(g) => g,
                         None => panic!("gray is not exist, version:{}", gray_tab.last_version),
