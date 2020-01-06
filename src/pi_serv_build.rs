@@ -3401,6 +3401,19 @@ fn call_3591490542(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3580724616(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in hotfix_listen1";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    hotfix::hotfix_listen1(jst0);
+    Some(CallResult::Ok)
+}
+
+
 fn call_3668445806(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in hotfix_listen";
 
@@ -4012,6 +4025,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::Call(call_4057105552), 4057105552);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1337865535), 1337865535);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3591490542), 3591490542);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3580724616), 3580724616);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3668445806), 3668445806);
     mgr.regist_fun_meta(FnMeta::Call(call_451831207), 451831207);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3060877404), 3060877404);

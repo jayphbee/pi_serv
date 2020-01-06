@@ -32,33 +32,100 @@ pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
 pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>, jsgray: JSGray) {
     let mut gray_tab = gray_tab.write().unwrap();
     let name = jsgray.name.clone();
-    let last_version = gray_tab.last_version;
     match version {
         Some(ver) => {
-            gray_tab.jsgrays.insert((ver, name), Arc::new(jsgray));
+            match gray_tab.jsgrays.get_mut(ver) {
+                Some(gray) => {
+                    gray.insert(name, Arc::new(jsgray));
+                }
+                None => {
+                    panic!("version not found {:?}", version);
+                }
+            }
         }
         None => {
-            gray_tab.jsgrays.insert((last_version, name), Arc::new(jsgray));
+            match gray_tab.jsgrays.last_mut() {
+                Some(gray) => {
+                    gray.insert(name, Arc::new(jsgray));
+                }
+                None => {
+                    let mut map = FnvHashMap::default();
+                    map.insert(name, Arc::new(jsgray));
+                    gray_tab.jsgrays.push(map);
+                }
+            }
         }
+    }
+
+    // TODO: 更新 byte code cache
+}
+
+// 克隆一个版本的字节码
+fn clone_byte_code_cache(version: usize) {
+    let mut gray_tab = GRAY_TABLE.write().unwrap();
+    let mut map = FnvHashMap::default();
+
+    match gray_tab.byte_code_cache.get(version) {
+        Some(byte_codes) => {
+            for (k, v) in byte_codes.iter() {
+                map.insert(k.clone(), v.clone());
+            }
+            gray_tab.byte_code_cache.push(map);
+            gray_tab.last_version += 1;
+        }
+        None => {}
     }
 }
 
+fn get_byte_code_with_version(modId: String, version: usize) -> Option<Arc<Vec<u8>>> {
+    let gray_tab = GRAY_TABLE.read().unwrap();
+    match gray_tab.byte_code_cache.get(version) {
+        Some(byte_codes) => byte_codes.get(&modId).cloned(),
+        None => None
+    }
+}
+
+fn remove_byte_code_with_version(modId: String, version: usize) {
+    let mut gray_tab = GRAY_TABLE.write().unwrap();
+    match gray_tab.byte_code_cache.get_mut(version) {
+        Some(byte_codes) => {
+            byte_codes.remove(&modId);
+        }
+        None => {}
+    }
+}
+
+pub fn compile_byte_code(name: String, source_code: String, version: usize) -> Option<Arc< Vec<u8>>> {
+    let opts = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+	match opts.compile(name.clone(), source_code) {
+		Some(r) => {
+            match GRAY_TABLE.write().unwrap().byte_code_cache.get_mut(version) {
+                Some(byte_code) => {
+                    byte_code.insert(name, Arc::new(r.clone()));
+                    Some(Arc::new(r))
+                }
+                None => None
+            }
+		}
+		None => None,
+	}
+}
 
 pub struct GrayTable {
     // 最新版本号
     pub last_version: usize,
     // 每个灰度版本的字节码缓存
-    pub byte_code_cache: FnvHashMap<(usize, String), Arc<Vec<Arc<Vec<u8>>>>>,
+    pub byte_code_cache: Vec<FnvHashMap<String, Arc<Vec<u8>>>>,
     // 每个灰度版本的所有 jsgray
-    pub jsgrays: FnvHashMap<(usize, Atom), Arc<JSGray>>,
+    pub jsgrays: Vec<FnvHashMap<Atom, Arc<JSGray>>>,
 }
 
 impl GrayTable {
     pub fn new() -> Self {
         GrayTable {
             last_version: 0,
-            byte_code_cache: FnvHashMap::default(),
-            jsgrays: FnvHashMap::default(),
+            byte_code_cache: vec![],
+            jsgrays: vec![],
         }
     }
 }
@@ -133,6 +200,40 @@ pub fn graymgr_to_arc(gray_mgr: GrayMgr) -> Arc<Mutex<GrayMgr>>{
 
 pub fn gray_table_to_arc(gray_tab: GrayTable) -> Arc<RwLock<GrayTable>> {
     Arc::new(RwLock::new(gray_tab))
+}
+
+
+pub fn hotfix_listen1(path: String) {
+    let listener = FSListener(Arc::new(move |event: FSChangeEvent| {
+        match event {
+            FSChangeEvent::Create(path) => {
+                // 创建新的模块，其他地方引入时会自己 require
+                debug!("new file created1: {:?}", path);
+            },
+            FSChangeEvent::Write(path) => {
+                debug!("new file created2: {:?}", path);
+                let mut version: usize;
+                {
+                    println!("before write lock");
+                    let gray_tab = GRAY_TABLE.read().unwrap();
+                    version = gray_tab.last_version;
+                    println!("release write lock version: {:?}", version);
+                }
+                clone_byte_code_cache(version);
+                
+                println!("last version {:?}", GRAY_TABLE.read().unwrap().last_version);
+            },
+            FSChangeEvent::Remove(path) => {
+                debug!("new file created3: {:?}", path);
+            },
+            FSChangeEvent::Rename(old, new) => {
+                debug!("new file created4: {:?}, {:?}", old, new);
+            },
+        };
+    }));
+    let mut monitor = FSMonitor::new(FSMonitorOptions::Dir(Atom::from(path), true, 1000), listener);
+    monitor.run().expect("watch dir failed");
+    forget(monitor);
 }
 
 

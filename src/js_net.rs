@@ -811,21 +811,22 @@ impl Handler for RequestHandler {
         let topic_name = topic.clone();
 
         let jsgray_name = topic.clone().to_string().split(".").collect::<Vec<&str>>()[0].to_string() + ".event.js";
+        let last_version = topic_handler.gray_tab.read().unwrap().last_version;
 
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
         let func = Box::new(move |lock: Option<isize>| {
             let gray_tab = topic_handler.gray_tab.read().unwrap();
             let gray = match env.get_gray() {
-                Some(v) => match gray_tab.jsgrays.get(&(v.clone(), Atom::from(jsgray_name))) {
-                    Some(g) => g,
+                Some(v) => match gray_tab.jsgrays.get(v.clone()) {
+                    Some(g) => g.get(&Atom::from(jsgray_name)).unwrap(),
                     None => panic!("gray is not exist, version:{}", v),
                 }
                 None => {
                     println!("get last version ---- ");
-                    match gray_tab.jsgrays.get(&(gray_tab.last_version, Atom::from(jsgray_name))) {
-                        Some(g) => g,
-                        None => panic!("gray is not exist, version:{}", gray_tab.last_version),
+                    match gray_tab.jsgrays.get(last_version) {
+                        Some(g) => g.get(&Atom::from(jsgray_name)).unwrap(),
+                        None => panic!("gray is not exist, version:{}", last_version),
                     }
                 }
             };
