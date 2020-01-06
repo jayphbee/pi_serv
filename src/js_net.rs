@@ -806,12 +806,9 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-        println!("topic ---- {:?}", topic);
 		let topic_handler = self.clone();
         let topic_name = topic.clone();
-
         let jsgray_name = topic.clone().to_string().split(".").collect::<Vec<&str>>()[0].to_string() + ".event.js";
-        let last_version = topic_handler.gray_tab.read().unwrap().last_version;
 
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
@@ -823,15 +820,13 @@ impl Handler for RequestHandler {
                     None => panic!("gray is not exist, version:{}", v),
                 }
                 None => {
-                    println!("get last version ---- ");
-                    match gray_tab.jsgrays.get(last_version) {
+                    match gray_tab.jsgrays.last() {
                         Some(g) => g.get(&Atom::from(jsgray_name)).unwrap(),
-                        None => panic!("gray is not exist, version:{}", last_version),
+                        None => panic!("gray is not exist"),
                     }
                 }
             };
             let mgr = gray.mgr.clone();
-            println!("gray name ---- {:?}", gray.name);
             let topic_name = topic.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 vm.new_str((*topic_name).to_string());
