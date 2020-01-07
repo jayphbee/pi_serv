@@ -919,6 +919,13 @@ pub fn register_rpc_topic(topic: String, service: &Arc<BaseService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
 }
 
+/*
+ * 取消注册指定的rpc服务
+ */
+pub fn unregister_rpc_topic(topic: String) {
+    WS_MQTT3_BROKER.unregister_service(&topic);
+}
+
 /**
 * rpc回应
 */
