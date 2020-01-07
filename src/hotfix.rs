@@ -1,28 +1,26 @@
-use std::sync::{Arc, Mutex, RwLock, MutexGuard};
+use std::sync::{Arc, RwLock, MutexGuard};
 use std::mem::forget;
 use std::env;
 use std::path::PathBuf;
 
 use fnv::FnvHashMap;
 
-use pi_vm::pi_vm_impl::{VMFactory};
-use pi_vm::adapter::{JS, JSType};
+use pi_vm::pi_vm_impl::{ VMFactory };
+use pi_vm::adapter::{ JS };
 use pi_vm::bonmgr::{NativeObjsAuth};
 use atom::Atom;
 
 use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
-use pi_db::mgr::Mgr;
-use gray::GrayTab;
 
 use js_lib::JSGray;
-use js_vm::{ remove_byte_code_cache, rename_byte_code_cache, compile_sync, load_module };
-
 use js_env::env_var;
 use init_js::{read_code, load_core_env};
 
 
 lazy_static! {
+    // 灰度表
     pub static ref GRAY_TABLE: Arc<RwLock<GrayTable>> = Arc::new(RwLock::new(GrayTable::new()));
+    // 每个灰度版本对应的字节码列表
     pub static ref BYTE_CODE_CACHE: Arc<RwLock<Vec<FnvHashMap<String, Arc<Vec<u8>>>>>> = Arc::new(RwLock::new(vec![FnvHashMap::default()]));
 }
 
@@ -59,8 +57,8 @@ pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>,
     }
 }
 
-// 克隆一个版本的字节码
-fn clone_byte_code_cache() {
+// 提升灰度版本号，相应的克隆字节码和jsgray
+fn bump_gray_version() {
     let mut gray_tab = GRAY_TABLE.write().unwrap();
     let mut map = FnvHashMap::default();
     match BYTE_CODE_CACHE.read().unwrap().last() {
@@ -133,14 +131,14 @@ pub fn hotfix_listen(path: String) {
             FSChangeEvent::Write(path) => {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 if mod_id.ends_with(".js") {
-                    clone_byte_code_cache();
+                    bump_gray_version();
                     module_changed(path);
                 }
             },
             FSChangeEvent::Remove(path) => {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 if mod_id.ends_with(".js") {
-                    clone_byte_code_cache();
+                    bump_gray_version();
                     module_changed(path);
                 }
             },
