@@ -816,49 +816,56 @@ impl Handler for RequestHandler {
             let gray_tab = topic_handler.gray_tab.read().unwrap();
             let gray = match env.get_gray() {
                 Some(v) => match gray_tab.jsgrays.get(v.clone()) {
-                    Some(g) => g.get(&Atom::from(jsgray_name)).unwrap(),
+                    Some(g) => g.get(&Atom::from(jsgray_name)),
                     None => panic!("gray is not exist, version:{}", v),
                 }
                 None => {
                     match gray_tab.jsgrays.last() {
-                        Some(g) => g.get(&Atom::from(jsgray_name)).unwrap(),
+                        Some(g) => {
+                            g.get(&Atom::from(jsgray_name))
+                        }
                         None => panic!("gray is not exist"),
                     }
                 }
             };
-            let mgr = gray.mgr.clone();
-            let topic_name = topic.clone();
-            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
-                vm.new_str((*topic_name).to_string());
-                let peer_addr = match args {
-                    Args::FourArgs(_, peer, rid, bin) => {
-                        let buffer = vm.new_uint8_array(bin.len() as u32);
-                        buffer.from_bytes(bin.as_slice());
-						vm.new_u32(rid); // rid
-                        peer
-                    },
-                    _ => panic!("invalid topic handler args"),
-                };
-                let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
-                let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
-                vm.new_u32(id as u32);
-                match peer_addr {
-                    Some(addr) => {
-                        vm.new_str(addr.to_string());
-                    },
-                    None => {
-                        vm.new_undefined();
-                    },
-                }
-                7
-            });
-            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
-            //解锁当前同步静态队列，保证虚拟机执行
-            if !unlock_js_task_queue(queue) {
-                warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let topic_name = topic.clone();
+                let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                    vm.new_str((*topic_name).to_string());
+                    let peer_addr = match args {
+                        Args::FourArgs(_, peer, rid, bin) => {
+                            let buffer = vm.new_uint8_array(bin.len() as u32);
+                            buffer.from_bytes(bin.as_slice());
+                            vm.new_u32(rid); // rid
+                            peer
+                        },
+                        _ => panic!("invalid topic handler args"),
+                    };
+                    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
+                    let ptr = Box::into_raw(Box::new(env.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
+                    vm.new_u32(id as u32);
+                    match peer_addr {
+                        Some(addr) => {
+                            vm.new_str(addr.to_string());
+                        },
+                        None => {
+                            vm.new_undefined();
+                        },
+                    }
+                    7
+                });
+                gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+
+                //解锁当前同步静态队列，保证虚拟机执行
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
