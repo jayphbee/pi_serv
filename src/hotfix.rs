@@ -13,7 +13,7 @@ use atom::Atom;
 use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
 
 use js_lib::JSGray;
-use js_env::env_var;
+use js_env::{ env_var };
 use js_file::read_file_string_sync;
 use js_net::{ RequestHandler, create_rpc_service, register_rpc_topic };
 use init_js::{read_code, load_core_env};
@@ -106,15 +106,19 @@ pub fn compile_byte_code(name: String, source_code: String) -> Option<Arc< Vec<u
 	}
 }
 
+// 每个项目有自己的虚拟机工厂和字节码缓存
 pub struct GrayTable {
     // 每个灰度版本的所有 jsgray
     pub jsgrays: Vec<FnvHashMap<Atom, Arc<JSGray>>>,
+    pub grays: FnvHashMap<Atom, Vec<FnvHashMap<Atom, Arc<JSGray>>>>,
 }
 
 impl GrayTable {
     pub fn new() -> Self {
+        println!("launched projects {:?}", launched_projects());
         GrayTable {
             jsgrays: vec![FnvHashMap::default()],
+            grays: FnvHashMap::default(),
         }
     }
 }
@@ -213,16 +217,16 @@ pub fn hotfix_listen(path: String) {
 }
 
 fn module_changed(path: PathBuf) {
-    let auth = Arc::new(NativeObjsAuth::new(None, None));
-    let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
-    load_core_env(&js);
-
     let mod_id = normalize_module_id(path.to_str().unwrap());
 
     let mut gray_tab = GRAY_TABLE.write().unwrap();
     let mut jsgrays = gray_tab.jsgrays.last_mut().unwrap();
-
     for (k, v) in jsgrays.iter_mut() {
+        // v.factory.append_module();
+        println!("kkkkkkkkkkk {:?}", k);
+        let auth = Arc::new(NativeObjsAuth::new(None, None));
+        let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
+        load_core_env(&js);
         if is_depend(&js, k.as_str(), &mod_id) {
             debug!("{:?} is a depend for {:?}", mod_id, k);
             let cur_exe = env::current_exe().unwrap();
@@ -273,6 +277,10 @@ fn is_depend(js: &Arc<JS>, vmf_name: &str, mod_id: &str) -> bool {
         panic!("Module.require function is not exist");
     }
 
+    js.get_js_function("getDepends".to_string());
+    let depends = js.invoke(0);
+    println!("depends for {:?} are : {:?}", vmf_name, depends.get_str());
+
     js.get_js_function("isDepend".to_string());
     js.new_str(mod_id.clone().to_string());
     let ret = js.invoke(1);
@@ -288,6 +296,23 @@ fn normalize_module_id(mod_id: &str) -> String {
         .as_str()
         .trim_start_matches(&(env_var("PROJECT_ROOT").unwrap() + "/"))
         .to_string()
+}
+
+// 平台启动了哪些项目，根据是否有 ptconfig.json 配置文件来判断
+// 如果没有 ptocnfig.json 文件就认为不是一个项目
+fn launched_projects() -> Vec<String> {
+    env_var("PROJECTS").unwrap()
+        .split(" ")
+        .filter(|p| {
+            let path = PathBuf::from(p);
+            if path.join("ptconfig.json").exists() {
+                true
+            } else {
+                false
+            }
+        })
+        .map(|s| s.to_string())
+        .collect()
 }
 
 
