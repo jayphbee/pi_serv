@@ -44,6 +44,7 @@ extern crate timer;
 extern crate util as lib_util;
 extern crate worker;
 extern crate ws;
+extern crate parking_lot;
 
 #[macro_use]
 extern crate lazy_static;

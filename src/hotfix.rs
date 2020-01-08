@@ -1,9 +1,10 @@
-use std::sync::{Arc, RwLock, MutexGuard};
+use std::sync::Arc;
 use std::mem::forget;
 use std::env;
 use std::path::PathBuf;
 
 use fnv::FnvHashMap;
+use parking_lot::RwLock;
 
 use pi_vm::pi_vm_impl::{ VMFactory };
 use pi_vm::adapter::{ JS };
@@ -23,7 +24,12 @@ lazy_static! {
     // 灰度表
     pub static ref GRAY_TABLE: Arc<RwLock<GrayTable>> = Arc::new(RwLock::new(GrayTable::new()));
     // 每个灰度版本对应的字节码列表
-    pub static ref BYTE_CODE_CACHE: Arc<RwLock<Vec<FnvHashMap<String, Arc<Vec<u8>>>>>> = Arc::new(RwLock::new(vec![FnvHashMap::default()]));
+    // { 灰度版本 => { 项目名 => { 模块 id => 字节码 }}}
+    pub static ref BYTE_CODE_CACHE: Arc<RwLock<FnvHashMap<usize, FnvHashMap<String, Arc<Vec<u8>>>>>> = {
+        let mut map = FnvHashMap::default();
+        map.insert(0, FnvHashMap::default());
+        Arc::new(RwLock::new(map))
+    };
 }
 
 pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
@@ -31,7 +37,7 @@ pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
 }
 
 pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>, jsgray: JSGray) {
-    let mut gray_tab = gray_tab.write().unwrap();
+    let mut gray_tab = gray_tab.write();
     let name = jsgray.name.clone();
     match version {
         Some(ver) => {
@@ -61,9 +67,9 @@ pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>,
 
 // 提升灰度版本号，相应的克隆字节码和jsgray
 fn bump_gray_version() {
-    let mut gray_tab = GRAY_TABLE.write().unwrap();
+    let last_version = GRAY_TABLE.read().last_version;
     let mut map = FnvHashMap::default();
-    match BYTE_CODE_CACHE.read().unwrap().last() {
+    match BYTE_CODE_CACHE.read().get(&last_version) {
         Some(byte_codes) => {
             for (k, v) in byte_codes.iter() {
                 map.insert(k.clone(), v.clone());
@@ -72,8 +78,9 @@ fn bump_gray_version() {
         None => {}
     }
 
-    BYTE_CODE_CACHE.write().unwrap().push(map);
+    BYTE_CODE_CACHE.write().insert(last_version + 1, map);
 
+    let mut gray_tab = GRAY_TABLE.write();
     let mut map2 = FnvHashMap::default();
     match gray_tab.jsgrays.last() {
         Some(jsgray) => {
@@ -85,21 +92,27 @@ fn bump_gray_version() {
 
         None => {}
     }
+
+    // 提升版本号
+    gray_tab.last_version += 1;
 }
 
 pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
-    BYTE_CODE_CACHE.read().unwrap().last().unwrap().get(&mod_id).cloned()
+    let last_version = GRAY_TABLE.read().last_version;
+    BYTE_CODE_CACHE.read().get(&last_version).unwrap().get(&mod_id).cloned()
 }
 
 pub fn remove_byte_code(mod_id: String) {
-    BYTE_CODE_CACHE.write().unwrap().last_mut().unwrap().remove(&mod_id);
+    let last_version = GRAY_TABLE.read().last_version;
+    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().remove(&mod_id);
 }
 
 pub fn compile_byte_code(name: String, source_code: String) -> Option<Arc< Vec<u8>>> {
+    let last_version = GRAY_TABLE.read().last_version;
     let opts = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
 	match opts.compile(name.clone(), source_code) {
 		Some(r) => {
-            BYTE_CODE_CACHE.write().unwrap().last_mut().unwrap().insert(name, Arc::new(r.clone()));
+            BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().insert(name, Arc::new(r.clone()));
             Some(Arc::new(r))
 		}
 		None => None,
@@ -108,6 +121,7 @@ pub fn compile_byte_code(name: String, source_code: String) -> Option<Arc< Vec<u
 
 // 每个项目有自己的虚拟机工厂和字节码缓存
 pub struct GrayTable {
+    pub last_version: usize,
     // 每个灰度版本的所有 jsgray
     pub jsgrays: Vec<FnvHashMap<Atom, Arc<JSGray>>>,
     pub grays: FnvHashMap<Atom, Vec<FnvHashMap<Atom, Arc<JSGray>>>>,
@@ -117,6 +131,7 @@ impl GrayTable {
     pub fn new() -> Self {
         println!("launched projects {:?}", launched_projects());
         GrayTable {
+            last_version: 0,
             jsgrays: vec![FnvHashMap::default()],
             grays: FnvHashMap::default(),
         }
@@ -141,7 +156,7 @@ pub fn hotfix_listen(path: String) {
                     let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
                     load_core_env(&js);
 
-                    let mgr = GRAY_TABLE.read().unwrap().jsgrays.last().unwrap().values().take(1).next().unwrap().mgr.clone();
+                    let mgr = GRAY_TABLE.read().jsgrays.last().unwrap().values().take(1).next().unwrap().mgr.clone();
 
                     let cur_exe = env::current_exe().unwrap();
                     let env_code = read_code(&cur_exe.join("../env.js"));
@@ -198,7 +213,7 @@ pub fn hotfix_listen(path: String) {
                     bump_gray_version();
                     if mod_id.ends_with(".event.js") {
                         // 如果删除的是 .event.js 结尾的模块，那么删除对应的虚拟机工厂
-                        match GRAY_TABLE.write().unwrap().jsgrays.last_mut().unwrap().remove(&Atom::from(mod_id.clone())) {
+                        match GRAY_TABLE.write().jsgrays.last_mut().unwrap().remove(&Atom::from(mod_id.clone())) {
                             Some(_) => debug!("remove factory success : {:?}", mod_id),
                             None => debug!("{:?} factory not exist", mod_id)
                         }
@@ -219,7 +234,7 @@ pub fn hotfix_listen(path: String) {
 fn module_changed(path: PathBuf) {
     let mod_id = normalize_module_id(path.to_str().unwrap());
 
-    let mut gray_tab = GRAY_TABLE.write().unwrap();
+    let mut gray_tab = GRAY_TABLE.write();
     let mut jsgrays = gray_tab.jsgrays.last_mut().unwrap();
     for (k, v) in jsgrays.iter_mut() {
         // v.factory.append_module();

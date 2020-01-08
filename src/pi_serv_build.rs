@@ -19,6 +19,7 @@ use guid;
 use atom;
 use httpc;
 use handler;
+use parking_lot;
 use rpc_tmp;
 use std::io::Error;
 use base;
@@ -2572,8 +2573,8 @@ fn call_3244057673(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 891229937, false, param_error).expect("");
-	let jst0 = unsafe { &*(ptr as *const Arc<RwLock<hotfix::GrayTable>>) };
+    let ptr = jstype_ptr(&jst0, js.clone(), 2913244961, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const Arc<parking_lot::RwLock<hotfix::GrayTable>>) };
 
 
     let result = js_net::RequestHandler::new(jst0);
@@ -3233,7 +3234,7 @@ fn call_2208297260(js: Arc<JS>) -> Option<CallResult>{
 fn call_4057105552(js: Arc<JS>) -> Option<CallResult>{
 
     let result = hotfix::get_gray_table();
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,891229937);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2913244961);
 
 
     Some(CallResult::Ok)
@@ -3244,8 +3245,8 @@ fn call_1337865535(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in register_jsgray";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 891229937, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<RwLock<hotfix::GrayTable>>)}.clone();
+    let ptr = jstype_ptr(&jst0, js.clone(), 2913244961, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Arc<parking_lot::RwLock<hotfix::GrayTable>>)}.clone();
 
 
 	let jst1 = &v[1];
@@ -3664,6 +3665,10 @@ fn drop_1707332364(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::NetHandler) };
 }
 
+fn drop_851644454(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<parking_lot::RwLock<gray::GrayTab<js_lib::JSGray>>>) };
+}
+
 fn drop_15779622(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::TopicHandler) };
 }
@@ -3672,8 +3677,8 @@ fn drop_2899437702(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net::NetEventHandler) };
 }
 
-fn drop_891229937(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Arc<RwLock<hotfix::GrayTable>>) };
+fn drop_2913244961(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Arc<parking_lot::RwLock<hotfix::GrayTable>>) };
 }
 
 fn drop_4208533229(ptr: usize){
@@ -3761,9 +3766,10 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetMgr"), drop_fn: drop_2462173101}, 2462173101);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TlsNetMgr"), drop_fn: drop_4120821321}, 4120821321);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetHandler"), drop_fn: drop_1707332364}, 1707332364);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<parking_lot::RwLock<gray::GrayTab<js_lib::JSGray>>>"), drop_fn: drop_851644454}, 851644454);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::TopicHandler"), drop_fn: drop_15779622}, 15779622);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::NetEventHandler"), drop_fn: drop_2899437702}, 2899437702);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<RwLock<hotfix::GrayTable>>"), drop_fn: drop_891229937}, 891229937);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Arc<parking_lot::RwLock<hotfix::GrayTable>>"), drop_fn: drop_2913244961}, 2913244961);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::RequestHandler"), drop_fn: drop_4208533229}, 4208533229);
     mgr.regist_struct_meta(StructMeta{name:String::from("rpc_tmp::server::RPCServer"), drop_fn: drop_3913457295}, 3913457295);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net::QoS"), drop_fn: drop_2688700187}, 2688700187);
