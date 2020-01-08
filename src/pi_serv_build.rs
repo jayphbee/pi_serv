@@ -3292,21 +3292,11 @@ fn call_1332096267(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_byte_code";
 
 	let jst0 = &v[0];
-	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
-	let jst0 = jst0.get_u32() as usize;
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
 
 
-	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
-
-
-	let jst2 = &v[2];
-	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst2 = jst2.get_str();
-
-
-    let result = hotfix::get_byte_code(jst0,jst1,jst2);let mut result = match result{
+    let result = hotfix::get_byte_code(jst0);let mut result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
@@ -3331,12 +3321,7 @@ fn call_1590345565(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst1 = jst1.get_str();
 
 
-	let jst2 = &v[2];
-	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst2 = jst2.get_str();
-
-
-    let result = hotfix::compile_byte_code(jst0,jst1,jst2);let mut result = match result{
+    let result = hotfix::compile_byte_code(jst0,jst1);let mut result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 

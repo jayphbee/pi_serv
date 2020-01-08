@@ -1,7 +1,9 @@
 use std::sync::Arc;
 use std::mem::forget;
 use std::env;
-use std::path::PathBuf;
+use std::path::{ Path, PathBuf };
+use std::path::Component::Normal;
+use std::sync::atomic::{ AtomicUsize, Ordering };
 
 use fnv::FnvHashMap;
 use parking_lot::RwLock;
@@ -30,6 +32,7 @@ lazy_static! {
         map.insert(0, FnvHashMap::default());
         Arc::new(RwLock::new(map))
     };
+    pub static ref GRAY_VERSION: AtomicUsize = AtomicUsize::new(0);
 }
 
 pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
@@ -46,7 +49,7 @@ pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>,
                     gray.insert(name, Arc::new(jsgray));
                 }
                 None => {
-                    panic!("version not found {:?}", version);
+                    error!("version not found {:?}", version);
                 }
             }
         }
@@ -67,13 +70,18 @@ pub fn register_jsgray(gray_tab: Arc<RwLock<GrayTable>>, version: Option<usize>,
 
 // 提升灰度版本号，相应的克隆字节码和jsgray
 fn bump_gray_version() {
-    let last_version = GRAY_TABLE.read().last_version;
-    let mut map = FnvHashMap::default();
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);
+    let mut map: FnvHashMap<String, FnvHashMap<String, Arc<Vec<u8>>>> = FnvHashMap::default();
     match BYTE_CODE_CACHE.read().get(&last_version) {
-        Some(byte_codes) => {
-            for (k, v) in byte_codes.iter() {
-                map.insert(k.clone(), v.clone());
+        Some(projs) => {
+            for proj in projs {
+                let mut m = FnvHashMap::default();
+                for (k, v) in proj.1.iter() {
+                    m.insert(k.clone(), v.clone());
+                }
+                map.insert(proj.0.clone(), m);
             }
+            
         }
         None => {}
     }
@@ -94,25 +102,53 @@ fn bump_gray_version() {
     }
 
     // 提升版本号
-    gray_tab.last_version += 1;
+    GRAY_VERSION.fetch_add(1, Ordering::SeqCst);
 }
 
-pub fn get_byte_code(version: usize, proj_name: String, mod_id: String) -> Option<Arc<Vec<u8>>> {
-    let last_version = GRAY_TABLE.read().last_version;
-    BYTE_CODE_CACHE.read().get(&last_version).unwrap().get(&proj_name).unwrap().get(&mod_id).cloned()
+pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);
+    let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
+
+    match BYTE_CODE_CACHE.read().get(&last_version) {
+        Some(proj) => {
+            match proj.get(proj_name) {
+                Some(module) => {
+                    module.get(&mod_id).cloned()
+                }
+                None => None
+            }
+        }
+        None => None
+    }
 }
 
-pub fn remove_byte_code(proj_name: String, mod_id: String) {
-    let last_version = GRAY_TABLE.read().last_version;
-    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(&proj_name).unwrap().remove(&mod_id);
+pub fn remove_byte_code(mod_id: String) {
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);;
+    let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
+    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(proj_name).unwrap().remove(&mod_id);
 }
 
-pub fn compile_byte_code(proj_name: String, name: String, source_code: String) -> Option<Arc< Vec<u8>>> {
-    let last_version = GRAY_TABLE.read().last_version;
+pub fn compile_byte_code(mod_id: String, source_code: String) -> Option<Arc< Vec<u8>>> {
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);;
+    let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
     let opts = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
-	match opts.compile(name.clone(), source_code) {
+	match opts.compile(mod_id.clone(), source_code) {
 		Some(r) => {
-            BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(&proj_name).unwrap().insert(name, Arc::new(r.clone()));
+            match BYTE_CODE_CACHE.write().get_mut(&last_version) {
+                Some(proj) => {
+                    match proj.get_mut(proj_name) {
+                        Some(module) => {
+                            module.insert(mod_id, Arc::new(r.clone()));
+                        }
+                        None => {
+                            proj.insert(proj_name.to_string(), FnvHashMap::default());
+                        }
+                    }
+                }
+                None => {
+                    error!("last version should be found");
+                }
+            }
             Some(Arc::new(r))
 		}
 		None => None,
@@ -121,19 +157,15 @@ pub fn compile_byte_code(proj_name: String, name: String, source_code: String) -
 
 // 每个项目有自己的虚拟机工厂和字节码缓存
 pub struct GrayTable {
-    pub last_version: usize,
     // 每个灰度版本的所有 jsgray
     pub jsgrays: Vec<FnvHashMap<Atom, Arc<JSGray>>>,
-    pub grays: FnvHashMap<Atom, Vec<FnvHashMap<Atom, Arc<JSGray>>>>,
 }
 
 impl GrayTable {
     pub fn new() -> Self {
         println!("launched projects {:?}", launched_projects());
         GrayTable {
-            last_version: 0,
             jsgrays: vec![FnvHashMap::default()],
-            grays: FnvHashMap::default(),
         }
     }
 }
@@ -239,52 +271,55 @@ fn module_changed(path: PathBuf) {
     let mut gray_tab = GRAY_TABLE.write();
     let mut jsgrays = gray_tab.jsgrays.last_mut().unwrap();
     for (k, v) in jsgrays.iter_mut() {
-        // v.factory.append_module();
-        println!("kkkkkkkkkkk {:?}", k);
         let auth = Arc::new(NativeObjsAuth::new(None, None));
         let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
         load_core_env(&js);
-        if is_depend(&js, k.as_str(), &mod_id) {
+
+        let cur_exe = env::current_exe().unwrap();
+        let env_code = read_code(&cur_exe.join("../env.js"));
+        let core_code = read_code(&cur_exe.join("../core.js"));
+
+        let env_code = js.compile("env.js".to_string(), env_code).unwrap();
+        let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+
+        let mgr = v.mgr.clone();
+        let auth = Arc::new(NativeObjsAuth::new(None, None));
+        let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
+
+        // env.js / core.js 代码
+        vmf = vmf.append(Arc::new(env_code));
+        vmf = vmf.append(Arc::new(core_code));
+
+        let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+
+        remove_byte_code(mod_id.clone());
+
+        let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+        let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
+        let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
+
+        // rpc 功能依赖的代码，和实际处理rpc需要的代码
+        vmf = vmf.append(Arc::new(extra_code));
+        vmf.produce(2);
+
+        if v.factory.is_depend(&mod_id) {
             debug!("{:?} is a depend for {:?}", mod_id, k);
-            let cur_exe = env::current_exe().unwrap();
-            let env_code = read_code(&cur_exe.join("../env.js"));
-            let core_code = read_code(&cur_exe.join("../core.js"));
-
-            let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-            let core_code = js.compile("core.js".to_string(), core_code).unwrap();
-
-            let mgr = v.mgr.clone();
-            let auth = Arc::new(NativeObjsAuth::new(None, None));
-            let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
-
-            // env.js / core.js 代码
-            vmf = vmf.append(Arc::new(env_code));
-            vmf = vmf.append(Arc::new(core_code));
-
-            let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
-
-            let proj_name = get_proj_name_from_path(&path);
-            remove_byte_code(proj_name, mod_id.clone());
-
-            let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-            let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
-            let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
-
-            // rpc 功能依赖的代码，和实际处理rpc需要的代码
-            vmf = vmf.append(Arc::new(extra_code));
-            vmf.produce(2);
 
             let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
-
             // 用新的代码替换
             *v = Arc::new(jsgray);
         } else {
-
+            let deps = get_depends(&js, k.as_str());
+            for dep in deps {
+                vmf = vmf.append_module(dep, Arc::new(vec![]));
+            }
+            let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+            *v = Arc::new(jsgray);
         }
     }
 }
 
-fn is_depend(js: &Arc<JS>, vmf_name: &str, mod_id: &str) -> bool {
+fn get_depends(js: &Arc<JS>, vmf_name: &str) -> Vec<String> {
     let cur_dir = env_var("PROJECT_ROOT").unwrap();
 
     if js.get_link_function("Module.require".to_string()) {
@@ -297,16 +332,7 @@ fn is_depend(js: &Arc<JS>, vmf_name: &str, mod_id: &str) -> bool {
 
     js.get_js_function("getDepends".to_string());
     let depends = js.invoke(0);
-    println!("depends for {:?} are : {:?}", vmf_name, depends.get_str());
-
-    js.get_js_function("isDepend".to_string());
-    js.new_str(mod_id.clone().to_string());
-    let ret = js.invoke(1);
-    if ret.get_boolean() {
-        return true;
-    } else {
-        return false;
-    }
+    depends.get_str().split(" ").filter(|dep| dep.len() > 0).map(|dep|dep.to_string()).collect()
 }
 
 fn normalize_module_id(mod_id: &str) -> String {
@@ -333,7 +359,23 @@ fn launched_projects() -> Vec<String> {
         .collect()
 }
 
+// 从被修改文件的路径得到是哪个项目被修改
+// path 参数是文件监控得到的绝对路径
 fn get_proj_name_from_path(path: &PathBuf) -> String {
-    String::from("foo")
+    let projs = launched_projects();
+    
+    // project name without relative path
+    for proj in projs {
+        let comps = Path::new(path).canonicalize().unwrap();
+        let comps = comps.components();
+        let comps = comps.filter(|comp| if let Normal(_) = comp { true } else { false }).map(|p| if let Normal(c) = p { c.to_str().unwrap() } else { "" }).collect::<Vec<&str>>();
+        if comps.contains(&proj.as_str()) {
+            return proj
+        } else {
+            return "".to_string()
+        }
+    }
+
+    return "".to_string()
 }
 
