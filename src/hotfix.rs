@@ -25,7 +25,7 @@ lazy_static! {
     pub static ref GRAY_TABLE: Arc<RwLock<GrayTable>> = Arc::new(RwLock::new(GrayTable::new()));
     // 每个灰度版本对应的字节码列表
     // { 灰度版本 => { 项目名 => { 模块 id => 字节码 }}}
-    pub static ref BYTE_CODE_CACHE: Arc<RwLock<FnvHashMap<usize, FnvHashMap<String, Arc<Vec<u8>>>>>> = {
+    pub static ref BYTE_CODE_CACHE: Arc<RwLock<FnvHashMap<usize, FnvHashMap<String, FnvHashMap<String, Arc<Vec<u8>>>>>>> = {
         let mut map = FnvHashMap::default();
         map.insert(0, FnvHashMap::default());
         Arc::new(RwLock::new(map))
@@ -97,22 +97,22 @@ fn bump_gray_version() {
     gray_tab.last_version += 1;
 }
 
-pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
+pub fn get_byte_code(version: usize, proj_name: String, mod_id: String) -> Option<Arc<Vec<u8>>> {
     let last_version = GRAY_TABLE.read().last_version;
-    BYTE_CODE_CACHE.read().get(&last_version).unwrap().get(&mod_id).cloned()
+    BYTE_CODE_CACHE.read().get(&last_version).unwrap().get(&proj_name).unwrap().get(&mod_id).cloned()
 }
 
-pub fn remove_byte_code(mod_id: String) {
+pub fn remove_byte_code(proj_name: String, mod_id: String) {
     let last_version = GRAY_TABLE.read().last_version;
-    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().remove(&mod_id);
+    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(&proj_name).unwrap().remove(&mod_id);
 }
 
-pub fn compile_byte_code(name: String, source_code: String) -> Option<Arc< Vec<u8>>> {
+pub fn compile_byte_code(proj_name: String, name: String, source_code: String) -> Option<Arc< Vec<u8>>> {
     let last_version = GRAY_TABLE.read().last_version;
     let opts = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
 	match opts.compile(name.clone(), source_code) {
 		Some(r) => {
-            BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().insert(name, Arc::new(r.clone()));
+            BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(&proj_name).unwrap().insert(name, Arc::new(r.clone()));
             Some(Arc::new(r))
 		}
 		None => None,
@@ -203,6 +203,7 @@ pub fn hotfix_listen(path: String) {
             FSChangeEvent::Write(path) => {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 if mod_id.ends_with(".js") {
+                    debug!("modified path: {:?}", path);
                     bump_gray_version();
                     module_changed(path);
                 }
@@ -210,6 +211,7 @@ pub fn hotfix_listen(path: String) {
             FSChangeEvent::Remove(path) => {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 if mod_id.ends_with(".js") {
+                    debug!("removed path: {:?}", path);
                     bump_gray_version();
                     if mod_id.ends_with(".event.js") {
                         // 如果删除的是 .event.js 结尾的模块，那么删除对应的虚拟机工厂
@@ -261,7 +263,8 @@ fn module_changed(path: PathBuf) {
 
             let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
 
-            remove_byte_code(mod_id.clone());
+            let proj_name = get_proj_name_from_path(&path);
+            remove_byte_code(proj_name, mod_id.clone());
 
             let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
@@ -330,4 +333,7 @@ fn launched_projects() -> Vec<String> {
         .collect()
 }
 
+fn get_proj_name_from_path(path: &PathBuf) -> String {
+    String::from("foo")
+}
 

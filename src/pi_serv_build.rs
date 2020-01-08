@@ -1348,6 +1348,24 @@ fn call_3595492395(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3126070271(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in full_path";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = js_file::full_path(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(v).unwrap();
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1347190475(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_sinfo";
 
@@ -3274,11 +3292,21 @@ fn call_1332096267(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_byte_code";
 
 	let jst0 = &v[0];
-	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst0 = jst0.get_str();
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u32() as usize;
 
 
-    let result = hotfix::get_byte_code(jst0);let mut result = match result{
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    let result = hotfix::get_byte_code(jst0,jst1,jst2);let mut result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
@@ -3303,7 +3331,12 @@ fn call_1590345565(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let jst1 = jst1.get_str();
 
 
-    let result = hotfix::compile_byte_code(jst0,jst1);let mut result = match result{
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    let result = hotfix::compile_byte_code(jst0,jst1,jst2);let mut result = match result{
         Some(v) => { 
     let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
@@ -3831,6 +3864,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3649129955), 3649129955);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3007613864), 3007613864);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3595492395), 3595492395);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3126070271), 3126070271);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1347190475), 1347190475);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3993207385), 3993207385);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4111533257), 4111533257);
