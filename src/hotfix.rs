@@ -313,7 +313,7 @@ fn module_changed(path: PathBuf) {
         } else {
             let deps = get_depends(&js, k.as_str());
             for dep in deps {
-                vmf = vmf.append_module(dep, Arc::new(vec![]));
+                vmf = vmf.append_depend(dep);
             }
             let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
             *v = Arc::new(jsgray);
