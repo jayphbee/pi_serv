@@ -236,6 +236,8 @@ pub fn hotfix_listen(path: String) {
                 let mod_id = normalize_module_id(path.to_str().unwrap());
                 if mod_id.ends_with(".js") {
                     debug!("modified path: {:?}", path);
+                    let proj_name = get_proj_name_from_path(&path);
+                    debug!(" path: {:?}, proj_name: {:?}", path, proj_name);
                     bump_gray_version();
                     module_changed(path);
                 }
@@ -363,14 +365,20 @@ fn launched_projects() -> Vec<String> {
 // path 参数是文件监控得到的绝对路径
 fn get_proj_name_from_path(path: &PathBuf) -> String {
     let projs = launched_projects();
+
+    let comps = Path::new(path).canonicalize().unwrap();
+    let comps = comps.components();
+    let comps = comps.filter(|comp| if let Normal(_) = comp { true } else { false }).map(|p| if let Normal(c) = p { c.to_str().unwrap() } else { "" }).collect::<Vec<&str>>();
     
     // project name without relative path
     for proj in projs {
-        let comps = Path::new(path).canonicalize().unwrap();
-        let comps = comps.components();
-        let comps = comps.filter(|comp| if let Normal(_) = comp { true } else { false }).map(|p| if let Normal(c) = p { c.to_str().unwrap() } else { "" }).collect::<Vec<&str>>();
-        if comps.contains(&proj.as_str()) {
-            return proj
+        let p = Path::new(&proj).canonicalize().unwrap();
+        let p = p.components();
+        let p = p.filter(|comp| if let Normal(_) = comp { true } else { false }).map(|p| if let Normal(c) = p { c.to_str().unwrap() } else { "" }).collect::<Vec<&str>>();
+
+        let last = p.last().unwrap();
+        if comps.contains(last) {
+            return last.to_string()
         } else {
             return "".to_string()
         }
