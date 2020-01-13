@@ -205,7 +205,15 @@ fn set_piserv_env_var(matches: &ArgMatches) {
     let cur_dir = current_dir.to_str().unwrap();
 
     set_env_var("PROJECTS", &projs.as_slice().join(" "));
-    set_env_var("PROJECT_ROOT", &project_root);
+
+    let cur_dir = env::current_dir();
+
+    // 如果没有出现 -p 参数
+    if matches.occurrences_of("projects") == 0 {
+        set_env_var("PROJECT_ROOT", cur_dir.unwrap().to_str().unwrap());
+    } else {
+        set_env_var("PROJECT_ROOT", &project_root);
+    }
 }
 
 // 启动存储任务工作线程
