@@ -91,6 +91,7 @@ mod pi_net_httpc_build;
 mod pi_net_https_build;
 mod pi_net_rpc_tmp_build;
 mod pi_store_build;
+mod ptmgr;
 
 use std::env;
 use std::io;
