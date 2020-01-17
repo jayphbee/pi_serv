@@ -1,4 +1,5 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex };
+use std::sync::{ RwLock as StdRwlock };
 use std::net::SocketAddr;
 use std::io::{Error};
 
@@ -7,6 +8,7 @@ use std::sync::atomic::Ordering;
 
 use fnv::FnvHashMap;
 use mqtt3;
+use parking_lot::RwLock;
 
 use pi_vm::adapter::{JS};
 use pi_vm::pi_vm_impl::{new_queue, remove_queue};
@@ -54,7 +56,7 @@ fn now_millis() -> isize {
 */
 pub struct NetMgr {
     pub mgr: NetManager,
-    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>,
+    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(RawSocket, Arc<StdRwlock<RawStream>>),Error>>,
     Arc<Result<SocketAddr,Error>>) + Send>>>>>,
     pub close_handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(usize, RawSocket) + Send>>>>>,
 }
@@ -72,7 +74,7 @@ impl NetMgr {
         }
     }
 
-    fn add_handler(&mut self, addr: String, protocol: String, f: Box<Fn(Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
+    fn add_handler(&mut self, addr: String, protocol: String, f: Box<Fn(Arc<Result<(RawSocket, Arc<StdRwlock<RawStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
         let key = Atom::from(addr.clone() + ":" + protocol.as_str());
         let h = self.handler.clone();
         let mut r = self.handler.lock().unwrap();
@@ -85,7 +87,7 @@ impl NetMgr {
                 close_handler.insert(key_copy.clone(), Vec::new());
             }
             let arr = Vec::new();
-            let callback: ListenerFn = Box::new(move |peer: Result<(RawSocket, Arc<RwLock<RawStream>>),Error>, addr: Result<SocketAddr,Error>|{ 
+            let callback: ListenerFn = Box::new(move |peer: Result<(RawSocket, Arc<StdRwlock<RawStream>>),Error>, addr: Result<SocketAddr,Error>|{ 
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
                 let c_h = c_h.clone();
@@ -143,7 +145,7 @@ impl NetMgr {
 */
 pub struct TlsNetMgr {
     pub mgr: TlsManager,
-    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>,
+    pub handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(Arc<Result<(TlsSocket, Arc<StdRwlock<TlsStream>>),Error>>,
     Arc<Result<SocketAddr,Error>>) + Send>>>>>,
     pub close_handler: Arc<Mutex<FnvHashMap<Atom, Vec<Box<Fn(usize, TlsSocket) + Send>>>>>,
 }
@@ -161,7 +163,7 @@ impl TlsNetMgr {
         }
     }
 
-    fn add_handler(&mut self, addr: String, protocol: String, cert_path:String, key_path: String, f: Box<Fn(Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
+    fn add_handler(&mut self, addr: String, protocol: String, cert_path:String, key_path: String, f: Box<Fn(Arc<Result<(TlsSocket, Arc<StdRwlock<TlsStream>>),Error>>, Arc<Result<SocketAddr,Error>>) + Send>){
         let key = Atom::from(addr.clone() + ":" + protocol.as_str());
         let h = self.handler.clone();
         let mut r = self.handler.lock().unwrap();
@@ -174,7 +176,7 @@ impl TlsNetMgr {
                 close_handler.insert(key_copy.clone(), Vec::new());
             }
             let arr = Vec::new();
-            let callback = Box::new(move |peer: Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>, addr: Result<SocketAddr,Error>|{
+            let callback = Box::new(move |peer: Result<(TlsSocket, Arc<StdRwlock<TlsStream>>),Error>, addr: Result<SocketAddr,Error>|{
                 let peer = Arc::new(peer);
                 let addr = Arc::new(addr);
                 let c_h = c_h.clone();
@@ -235,7 +237,7 @@ impl TlsNetMgr {
 #[derive(Clone)]
 pub struct NetHandler {
     handler: Atom, //处理函数名称（js函数）
-    gray_tab: Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+    gray_tab: Arc<StdRwlock<GrayTab<JSGray>>>, //灰度表
 }
 
 unsafe impl Send for NetHandler {}
@@ -272,7 +274,6 @@ impl Handler for NetHandler {
         let event_name_copy = event_name.clone();
         let func = Box::new(move |lock: Option<isize>| {
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let event_name1 = event_name.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
@@ -283,9 +284,7 @@ impl Handler for NetHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                 //env
                 ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
-                //nobj
-                nobjs.to_map(&vm);
-                4
+                3
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
 
@@ -309,7 +308,7 @@ impl NetHandler {
 	*/
 	pub fn new(handler: String, gray: JSGray) -> NetHandler {
 		NetHandler {
-			gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
+			gray_tab: Arc::new(StdRwlock::new(GrayTab::new(gray))),
             handler: Atom::from(handler),
 		}
 	}
@@ -320,7 +319,7 @@ impl NetHandler {
 */
 #[derive(Clone)]
 pub struct TopicHandler {
-	gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+	gray_tab: 	Arc<StdRwlock<GrayTab<JSGray>>>, //灰度表
 }
 
 unsafe impl Send for TopicHandler {}
@@ -353,7 +352,6 @@ impl Handler for TopicHandler {
                 None => gray_tab.get_last(),
             };
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let topic_name = topic.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 vm.new_str((*topic_name).to_string());
@@ -369,7 +367,6 @@ impl Handler for TopicHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
                 let ptr = Box::into_raw(Box::new(env.clone())) as usize;
                 ptr_jstype(vm.get_objs(), vm.clone(), ptr, 717646231);
-                nobjs.to_map(&vm);
                 vm.new_u32(id as u32);
                 match peer_addr {
                     Some(addr) => {
@@ -379,7 +376,7 @@ impl Handler for TopicHandler {
                         vm.new_undefined();
                     },
                 }
-                7
+                6
             });
             gray.factory.call(Some(id), Atom::from("_$rpc_tmp"), real_args, Atom::from((*topic).to_string() + " rpc task"));
 
@@ -399,7 +396,7 @@ impl TopicHandler {
 	* @param gray 灰度对象
 	* @returns 返回Topic处理器
 	*/
-	pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
+	pub fn new(gray: &Arc<StdRwlock<GrayTab<JSGray>>>) -> Self {
 		TopicHandler {
 			gray_tab: gray.clone()
 		}
@@ -419,7 +416,7 @@ impl TopicHandler {
 pub fn mqtt_bind(server: &ServerNode, mgr: &mut NetMgr, addr: String, protocol: String, send_buf_size: usize, recv_timeout: usize){
     // let server = ServerNode::new();
     let copy = server.clone();
-    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
+    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<StdRwlock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = &peer.0;
@@ -462,7 +459,7 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
             },
         };
     });
-    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<RwLock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
+    let f = Box::new(move |peer:Arc<Result<(RawSocket, Arc<StdRwlock<RawStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = peer.0.clone();
@@ -507,7 +504,7 @@ pub fn net_connect_bind(mgr: &mut NetMgr, addr: String, protocol: String, handle
 */
 pub fn mqtt_bind_tls(server: &ServerNode, mgr: &mut TlsNetMgr, addr: String, protocol: String, cert_path: String, key_path: String, send_buf_size: usize, recv_timeout: usize){
     let copy = server.clone();
-    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
+    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<StdRwlock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>> | {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = &peer.0;
@@ -550,7 +547,7 @@ pub fn net_connect_bind_tls(mgr: &mut TlsNetMgr, addr: String, protocol: String,
             },
         };
     });
-    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<RwLock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
+    let f = Box::new(move |peer:Arc<Result<(TlsSocket, Arc<StdRwlock<TlsStream>>),Error>>, _addr: Arc<Result<SocketAddr,Error>>| {
         match peer.as_ref() {
             &Ok(ref peer) => {
                 let socket = peer.0.clone();
@@ -709,7 +706,7 @@ pub fn arc_new_topic_handler(th: TopicHandler) -> Arc<TopicHandler> {
 #[derive(Clone)]
 pub struct NetEventHandler {
     handler: Atom, //处理函数名称（js函数）
-    gray_tab: Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+    gray_tab: Arc<StdRwlock<GrayTab<JSGray>>>, //灰度表
 }
 
 unsafe impl Send for NetEventHandler {}
@@ -746,7 +743,6 @@ impl Handler for NetEventHandler {
         let event_name_copy = event_name.clone();
         let func = Box::new(move |lock: Option<isize>| {
             let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
             let event_name1 = event_name.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
@@ -757,9 +753,7 @@ impl Handler for NetEventHandler {
                 ptr_jstype(vm.get_objs(), vm.clone(), Box::into_raw(Box::new(mgr.clone())) as usize, 2976191628);
                 //env
                 ptr_jstype(vm.get_objs(), vm.clone(),  Box::into_raw(Box::new(env.clone())) as usize, 589055833);
-                //nobj
-                nobjs.to_map(&vm);
-                4
+                3
             });
             gray.factory.call(Some(id), handler_name, real_args, Atom::from((*event_name).to_string() + " net task"));
 
@@ -783,18 +777,20 @@ impl NetEventHandler {
     */
     pub fn new(handler: String, gray: JSGray) -> NetEventHandler {
         NetEventHandler {
-            gray_tab: Arc::new(RwLock::new(GrayTab::new(gray))),
+            gray_tab: Arc::new(StdRwlock::new(GrayTab::new(gray))),
             handler: Atom::from(handler),
         }
     }
 }
+
+use hotfix::GrayTable;
 
 /**
 * Rpc请求处理器
 */
 #[derive(Clone)]
 pub struct RequestHandler {
-    gray_tab: 	Arc<RwLock<GrayTab<JSGray>>>, //灰度表
+    gray_tab: 	Arc<RwLock<GrayTable>>,
 }
 
 unsafe impl Send for RequestHandler {}
@@ -814,52 +810,64 @@ impl Handler for RequestHandler {
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
 		let topic_handler = self.clone();
         let topic_name = topic.clone();
+        let jsgray_name = topic.clone().to_string().split(".").collect::<Vec<&str>>()[0].to_string() + ".event.js";
+
         let id = env.get_id();
         let queue = new_queue(id); //创建指定socket的同步静态队列
         let func = Box::new(move |lock: Option<isize>| {
-            let gray_tab = topic_handler.gray_tab.read().unwrap();
+            let gray_tab = topic_handler.gray_tab.read();
             let gray = match env.get_gray() {
-                Some(v) => match gray_tab.get(v) {
-                    Some(g) => g,
+                Some(v) => match gray_tab.jsgrays.get(v.clone()) {
+                    Some(g) => g.get(&Atom::from(jsgray_name)),
                     None => panic!("gray is not exist, version:{}", v),
-                },
-                None => gray_tab.get_last(),
-            };
-            let mgr = gray.mgr.clone();
-            let nobjs = gray.nobjs.clone();
-            let topic_name = topic.clone();
-            let real_args = Box::new(move |vm: Arc<JS>| -> usize {
-                vm.new_str((*topic_name).to_string());
-                let peer_addr = match args {
-                    Args::FourArgs(_, peer, rid, bin) => {
-                        let buffer = vm.new_uint8_array(bin.len() as u32);
-                        buffer.from_bytes(bin.as_slice());
-						vm.new_u32(rid); // rid
-                        peer
-                    },
-                    _ => panic!("invalid topic handler args"),
-                };
-                let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
-                let ptr = Box::into_raw(Box::new(env.clone())) as usize;
-                ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
-                nobjs.to_map(&vm);
-                vm.new_u32(id as u32);
-                match peer_addr {
-                    Some(addr) => {
-                        vm.new_str(addr.to_string());
-                    },
-                    None => {
-                        vm.new_undefined();
-                    },
                 }
-                8
-            });
-            gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+                None => {
+                    match gray_tab.jsgrays.last() {
+                        Some(g) => {
+                            g.get(&Atom::from(jsgray_name))
+                        }
+                        None => panic!("gray is not exist"),
+                    }
+                }
+            };
 
-            //解锁当前同步静态队列，保证虚拟机执行
-            if !unlock_js_task_queue(queue) {
-                warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let topic_name = topic.clone();
+                let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                    vm.new_str((*topic_name).to_string());
+                    let peer_addr = match args {
+                        Args::FourArgs(_, peer, rid, bin) => {
+                            let buffer = vm.new_uint8_array(bin.len() as u32);
+                            buffer.from_bytes(bin.as_slice());
+                            vm.new_u32(rid); // rid
+                            peer
+                        },
+                        _ => panic!("invalid topic handler args"),
+                    };
+                    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
+                    let ptr = Box::into_raw(Box::new(env.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 3092548949);
+                    vm.new_u32(id as u32);
+                    match peer_addr {
+                        Some(addr) => {
+                            vm.new_str(addr.to_string());
+                        },
+                        None => {
+                            vm.new_undefined();
+                        },
+                    }
+                    7
+                });
+                gray.factory.call(Some(id), Atom::from("_$rpc"), real_args, Atom::from((*topic).to_string() + " rpc task"));
+
+                //解锁当前同步静态队列，保证虚拟机执行
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
             }
         });
         cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle task"));
@@ -872,7 +880,7 @@ impl RequestHandler {
     * @param gray 灰度对象
     * @returns 返回Rpc请求处理器
     */
-    pub fn new(gray: &Arc<RwLock<GrayTab<JSGray>>>) -> Self {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
         RequestHandler {
             gray_tab: gray.clone()
         }
@@ -911,6 +919,13 @@ pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_han
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<BaseService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
+}
+
+/*
+ * 取消注册指定的rpc服务
+ */
+pub fn unregister_rpc_topic(topic: String) {
+    WS_MQTT3_BROKER.unregister_service(&topic);
 }
 
 /**

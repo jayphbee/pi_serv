@@ -8,7 +8,7 @@ use pi_vm::bonmgr::{NativeObjsAuth};
 
 // 全局字节码缓冲
 lazy_static! {
-	pub static ref BYTE_CODE_CATCH: Arc<Mutex<RefCell<HashMap<String, Arc<Vec<u8>>>>>> = Arc::new(Mutex::new(RefCell::new(HashMap::default())));
+	pub static ref BYTE_CODE_CACHE: Arc<Mutex<RefCell<HashMap<String, Arc<Vec<u8>>>>>> = Arc::new(Mutex::new(RefCell::new(HashMap::default())));
 }
 
 /**
@@ -16,11 +16,32 @@ lazy_static! {
  * @name： 字节码的key（通常是模块名称）
  */
 pub fn get_byte_code(name: String) -> Option<Arc<Vec<u8>>> {
-	let lock = BYTE_CODE_CATCH.lock().unwrap();
+	let lock = BYTE_CODE_CACHE.lock().unwrap();
 	let b = lock.borrow();
 	match b.get(&name) {
 		Some(r) => Some(unsafe { r.clone() }),
 		None => None
+	}
+}
+
+/**
+ * 删除缓存的字节码
+ */
+pub fn remove_byte_code_cache(name: String) {
+	let lock = BYTE_CODE_CACHE.lock().unwrap();
+	let mut b = lock.borrow_mut();
+	b.remove(&name);
+}
+
+/**
+ * 重命名模块名字
+ */
+pub fn rename_byte_code_cache(old_name: String, new_name: String) {
+	let lock = BYTE_CODE_CACHE.lock().unwrap();
+	let mut b = lock.borrow_mut();
+
+	if let Some(old) = b.remove(&old_name) {
+		b.insert(new_name, old);
 	}
 }
 
@@ -32,7 +53,7 @@ pub fn compile(name: String, source_code: String, call_back: Box<dyn FnOnce(Resu
 	//为了保证模块的封装函数，可以是匿名的，且不绑定到全局环境中，需要用括号将封装函数括起来
 	match opts.compile(name.clone(), source_code) {
 		Some(r) => {
-			let lock = BYTE_CODE_CATCH.lock().unwrap();
+			let lock = BYTE_CODE_CACHE.lock().unwrap();
 			let mut b = lock.borrow_mut();
 			let byte_code = b.entry(name).or_insert(Arc::new(r));
 			// 字节码被全局缓冲，
@@ -50,7 +71,7 @@ pub fn compile_sync(name: String, source_code: String) -> Option<Arc< Vec<u8>>> 
 	//为了保证模块的封装函数，可以是匿名的，且不绑定到全局环境中，需要用括号将封装函数括起来
 	match opts.compile(name.clone(), source_code) {
 		Some(r) => {
-			let lock = BYTE_CODE_CATCH.lock().unwrap();
+			let lock = BYTE_CODE_CACHE.lock().unwrap();
 			let mut b = lock.borrow_mut();
 			let byte_code = b.entry(name).or_insert(Arc::new(r));
 			// 字节码被全局缓冲， 

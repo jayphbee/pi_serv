@@ -143,3 +143,20 @@ pub fn is_absolute(path: &str) -> bool {
 pub fn is_relative(path: &str) -> bool {
 	Path::new(path).is_relative()
 }
+
+pub fn full_path(path: &str) -> Option<String> {
+	let p = Path::new(path);
+	match p.canonicalize() {
+		Ok(cano) => {
+			let cano = cano.to_str().unwrap().split(":").map(|s|s.to_string()).collect::<Vec<String>>();
+			// unix 环境
+			if cano.len() == 1 {
+				Some(cano[0].clone())
+			// windows 环境
+			} else {
+				Some(cano[1].replace("\\","/"))
+			}
+		}
+		Err(_e) => None
+	}
+}
