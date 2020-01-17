@@ -234,12 +234,20 @@ pub fn clone_db_mgr(mgr: &Mgr) -> Mgr{
 
 // 注册内存数据库
 pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
-	mgr.register(Atom::from(prefix), Arc::new(ware))
+    if let Some(w) = mgr.find(&Atom::from(prefix.clone())) {
+        false
+    } else {
+        mgr.register(Atom::from(prefix), Arc::new(ware))
+    }
 }
 
 // 注册文件数据库
 pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
-    mgr.register(Atom::from(prefix), Arc::new(ware))
+    if let Some(w) = mgr.find(&Atom::from(prefix.clone())) {
+        false
+    } else {
+        mgr.register(Atom::from(prefix), Arc::new(ware))
+    }
 }
 
 pub fn register_file_mem_db(mgr: &Mgr, prefix: String, ware: FileMemDB) -> bool {
