@@ -55,10 +55,14 @@ pub struct PlatMgr {
     net_services: FnvHashMap<String, Vec<(String, u16)>>
 }
 
-
+#[derive(Clone)]
 pub struct GlobalPlatMgr(Arc<RwLock<PlatMgr>>);
 
 impl GlobalPlatMgr {
+    pub fn get() -> Self {
+        PLAT_MGR.clone()
+    }
+
     pub fn db_mgr(&self) -> Option<Mgr> {
         self.0.read().db_mgr.clone()
     }
