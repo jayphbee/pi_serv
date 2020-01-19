@@ -268,55 +268,99 @@ pub fn hotfix_listen(path: String) {
 }
 
 fn module_changed(path: PathBuf) {
-    let mod_id = normalize_module_id(path.to_str().unwrap());
+    let path = match path.to_str() {
+        Some(path) => path,
+        None => {
+            error!("module change path is None");
+            return
+        }
+    };
+    let mod_id = normalize_module_id(path);
 
     let mut gray_tab = GRAY_TABLE.write();
-    let mut jsgrays = gray_tab.jsgrays.last_mut().unwrap();
-    for (k, v) in jsgrays.iter_mut() {
-        let auth = Arc::new(NativeObjsAuth::new(None, None));
-        let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
-        load_core_env(&js);
+    if let Some(jsgrays) = gray_tab.jsgrays.last_mut() {
+        for (k, v) in jsgrays.iter_mut() {
+            let auth = Arc::new(NativeObjsAuth::new(None, None));
+            let js = match JS::new(1, Atom::from("hotfix compile"), auth.clone(), None) {
+                Some(js) => js,
+                None => {
+                    error!("new hotfix compile vm failed, change path: {:?}", path);
+                    return
+                }
+            };
 
-        let cur_exe = env::current_exe().unwrap();
-        let env_code = read_code(&cur_exe.join("../env.js"));
-        let core_code = read_code(&cur_exe.join("../core.js"));
+            load_core_env(&js);
 
-        let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-        let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+            let cur_exe = match env::current_exe() {
+                Ok(cur_exe) => cur_exe,
+                Err(e) => {
+                    error!("get current exe failed, change path: {:?}, error: {:?}", path, e);
+                    return
+                }
+            };
 
-        let mgr = v.mgr.clone();
-        let auth = Arc::new(NativeObjsAuth::new(None, None));
-        let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
+            let env_code = read_code(&cur_exe.join("../env.js"));
+            let core_code = read_code(&cur_exe.join("../core.js"));
 
-        // env.js / core.js 代码
-        vmf = vmf.append(Arc::new(env_code));
-        vmf = vmf.append(Arc::new(core_code));
+            let env_code = match js.compile("env.js".to_string(), env_code) {
+                Some(env_code) => env_code,
+                None => {
+                    error!("compile env.js code failed, change path: {:?}", path);
+                    return
+                }
+            };
+            let core_code = match js.compile("core.js".to_string(), core_code) {
+                Some(env_code) => env_code,
+                None => {
+                    error!("compile core.js code failed, change path: {:?}", path);
+                    return
+                }
+            };
 
-        let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+            let mgr = v.mgr.clone();
+            let auth = Arc::new(NativeObjsAuth::new(None, None));
+            let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
 
-        remove_byte_code(mod_id.clone());
+            // env.js / core.js 代码
+            vmf = vmf.append(Arc::new(env_code));
+            vmf = vmf.append(Arc::new(core_code));
 
-        let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-        let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
-        let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
+            let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
 
-        // rpc 功能依赖的代码，和实际处理rpc需要的代码
-        vmf = vmf.append(Arc::new(extra_code));
-        vmf.produce(2);
+            remove_byte_code(mod_id.clone());
 
-        if v.factory.is_depend(&mod_id) {
-            debug!("{:?} is a depend for {:?}", mod_id, k);
+            let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+            let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
+            // let extra_code = js.compile("rpc_entrance".to_string(), extra_code).expect("compile extra code failed");
+            let extra_code = match js.compile("rpc_entrance".to_string(), extra_code) {
+                Some(extra_code) => extra_code,
+                None => {
+                    error!("compile extra code failed, change path: {:?}", path);
+                    return
+                }
+            };
 
-            let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
-            // 用新的代码替换
-            *v = Arc::new(jsgray);
-        } else {
-            let deps = get_depends(&js, k.as_str());
-            for dep in deps {
-                vmf = vmf.append_depend(dep);
+            // rpc 功能依赖的代码，和实际处理rpc需要的代码
+            vmf = vmf.append(Arc::new(extra_code));
+            if let Err(e) = vmf.produce(2) {
+                error!("vm factory produce failed, change path: {:?}, error: {:?}", path, e);
+                return
             }
-            let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
-            *v = Arc::new(jsgray);
+
+            if v.factory.is_depend(&mod_id) {
+                debug!("{:?} is a depend for {:?}", mod_id, k);
+
+                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                // 用新的代码替换
+                *v = Arc::new(jsgray);
+            } else {
+                let deps = get_depends(&js, k.as_str());
+                for dep in deps {
+                    vmf = vmf.append_depend(dep);
+                }
+                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                *v = Arc::new(jsgray);
+            }
         }
     }
 }
@@ -338,9 +382,16 @@ fn get_depends(js: &Arc<JS>, vmf_name: &str) -> Vec<String> {
 }
 
 fn normalize_module_id(mod_id: &str) -> String {
+    let root = match env_var("PROJECT_ROOT") {
+        Ok(root) => root,
+        Err(e) => {
+            error!("Can't get PROJECT_ROOT env, mod_id: {:?}, error: {:?}", mod_id, e);
+            return "".to_string();
+        }
+    };
     mod_id.replace("\\", "/")
         .as_str()
-        .trim_start_matches(&(env_var("PROJECT_ROOT").unwrap() + "/"))
+        .trim_start_matches(&(root + "/"))
         .to_string()
 }
 
