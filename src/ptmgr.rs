@@ -46,7 +46,7 @@ pub struct PlatMgr {
     // 全局的数据库管理器
     db_mgr: Option<Mgr>,
     // 每个项目的rpc列表, {"虚拟机工厂名 => [rpc函数名]"}
-    rpcs: FnvHashMap<String, (String, Vec<String>)>,
+    rpcs: FnvHashMap<String, FnvHashMap<String, Vec<String>>>,
     // 每个项目注册的数据库监听器
     db_monitors: FnvHashMap<String, Vec<String>>,
     // 每个项目注册的mqtt topic
@@ -75,9 +75,11 @@ impl GlobalPlatMgr {
         let mut res = vec![];
         match self.0.read().rpcs.get(&proj_name) {
             Some(rpcs) => {
-                for rpc in rpcs.1.clone() {
-                    let endpoint = rpcs.0.clone() + &rpc;
-                    res.push(endpoint);
+                for rpc in rpcs {
+                    for topic in rpc.1 {
+                        let endpoint = rpc.0.clone() + "." + topic;
+                        res.push(endpoint);
+                    }
                 }
                 res
             }
@@ -118,18 +120,19 @@ impl PlatMgrTrait for GlobalPlatMgr {
 
     fn register_rpc(&self, proj_name: String, vmf_name: String, topic_name: String) {
         let mut plat_mgr = self.0.write();
-        match plat_mgr.rpcs.get_mut(&proj_name) {
-            Some(rpcs) => {
-                if rpcs.0 == vmf_name {
-                    rpcs.1.push(topic_name);
-                } else {
-                    plat_mgr.rpcs.insert(proj_name, (vmf_name, vec![topic_name]));
-                }
-            }
-            None => {
-                plat_mgr.rpcs.insert(proj_name, (vmf_name, vec![topic_name]));
-            }
-        }
+        plat_mgr.rpcs.entry(proj_name)
+            .and_modify(|rpcs| {
+                rpcs.entry(vmf_name.clone())
+                    .and_modify(|topics| {
+                        topics.push(topic_name.clone());
+                    })
+                    .or_insert(vec![topic_name.clone()]);
+            })
+            .or_insert_with(|| {
+                let mut map = FnvHashMap::default();
+                map.insert(vmf_name.clone(), vec![topic_name.clone()]);
+                map
+            });
     }
 
     fn register_db_monitor(&self, proj_name: String, endpoint: String) {
