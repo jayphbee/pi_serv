@@ -101,9 +101,15 @@ impl GlobalPlatMgr {
         }
     }
 
-    pub fn project_net_services(&self, proj_name: String) -> Vec<(String, u16)> {
+    pub fn project_net_services(&self, proj_name: String) -> Vec<String> {
+        let mut res = vec![];
         match self.0.read().net_services.get(&proj_name) {
-            Some(net_services) => net_services.clone(),
+            Some(net_services) => {
+                for (service_name, port) in net_services {
+                    res.push(service_name.to_string() + ":" + &port.to_string());
+                }
+                res
+            }
             None => vec![]
         }
     }

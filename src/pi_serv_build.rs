@@ -3661,7 +3661,7 @@ fn call_2721429549(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = ptmgr::GlobalPlatMgr::project_net_services(jst0,jst1);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3526294061);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
 
 
     Some(CallResult::Ok)
@@ -3785,6 +3785,34 @@ fn call_2085560380(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     ptmgr::GlobalPlatMgr::register_mqtt_topic(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_854437954(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_net_service";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_u16();
+
+
+    ptmgr::GlobalPlatMgr::register_net_service(jst0,jst1,jst2,jst3);
     Some(CallResult::Ok)
 }
 
@@ -4003,10 +4031,6 @@ fn drop_4288401962(ptr: usize){
 fn drop_1017644051(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut ptmgr::GlobalPlatMgr) };
 }
-
-fn drop_3526294061(ptr: usize){
-    unsafe { Box::from_raw(ptr as *mut Vec<(String,u16)>) };
-}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
@@ -4062,7 +4086,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::RPCClient"), drop_fn: drop_4088898725}, 4088898725);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::CloseHandler"), drop_fn: drop_4288401962}, 4288401962);
     mgr.regist_struct_meta(StructMeta{name:String::from("ptmgr::GlobalPlatMgr"), drop_fn: drop_1017644051}, 1017644051);
-    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<(String,u16)>"), drop_fn: drop_3526294061}, 3526294061);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3763610783_sync), 3763610783);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2701929727_sync), 2701929727);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1993779671), 1993779671);
@@ -4209,4 +4232,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2449998706), 2449998706);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1390968299), 1390968299);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2085560380), 2085560380);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_854437954), 854437954);
 }
