@@ -349,6 +349,31 @@ fn call_685881041_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3982929673(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in list_all_tables";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = pi_db::mgr::Tr::list_all_tables(jst0,jst1);let mut result = match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in alter";
@@ -471,5 +496,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_977907218_sync), 977907218);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1841891766_sync), 1841891766);
     mgr.regist_fun_meta(FnMeta::CallArg(call_685881041_sync), 685881041);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3982929673), 3982929673);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3786000589_sync), 3786000589);
 }
