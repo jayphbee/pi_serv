@@ -24,6 +24,7 @@ use rpc_tmp;
 use std::io::Error;
 use base;
 use rpc;
+use ptmgr::PlatMgrTrait;
 use js_db;
 use util;
 use js_vm;
@@ -37,6 +38,7 @@ use js_async;
 use hotfix;
 use webshell;
 use js_net_rpc_client;
+use ptmgr;
 
 
 
@@ -3535,6 +3537,285 @@ fn call_146889029(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_2761548319(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = ptmgr::GlobalPlatMgr::get();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1017644051);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_487274951(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in db_mgr";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+    let result = ptmgr::GlobalPlatMgr::db_mgr(jst0);let mut result = match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,2976191628);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1929701597(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in projects";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+    let result = ptmgr::GlobalPlatMgr::projects(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3774088247(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in project_rpcs";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = ptmgr::GlobalPlatMgr::project_rpcs(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3873833570(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in project_db_monitors";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = ptmgr::GlobalPlatMgr::project_db_monitors(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1759242268(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in project_mqtt_topics";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = ptmgr::GlobalPlatMgr::project_mqtt_topics(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2721429549(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in project_net_services";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = ptmgr::GlobalPlatMgr::project_net_services(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1060918615(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_project";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    ptmgr::GlobalPlatMgr::register_project(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_744538193(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_db_mgr";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+    let jst1 = if jst1.is_undefined() || jst1.is_null(){
+        None
+    }else{
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+        Some(jst1)
+    };
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 2976191628, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Mgr) };
+
+
+    ptmgr::GlobalPlatMgr::register_db_mgr(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2449998706(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_rpc";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst3 = jst3.get_str();
+
+
+    ptmgr::GlobalPlatMgr::register_rpc(jst0,jst1,jst2,jst3);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1390968299(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_db_monitor";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    ptmgr::GlobalPlatMgr::register_db_monitor(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2085560380(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_mqtt_topic";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    ptmgr::GlobalPlatMgr::register_mqtt_topic(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_854437954(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_net_service";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+	let jst3 = &v[3];
+	if !jst3.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst3 = jst3.get_u16();
+
+
+    ptmgr::GlobalPlatMgr::register_net_service(jst0,jst1,jst2,jst3);
+    Some(CallResult::Ok)
+}
+
 fn drop_3289224548(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBIter) };
 }
@@ -3746,6 +4027,10 @@ fn drop_4088898725(ptr: usize){
 fn drop_4288401962(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_net_rpc_client::CloseHandler) };
 }
+
+fn drop_1017644051(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut ptmgr::GlobalPlatMgr) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
@@ -3800,6 +4085,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("webshell::WebShell"), drop_fn: drop_937567010}, 937567010);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::RPCClient"), drop_fn: drop_4088898725}, 4088898725);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::CloseHandler"), drop_fn: drop_4288401962}, 4288401962);
+    mgr.regist_struct_meta(StructMeta{name:String::from("ptmgr::GlobalPlatMgr"), drop_fn: drop_1017644051}, 1017644051);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3763610783_sync), 3763610783);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2701929727_sync), 2701929727);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1993779671), 1993779671);
@@ -3934,4 +4220,17 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3808530099_async), 3808530099);
     mgr.regist_fun_meta(FnMeta::CallArg(call_298029700), 298029700);
     mgr.regist_fun_meta(FnMeta::CallArg(call_146889029), 146889029);
+    mgr.regist_fun_meta(FnMeta::Call(call_2761548319), 2761548319);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_487274951), 487274951);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1929701597), 1929701597);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3774088247), 3774088247);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3873833570), 3873833570);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1759242268), 1759242268);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2721429549), 2721429549);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1060918615), 1060918615);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_744538193), 744538193);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2449998706), 2449998706);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1390968299), 1390968299);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2085560380), 2085560380);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_854437954), 854437954);
 }

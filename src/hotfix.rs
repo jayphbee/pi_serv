@@ -125,7 +125,13 @@ pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
 pub fn remove_byte_code(mod_id: String) {
     let last_version = GRAY_VERSION.load(Ordering::SeqCst);;
     let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
-    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(proj_name).unwrap().remove(&mod_id);
+
+    BYTE_CODE_CACHE.write().entry(last_version)
+        .and_modify(|version| {
+            version.entry(proj_name.to_string()).and_modify(|code|{
+                code.remove(&mod_id);
+            });
+        });
 }
 
 pub fn compile_byte_code(mod_id: String, source_code: String) -> Option<Arc< Vec<u8>>> {

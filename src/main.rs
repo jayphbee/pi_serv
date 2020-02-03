@@ -72,6 +72,7 @@ pub mod js_net_rpc_client;
 pub mod js_vm;
 pub mod util;
 pub mod webshell;
+pub mod ptmgr;
 
 mod def_build;
 mod js_util;
@@ -130,6 +131,7 @@ use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
 use apm::common::SysStat;
+use ptmgr::PLAT_MGR;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;

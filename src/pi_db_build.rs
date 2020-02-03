@@ -89,6 +89,22 @@ fn call_951191934(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3560153893(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in ware_name_list";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+    let result = pi_db::mgr::Mgr::ware_name_list(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3803008464_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in prepare";
@@ -333,6 +349,32 @@ fn call_685881041_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2773727520(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in list";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1754972364, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Tr) };
+
+
+	let jst1 = &v[1];
+    if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = Atom::from(jst1.get_str());
+    let jst1 = &jst1;
+
+
+    let result = pi_db::mgr::Tr::list(jst0,jst1);let mut result = match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_3786000589_sync( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 	let param_error = "param error in alter";
@@ -415,6 +457,10 @@ fn drop_1754972364(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Tr) };
 }
 
+fn drop_1542823015(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut Vec<String>) };
+}
+
 fn drop_2202214327(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Vec<pi_db::db::TabKV>) };
 }
@@ -436,6 +482,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Mgr"), drop_fn: drop_2976191628}, 2976191628);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::mgr::Tr"), drop_fn: drop_1754972364}, 1754972364);
+    mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>"), drop_fn: drop_1542823015}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<pi_db::db::TabKV>"), drop_fn: drop_2202214327}, 2202214327);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::TabMeta"), drop_fn: drop_18210791}, 18210791);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::db::Event"), drop_fn: drop_3165549746}, 3165549746);
@@ -444,10 +491,12 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_4081023775), 4081023775);
     mgr.regist_fun_meta(FnMeta::CallArg(call_258785726), 258785726);
     mgr.regist_fun_meta(FnMeta::CallArg(call_951191934), 951191934);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3560153893), 3560153893);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3803008464_sync), 3803008464);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1346774966_sync), 1346774966);
     mgr.regist_fun_meta(FnMeta::CallArg(call_977907218_sync), 977907218);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1841891766_sync), 1841891766);
     mgr.regist_fun_meta(FnMeta::CallArg(call_685881041_sync), 685881041);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2773727520), 2773727520);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3786000589_sync), 3786000589);
 }

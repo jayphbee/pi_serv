@@ -43,6 +43,7 @@ use base::service::{BaseListener, BaseService};
 use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
 use rpc::connect::RpcConnect;
+use ptmgr::{PLAT_MGR, PlatMgrTrait};
 
 fn now_millis() -> isize {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
@@ -980,6 +981,7 @@ pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的�
 */
 pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                              topic: String) {
+    PLAT_MGR.register_mqtt_topic("_$global_mqtt".to_string(), topic.clone()); // 注册全局mqtt topic到平台管理器中
     add_topic(is_public, topic, 0, None);
 }
 
