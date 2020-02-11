@@ -52,7 +52,9 @@ pub struct PlatMgr {
     // 每个项目注册的mqtt topic
     mqtt_topics: FnvHashMap<String, Vec<String>>,
     // 每个项目注册的网络服务
-    net_services: FnvHashMap<String, Vec<(String, u16)>>
+    net_services: FnvHashMap<String, Vec<(String, u16)>>,
+    // struct 的名字和名字的哈希
+    map: FnvHashMap<String, u32>,
 }
 
 #[derive(Clone)]
@@ -112,6 +114,15 @@ impl GlobalPlatMgr {
             }
             None => vec![]
         }
+    }
+
+    pub fn register_name_and_hash(&self, name: String, hash: u32) {
+        let mut plat_mgr = self.0.write();
+        plat_mgr.map.entry(name).or_insert(hash);
+    }
+
+    pub fn get_hash_from_name(&self, name: String) -> Option<u32> {
+        self.0.read().map.get(&name).cloned()
     }
 }
 

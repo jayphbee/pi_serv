@@ -3668,6 +3668,52 @@ fn call_2721429549(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1891575260(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_name_and_hash";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst2 = jst2.get_u32();
+
+
+    ptmgr::GlobalPlatMgr::register_name_and_hash(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1548905001(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in get_hash_from_name";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1017644051, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const ptmgr::GlobalPlatMgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = ptmgr::GlobalPlatMgr::get_hash_from_name(jst0,jst1);let mut result = match result{
+        Some(v) => { let mut v = js.new_u32(v);
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1060918615(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in register_project";
 
@@ -4227,6 +4273,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3873833570), 3873833570);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1759242268), 1759242268);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2721429549), 2721429549);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1891575260), 1891575260);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1548905001), 1548905001);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1060918615), 1060918615);
     mgr.regist_fun_meta(FnMeta::CallArg(call_744538193), 744538193);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2449998706), 2449998706);
