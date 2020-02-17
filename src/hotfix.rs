@@ -333,9 +333,13 @@ fn module_changed(path: PathBuf) {
 
             let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
 
+            // 对应pi_pt/init/util.ts 数据库监听器的临时方案
+            let db_listener_code = "pi_pt/db/dblistener.js";
+
             remove_byte_code(mod_id.clone());
 
             let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+            let extra_code = extra_code + format!("Module.require(\'{}\', '');", db_listener_code).as_str();
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
             // let extra_code = js.compile("rpc_entrance".to_string(), extra_code).expect("compile extra code failed");
             let extra_code = match js.compile("rpc_entrance".to_string(), extra_code) {
