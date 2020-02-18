@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -10,20 +7,30 @@ use std::io::Read;
 use atom::Atom;
 use bon::{Encode, WriteBuffer};
 use guid::GuidGen;
-use pi_db::db::{SResult, TabKV, TabMeta};
+use pi_db::db::{SResult, TabKV};
 use pi_db::memery_db::DB;
 use pi_db::mgr::Mgr;
 
 use pi_vm::adapter::JS;
 use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
-use pi_vm::shell::SHELL_MANAGER;
-use pi_vm::duk_proc::{DukProcess, DukProcessFactory};
+use pi_vm::duk_proc::DukProcessFactory;
 use pi_vm::proc_pool::set_factory;
 
-use js_env::{env_var, set_current_dir, current_dir};
+use js_env::{env_var, set_current_dir};
+use ptmgr::{PLAT_MGR, PlatMgrTrait};
 
-use sinfo::EnumType;
-use time::now_millisecond;
+pub fn load_core_env(js: &Arc<JS>) {
+    let cur_exe = env::current_exe().unwrap();
+    // 初始化js执行环境
+    let env_code = read_code(&cur_exe.join("../env.js"));
+    let core_code = read_code(&cur_exe.join("../core.js"));
+
+    let env_code = js.compile("env.js".to_string(), env_code).unwrap();
+    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+
+    load_code(&js, env_code.as_slice());
+    load_code(&js, core_code.as_slice());
+}
 
 pub fn exec_js(path: String) {
     let path = path.as_str().replace("\\", "/");
@@ -31,13 +38,15 @@ pub fn exec_js(path: String) {
     let auth = Arc::new(NativeObjsAuth::new(None, None));
 
     let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
+    // 保存数据库管理器
+    PLAT_MGR.register_db_mgr(None, mgr.clone());
     mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
 
     let js = JS::new(1, Atom::from("compile"), auth.clone(), None).unwrap();
 
     // 设置当前运行目录
     let build_out_root = env_var("PROJECT_ROOT").unwrap();
-    set_current_dir(&build_out_root);
+    set_current_dir(&build_out_root).expect("set current dir failed");
 
     // 初始化js执行环境
     let env_code = read_code(&cur_exe.join("../env.js"));
@@ -64,7 +73,7 @@ pub fn exec_js(path: String) {
     //////////////
     //调用全局变量定义函数， 定义全局变量_$mgr
     js.get_js_function("_$defineGlobal".to_string());
-    js.new_str(String::from("_$db_mgr"));
+    js.new_str(String::from("_$db_mgr")).expect("js new str error");
     let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
     ptr_jstype(js.get_objs(), js.clone(), ptr, 2976191628); //new native obj作为参数
     js.call(2);
@@ -82,7 +91,7 @@ pub fn exec_js(path: String) {
 }
 
 
-fn read_code(path: &PathBuf) -> String {
+pub fn read_code(path: &PathBuf) -> String {
     let mut file = match File::open(path) {
         Ok(f) => f,
         Err(e) => panic!("no such file {:?} exception:{}", path, e),
@@ -94,7 +103,7 @@ fn read_code(path: &PathBuf) -> String {
     return str_val;
 }
 
-fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
+pub fn load_code(js: &Arc<JS>, code: &[u8]) -> bool {
     loop {
         if js.is_ran() {
             return js.load(&code);

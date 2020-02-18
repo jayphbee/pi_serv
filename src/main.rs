@@ -44,6 +44,7 @@ extern crate timer;
 extern crate util as lib_util;
 extern crate worker;
 extern crate ws;
+extern crate parking_lot;
 
 #[macro_use]
 extern crate lazy_static;
@@ -71,6 +72,7 @@ pub mod js_net_rpc_client;
 pub mod js_vm;
 pub mod util;
 pub mod webshell;
+pub mod ptmgr;
 
 mod def_build;
 mod js_util;
@@ -129,6 +131,7 @@ use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
 use apm::common::SysStat;
+use ptmgr::PLAT_MGR;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -204,7 +207,15 @@ fn set_piserv_env_var(matches: &ArgMatches) {
     let cur_dir = current_dir.to_str().unwrap();
 
     set_env_var("PROJECTS", &projs.as_slice().join(" "));
-    set_env_var("PROJECT_ROOT", &project_root);
+
+    let cur_dir = env::current_dir();
+
+    // 如果没有出现 -p 参数
+    if matches.occurrences_of("projects") == 0 {
+        set_env_var("PROJECT_ROOT", cur_dir.unwrap().to_str().unwrap());
+    } else {
+        set_env_var("PROJECT_ROOT", &project_root);
+    }
 }
 
 // 启动存储任务工作线程

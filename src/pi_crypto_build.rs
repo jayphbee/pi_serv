@@ -112,10 +112,11 @@ fn call_3937242908(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = &v[0];
     if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
     let jst0 = match jst0.get_u32(){
-        0 => pi_crypto::digest::DigestAlgorithm::SHA1,
-        1 => pi_crypto::digest::DigestAlgorithm::SHA256,
-        2 => pi_crypto::digest::DigestAlgorithm::SHA384,
-        3 => pi_crypto::digest::DigestAlgorithm::SHA512,
+        0 => pi_crypto::digest::DigestAlgorithm::MD5,
+        1 => pi_crypto::digest::DigestAlgorithm::SHA1,
+        2 => pi_crypto::digest::DigestAlgorithm::SHA256,
+        3 => pi_crypto::digest::DigestAlgorithm::SHA384,
+        4 => pi_crypto::digest::DigestAlgorithm::SHA512,
         _ => panic!("enum type error")
     };
 
