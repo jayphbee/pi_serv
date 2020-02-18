@@ -20,6 +20,7 @@ use js_env::{ env_var };
 use js_file::read_file_string_sync;
 use js_net::{ RequestHandler, create_rpc_service, register_rpc_topic };
 use init_js::{read_code, load_core_env};
+use js_net::get_all_http_endpoint;
 
 
 lazy_static! {
@@ -336,12 +337,20 @@ fn module_changed(path: PathBuf) {
             // 对应pi_pt/init/util.ts 数据库监听器的临时方案
             let db_listener_code = "pi_pt/db/dblistener.js";
 
+            // http rpc 的热更新
+            let http_code = get_all_http_endpoint().into_iter().fold("".to_string(), |acc, x| {
+                let mut mod_name = x.split(".").nth(0).unwrap().to_string();
+                mod_name += ".event";
+                acc + format!("Module.require(\'{}\', '');", mod_name).as_str()
+            });
+            debug!("http_code: {:?}", http_code);
+
             remove_byte_code(mod_id.clone());
 
             let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", db_listener_code).as_str();
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
-            // let extra_code = js.compile("rpc_entrance".to_string(), extra_code).expect("compile extra code failed");
+            let extra_code = extra_code + http_code.as_str();
             let extra_code = match js.compile("rpc_entrance".to_string(), extra_code) {
                 Some(extra_code) => extra_code,
                 None => {

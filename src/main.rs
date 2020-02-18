@@ -30,7 +30,10 @@ extern crate guid;
 extern crate handler;
 extern crate hash_value;
 extern crate httpc;
+extern crate http;
 extern crate https;
+extern crate https_external;
+extern crate hash;
 extern crate libc;
 extern crate mqtt;
 extern crate mqtt3;
@@ -133,6 +136,20 @@ use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
 use apm::common::SysStat;
 use ptmgr::PLAT_MGR;
+
+use js_net::InsecureHttpRpcRequstHandler;
+use http::{server::HttpListenerFactory,
+    virtual_host::{VirtualHostTab, VirtualHost},
+    route::HttpRoute,
+    middleware::MiddlewareChain,
+    default_parser::DefaultParser,
+    port::HttpPort};
+use http::virtual_host::VirtualHostPool;
+use tcp::server::{AsyncPortsFactory, SocketListener};
+use tcp::connect::TcpSocket;
+use tcp::driver::{SocketConfig};
+use tcp::buffer_pool::WriteBufferPool;
+use tcp::util::{TlsConfig};
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -452,6 +469,50 @@ fn main() {
     set_vm_max_heap(&matches, &sys);
     set_piserv_env_var(&matches);
     init_js(&matches);
+
+    // 临时启动一个web服务器
+    let handler = Arc::new(InsecureHttpRpcRequstHandler::new(&hotfix::get_gray_table()));
+
+    //构建中间件
+    let parser = Arc::new(DefaultParser::with(128, None));
+    let port = Arc::new(HttpPort::with_handler(None, handler));
+
+    //构建处理动态资源访问的中间件链
+    let mut chain = MiddlewareChain::new();
+    chain.push_back(parser);
+    chain.push_back(port);
+    chain.finish();
+    let port_middleware = Arc::new(chain);
+
+    //构建路由
+    let mut route = HttpRoute::new();
+    route.at("/login").get(port_middleware.clone())
+        .at("/login").post(port_middleware.clone())
+        .at("/port/**").get(port_middleware.clone())
+        .at("/port/**").post(port_middleware);
+
+    //构建虚拟主机
+    let host = VirtualHost::with(route);
+
+    //设置虚拟主机
+    let mut hosts = VirtualHostTab::new();
+    hosts.add("127.0.0.1", host);
+
+    let mut factory = AsyncPortsFactory::<TcpSocket>::new();
+    factory.bind(80,
+                 Box::new(HttpListenerFactory::<TcpSocket, _>::with_hosts(hosts, 10000)));
+    let mut config = SocketConfig::new("0.0.0.0", factory.bind_ports().as_slice());
+    config.set_option(16384, 16384, 16384, 16);
+    let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
+
+    match SocketListener::bind(factory, buffer, config, TlsConfig::empty(), 1024, 1024 * 1024, 1024, Some(10)) {
+        Err(e) => {
+            println!("!!!> Http Listener Bind Error, reason: {:?}", e);
+        },
+        Ok(driver) => {
+            println!("===> Http Listener Bind Ok");
+        }
+    }
 
     // 启动全局虚拟机堆整理
     set_vm_timeout(60000);

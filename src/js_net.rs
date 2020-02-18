@@ -5,6 +5,8 @@ use std::io::{Error, ErrorKind};
 
 use std::time::SystemTime;
 use std::sync::atomic::Ordering;
+use std::cell::RefCell;
+use std::marker::PhantomData;
 
 use fnv::FnvHashMap;
 use mqtt3;
@@ -14,7 +16,7 @@ use futures::future::BoxFuture;
 use pi_vm::adapter::{JS};
 use pi_vm::pi_vm_impl::{new_queue, remove_queue};
 use pi_vm::bonmgr::{ptr_jstype};
-use handler::{Args, Handler};
+use handler::{Args, Handler, SGenType};
 use gray::{GrayVersion, GrayTab};
 use atom::Atom;
 // use pi_p2p::manage::P2PManage;
@@ -34,6 +36,7 @@ use js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
 use tcp::connect::TcpSocket;
+use tcp::tls_connect::TlsSocket as FTlsSocket;
 use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
 use tcp::driver::{Socket as SocketTrait, Stream as StreamTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
@@ -45,6 +48,13 @@ use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
 use rpc::connect::RpcConnect;
 use ptmgr::{PLAT_MGR, PlatMgrTrait};
+use https_external::header::HeaderMap;
+use hash::XHashMap;
+use http::response::{ResponseHandler, HttpResponse};
+
+lazy_static! {
+    static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+}
 
 fn now_millis() -> isize {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
@@ -889,6 +899,314 @@ impl RequestHandler {
     }
 }
 
+#[derive(Clone)]
+pub struct SecureHttpRpcRequestHandler {
+    gray_tab: 	Arc<RwLock<GrayTable>>,
+}
+
+#[derive(Clone)]
+pub struct InsecureHttpRpcRequstHandler {
+    gray_tab: 	Arc<RwLock<GrayTable>>,
+}
+
+unsafe impl Send for SecureHttpRpcRequestHandler {}
+unsafe impl Sync for SecureHttpRpcRequestHandler {}
+
+unsafe impl Send for InsecureHttpRpcRequstHandler {}
+unsafe impl Sync for InsecureHttpRpcRequstHandler {}
+
+impl Handler for InsecureHttpRpcRequstHandler {
+    type A = SocketAddr;
+    type B = Arc<HeaderMap>;
+    type C = Arc<RefCell<XHashMap<String, SGenType>>>;
+    type D = ResponseHandler<TcpSocket>;
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = ();
+
+    //处理方法
+    fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let topic_handler = self.clone();
+        let topic_name = topic.clone();
+
+        let id = env.get_id();
+        let queue = new_queue(id); //创建指定socket的同步静态队列
+        let func = Box::new(move |lock: Option<isize>| {
+            let gray_tab = topic_handler.gray_tab.read();
+            let gray = match gray_tab.jsgrays.last() {
+                Some(g) => {
+                    g.values().last()
+                }
+                None => panic!("gray is not exist"),
+            };
+
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let topic_name = topic.clone();
+                let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628); // mgr 参数
+                    vm.new_str((*topic_name).to_string()); // topic 参数
+
+                    match args {
+                        Args::FourArgs(addr, headers, msg, handler) => {
+                            let mut http_connect = HttpConnect::new(addr);
+                            
+                            http_connect.set_insecure_resp_handle(handler);
+
+                            let ptr = Box::into_raw(Box::new(http_connect)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), ptr, 63358028); // HttpConnect 参数
+                            let http_header = HttpHeaders::new(headers);
+                            let ptr = Box::into_raw(Box::new(http_header)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), ptr, 1654202482); // HttpHeaders 参数
+
+                            let data = vm.new_object(); // data 参数
+                            for (key, val) in msg.borrow().iter() {
+                                match val {
+                                    SGenType::Str(s) => {
+                                        vm.set_field(&data, String::from(key), &mut vm.new_str(s.to_string()).unwrap());
+                                    }
+                                    SGenType::String(s) => {
+                                        vm.set_field(&data, String::from(key), &mut vm.new_str(s.to_string()).unwrap());
+                                    }
+                                    SGenType::Bin(bin) => {
+                                        let mut buffer = vm.new_uint8_array(bin.len() as u32);
+                                        buffer.from_bytes(bin.as_slice());
+                                        vm.set_field(&data, String::from(key), &mut buffer);
+                                    }
+                                    _ => {
+                                        unimplemented!();
+                                    }
+                                }
+                            }
+                        }
+                        _ => panic!("invalid HttpRpcRequestHandler handler args"),
+                    }
+                    5 // _$http_rpc 总共5个参数
+                });
+                gray.factory.call(Some(id), Atom::from("_$http_rpc"), real_args, Atom::from((*topic).to_string() + " http_rpc task"));
+
+                //解锁当前同步静态队列，保证虚拟机执行
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle http_rpc task"));
+    }
+}
+
+impl InsecureHttpRpcRequstHandler {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
+        InsecureHttpRpcRequstHandler {
+            gray_tab: gray.clone()
+        }
+    }
+}
+
+impl Handler for SecureHttpRpcRequestHandler {
+    type A = SocketAddr;
+    type B = Arc<HeaderMap>;
+    type C = Arc<RefCell<XHashMap<String, SGenType>>>;
+    type D = ResponseHandler<FTlsSocket>;
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = ();
+
+    //处理方法
+    fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let topic_handler = self.clone();
+        let topic_name = topic.clone();
+
+        let id = env.get_id();
+        let queue = new_queue(id); //创建指定socket的同步静态队列
+        let func = Box::new(move |lock: Option<isize>| {
+            let gray_tab = topic_handler.gray_tab.read();
+            let gray = match gray_tab.jsgrays.last() {
+                Some(g) => {
+                    g.values().last()
+                }
+                None => panic!("gray is not exist"),
+            };
+
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let topic_name = topic.clone();
+                let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                    let ptr = Box::into_raw(Box::new(mgr.clone())) as usize;
+                    ptr_jstype(vm.get_objs(), vm.clone(), ptr, 2976191628);
+                    vm.new_str((*topic_name).to_string());
+
+                    match args {
+                        Args::FourArgs(addr, headers, msg, handler) => {
+                            let mut http_connect = HttpConnect::new(addr);
+                            
+                            http_connect.set_secure_resp_handle(handler);
+
+                            let ptr = Box::into_raw(Box::new(http_connect)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), ptr, 63358028);
+                            let http_header = HttpHeaders::new(headers);
+                            let ptr = Box::into_raw(Box::new(http_header)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), ptr, 1654202482);
+
+                            let data = vm.new_object();
+                            for (key, val) in msg.borrow().iter() {
+                                match val {
+                                    SGenType::Str(s) => {
+                                        vm.set_field(&data, String::from(key), &mut vm.new_str(s.to_string()).unwrap());
+                                    }
+                                    SGenType::String(s) => {
+                                        vm.set_field(&data, String::from(key), &mut vm.new_str(s.to_string()).unwrap());
+                                    }
+                                    SGenType::Bin(bin) => {
+                                        let mut buffer = vm.new_uint8_array(bin.len() as u32);
+                                        buffer.from_bytes(bin.as_slice());
+                                        vm.set_field(&data, String::from(key), &mut buffer);
+                                    }
+                                    _ => {
+                                        unimplemented!();
+                                    }
+                                }
+                            }
+                        }
+                        _ => panic!("invalid HttpRpcRequestHandler handler args"),
+                    }
+                    5 // _$http_rpc 总共5个参数
+                });
+                gray.factory.call(Some(id), Atom::from("_$http_rpc"), real_args, Atom::from((*topic).to_string() + " http_rpc task"));
+
+                //解锁当前同步静态队列，保证虚拟机执行
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> Topic Handle Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("topic ".to_string() + &topic_name + " handle http_rpc task"));
+    }
+}
+
+impl SecureHttpRpcRequestHandler {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
+        SecureHttpRpcRequestHandler {
+            gray_tab: gray.clone()
+        }
+    }
+}
+
+pub struct HttpConnect {
+    peer_addr: SocketAddr,
+    conn_type: ConnectType,
+}
+
+impl  HttpConnect {
+    pub fn new(peer_addr: SocketAddr) -> Self {
+        Self {
+            peer_addr,
+            conn_type: ConnectType::Unknow
+        }
+    }
+
+    pub fn set_secure_resp_handle(&mut self, handle: ResponseHandler<FTlsSocket>) {
+        self.conn_type = ConnectType::Secure(handle);
+    }
+
+    pub fn set_insecure_resp_handle(&mut self, handle: ResponseHandler<TcpSocket>) {
+        self.conn_type = ConnectType::InSecure(handle);
+    }
+
+    // 返回 string 比较好，如果返回 [string, u16]的元组，js层没有解析方法
+    pub fn peer_addr(&self) -> String {
+        return self.peer_addr.to_string();
+    }
+
+    pub fn set(&self, key: &str, val: &str) {
+        match self.conn_type.clone() {
+            ConnectType::InSecure(handle) => {
+                handle.header(key, val);
+            }
+            ConnectType::Secure(handle) => {
+                handle.header(key, val)
+            }
+            ConnectType::Unknow => {
+                panic!("unknow connect type")
+            }
+        }
+    }
+
+    pub fn reply_http_rpc(&self, data: &[u8]) -> Result<bool, std::io::Error> {
+        match self.conn_type.clone() {
+            ConnectType::InSecure(insecure_handle) => {
+                if data.len() == 0 {
+                    insecure_handle.finish()?;
+                    return Ok(true)
+                }
+                insecure_handle.write(Vec::from(data))?;
+                insecure_handle.finish()?;
+                Ok(true)
+            }
+            ConnectType::Secure(secure_handle) => {
+                if data.len() == 0 {
+                    secure_handle.finish()?;
+                    return Ok(true)
+                }
+                secure_handle.write(Vec::from(data))?;
+                secure_handle.finish()?;
+                Ok(true)
+            }
+            ConnectType::Unknow => {
+                Err(Error::new(ErrorKind::Other, "Unknow connect type"))
+            }
+        }
+    }
+}
+
+pub struct HttpHeaders {
+    headers: Arc<HeaderMap>
+}
+
+impl HttpHeaders {
+    pub fn new(headers: Arc<HeaderMap>) -> Self {
+        Self {
+            headers
+        }
+    }
+
+    // 获取指定头
+    pub fn get(&self, key: &str) -> Option<&str> {
+        match self.headers.get(key) {
+            Some(val) => {
+                match val.to_str() {
+                    Ok(v) => {
+                        Some(v)
+                    }
+                    Err(_) => None
+                }
+            }
+            None => None
+        }
+    }
+}
+
+pub fn register_http_endpoint(key: String, val: String) {
+    HTTP_ENDPOINT.write().insert(key, val);
+}
+
+pub fn get_http_endpoint(key: &str) -> Option<String> {
+    HTTP_ENDPOINT.read().get(key).cloned()
+}
+
+pub fn get_all_http_endpoint() -> Vec<String> {
+    HTTP_ENDPOINT.read().values().map(|s|s.to_string()).collect::<Vec<String>>()
+}
+
 /**
 * 创建Rpc服务
 */
@@ -1034,4 +1352,11 @@ pub fn global_bind_tcp_ports<S: SocketTrait + StreamTrait>(ip: String,          
 */
 pub fn close_tcp_socket(uid: usize, reason: String) -> bool {
     close_socket(uid, Err(Error::new(ErrorKind::Other, reason)))
+}
+
+#[derive(Clone)]
+enum ConnectType {
+    InSecure(ResponseHandler<TcpSocket>),
+    Secure(ResponseHandler<FTlsSocket>),
+    Unknow
 }
