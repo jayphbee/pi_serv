@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex, RwLock};
 use std::net::SocketAddr;
-use std::io::{Error};
+use std::io::{Error, ErrorKind};
 
 use std::time::SystemTime;
 use std::sync::atomic::Ordering;
@@ -34,7 +34,7 @@ use tcp::connect::TcpSocket;
 use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
 use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
-use tcp::util::TlsConfig;
+use tcp::util::{close_socket, TlsConfig};
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
 use base::service::{BaseListener, BaseService};
@@ -972,9 +972,15 @@ pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定
 * 可以在运行时线程安全的，在全局Mqtt服务器上发布指定主题的消息
 */
 pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
-                                 topic: String, msg: &[u8]) {
-    if let Ok(bin) = encode(0, false, 0, msg) {
+                                 topic: String, msg: Arc<Vec<u8>>) {
+    if let Ok(bin) = encode(0, false, 0, msg.as_slice()) {
         publish_topic(is_public, topic, 0, None, Arc::new(bin));
     }
 }
 
+/*
+* 可以运行时线程安全的关闭指定唯一id的Tcp连接
+*/
+pub fn close_tcp_socket(uid: usize, reason: String) -> bool {
+    close_socket(uid, Err(Error::new(ErrorKind::Other, reason)))
+}
