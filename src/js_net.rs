@@ -989,8 +989,8 @@ pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定
 * 可以在运行时线程安全的，在全局Mqtt服务器上发布指定主题的消息
 */
 pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
-                                 topic: String, msg: Arc<Vec<u8>>) {
-    if let Ok(bin) = encode(0, false, 0, msg.as_slice()) {
+                                 topic: String, msg: &[u8]) {
+    if let Ok(bin) = encode(0, false, 0, msg) {
         publish_topic(is_public, topic, 0, None, Arc::new(bin));
     }
 }
