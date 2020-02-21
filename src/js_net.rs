@@ -9,6 +9,7 @@ use std::sync::atomic::Ordering;
 use fnv::FnvHashMap;
 use mqtt3;
 use parking_lot::RwLock;
+use futures::future::BoxFuture;
 
 use pi_vm::adapter::{JS};
 use pi_vm::pi_vm_impl::{new_queue, remove_queue};
@@ -34,7 +35,7 @@ use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
 use tcp::connect::TcpSocket;
 use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
-use tcp::driver::{Socket as SocketTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
+use tcp::driver::{Socket as SocketTrait, Stream as StreamTrait, SocketConfig, AsyncIOWait, AsyncServiceFactory};
 use tcp::buffer_pool::WriteBufferPool;
 use tcp::util::{close_socket, TlsConfig};
 use ws::server::WebsocketListenerFactory;
@@ -992,6 +993,39 @@ pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，�
                                  topic: String, msg: &[u8]) {
     if let Ok(bin) = encode(0, false, 0, msg) {
         publish_topic(is_public, topic, 0, None, Arc::new(bin));
+    }
+}
+
+/**
+* 为指定地址的指定端口，设置指定的网络服务工厂，并绑定对应的Tcp端口
+*/
+pub fn global_bind_tcp_ports<S: SocketTrait + StreamTrait>(ip: String,                       //绑定的本地ip地址
+                                                           binds: Vec<(u16, Box<dyn AsyncServiceFactory<Connect = S, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)>,
+                                                           recv_buffer_size: usize,          //连接的接收缓冲区，单位B
+                                                           send_buffer_size: usize,          //连接的发送缓冲区，单位B
+                                                           read_buffer_capacity: usize,      //连接的读缓冲区，单位B
+                                                           write_buffer_capacity: usize,     //连接的写缓冲区，单位次
+                                                           pool_size: usize,                 //连接池的初始容量
+                                                           stack_size: usize,                //连接线程的栈大小
+                                                           timeout: usize,                   //连接轮询的间隔时长，单位毫秒
+                                                           tls_config: TlsConfig) {
+    let mut ports = Vec::with_capacity(binds.len());
+    let mut factory = AsyncPortsFactory::<S>::new();
+    for (port, service) in binds {
+        ports.push(port.clone());
+        factory.bind(port, service);
+    }
+
+    let mut config = SocketConfig::new(&ip, factory.bind_ports().as_slice());
+    config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
+    let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
+    match SocketListener::<S, _>::bind(factory, buffer, config, tls_config, pool_size, stack_size, 1024, Some(timeout)) {
+        Err(e) => {
+            panic!("Bind tcp port Error, reason: {:?}", e);
+        },
+        Ok(_) => {
+            info!("===> Bind tcp port ok, ports: {:?}", ports);
+        }
     }
 }
 
