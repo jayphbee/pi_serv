@@ -1012,7 +1012,7 @@ pub fn global_bind_tcp_ports<S: SocketTrait + StreamTrait>(ip: String,          
     let mut ports = Vec::with_capacity(binds.len());
     let mut factory = AsyncPortsFactory::<S>::new();
     for (port, service) in binds {
-        ports.push(port.clone());
+        ports.push(port);
         factory.bind(port, service);
     }
 
