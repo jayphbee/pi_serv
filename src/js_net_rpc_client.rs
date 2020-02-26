@@ -59,6 +59,10 @@ impl RPCClient {
         }
     }
 
+    pub fn status(&self) -> isize {
+        self.0.status()
+    }
+
     /**
     * 使用RPC客户端建立一个连接
     * @param keep_alive 连接保持时长，单位秒
