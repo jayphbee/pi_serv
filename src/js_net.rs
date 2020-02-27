@@ -1304,7 +1304,7 @@ pub fn global_mqtt_bind_tcp_ports(ip: String,                       //绑定的�
     let mut config = SocketConfig::new(&ip, factory.bind_ports().as_slice());
     config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
     let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
-    match SocketListener::bind(factory, buffer, config, TlsConfig::empty(), pool_size, stack_size, 1024, Some(timeout)) {
+    match SocketListener::bind(factory, buffer, config, pool_size, stack_size, 1024, Some(timeout)) {
         Err(e) => {
             panic!("Mqtt bind tcp port Error, reason: {:?}", e);
         },
@@ -1508,9 +1508,9 @@ fn build_middleware<S: SocketTrait + StreamTrait + 'static>(http_config: Arc<Htt
 }
 
 pub fn start_network_services(net_kernel_options: NetKernelOptions, cert_path: Option<String>, priv_key_path: Option<String>) {
-    let mut secure_services: Vec<(u16, Box<dyn AsyncServiceFactory<Connect = FTlsSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
+    let mut secure_services: Vec<(u16, TlsConfig, Box<dyn AsyncServiceFactory<Connect = FTlsSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
     for SecureServices((port, service)) in  SECURE_SERVICES.write().drain(..).into_iter() {
-        secure_services.push((port, service));
+        secure_services.push((port, TlsConfig::empty(), service));
     }
 
     let mut insecure_services: Vec<(u16, Box<dyn AsyncServiceFactory<Connect = TcpSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
@@ -1519,7 +1519,7 @@ pub fn start_network_services(net_kernel_options: NetKernelOptions, cert_path: O
     }
 
     if insecure_services.len() > 0 {
-        global_bind_tcp_ports("0.0.0.0".to_string(), insecure_services, net_kernel_options.recv_buf_size, net_kernel_options.send_buf_size, net_kernel_options.read_buf_cap, net_kernel_options.write_buf_cap, net_kernel_options.pool_size, net_kernel_options.stack_size, net_kernel_options.timeout, TlsConfig::empty());
+        global_bind_tcp_ports("0.0.0.0".to_string(), insecure_services, net_kernel_options.recv_buf_size, net_kernel_options.send_buf_size, net_kernel_options.read_buf_cap, net_kernel_options.write_buf_cap, net_kernel_options.pool_size, net_kernel_options.stack_size, net_kernel_options.timeout);
     }
 
     if secure_services.len() > 0 {
@@ -1538,7 +1538,7 @@ pub fn start_network_services(net_kernel_options: NetKernelOptions, cert_path: O
                                                 "").unwrap();
 
 
-        global_bind_tcp_ports("0.0.0.0".to_string(), secure_services, net_kernel_options.recv_buf_size, net_kernel_options.send_buf_size, net_kernel_options.read_buf_cap, net_kernel_options.write_buf_cap, net_kernel_options.pool_size, net_kernel_options.stack_size, net_kernel_options.timeout, tls_config);
+        global_bind_tls_ports("0.0.0.0".to_string(), secure_services, net_kernel_options.recv_buf_size, net_kernel_options.send_buf_size, net_kernel_options.read_buf_cap, net_kernel_options.write_buf_cap, net_kernel_options.pool_size, net_kernel_options.stack_size, net_kernel_options.timeout);
     }
 }
 
@@ -1748,7 +1748,7 @@ pub fn global_bind_tcp_ports<S: SocketTrait + StreamTrait>(ip: String,          
                                                            pool_size: usize,                 //连接池的初始容量
                                                            stack_size: usize,                //连接线程的栈大小
                                                            timeout: usize,                   //连接轮询的间隔时长，单位毫秒
-                                                           tls_config: TlsConfig) {
+                                                           ) {
     let mut ports = Vec::with_capacity(binds.len());
     let mut factory = AsyncPortsFactory::<S>::new();
     for (port, service) in binds {
@@ -1759,12 +1759,45 @@ pub fn global_bind_tcp_ports<S: SocketTrait + StreamTrait>(ip: String,          
     let mut config = SocketConfig::new(&ip, factory.bind_ports().as_slice());
     config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
     let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
-    match SocketListener::<S, _>::bind(factory, buffer, config, tls_config, pool_size, stack_size, 1024, Some(timeout)) {
+    match SocketListener::<S, _>::bind(factory, buffer, config, pool_size, stack_size, 1024, Some(timeout)) {
         Err(e) => {
             panic!("Bind tcp port Error, reason: {:?}", e);
         },
         Ok(_) => {
             info!("===> Bind tcp port ok, ports: {:?}", ports);
+        }
+    }
+}
+
+/**
+* 为指定地址的指定端口，设置指定的网络服务工厂，并绑定对应的Tls端口
+*/
+pub fn global_bind_tls_ports<S: SocketTrait + StreamTrait>(ip: String,                       //绑定的本地ip地址
+                                                           binds: Vec<(u16, TlsConfig, Box<dyn AsyncServiceFactory<Connect = S, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)>,
+                                                           recv_buffer_size: usize,          //连接的接收缓冲区，单位B
+                                                           send_buffer_size: usize,          //连接的发送缓冲区，单位B
+                                                           read_buffer_capacity: usize,      //连接的读缓冲区，单位B
+                                                           write_buffer_capacity: usize,     //连接的写缓冲区，单位次
+                                                           pool_size: usize,                 //连接池的初始容量
+                                                           stack_size: usize,                //连接线程的栈大小
+                                                           timeout: usize,                   //连接轮询的间隔时长，单位毫秒
+) {
+    let mut ports = Vec::with_capacity(binds.len());
+    let mut factory = AsyncPortsFactory::<S>::new();
+    for (port, tls_cfg, service) in binds {
+        ports.push((port, tls_cfg));
+        factory.bind(port, service);
+    }
+
+    let mut config = SocketConfig::with_tls(&ip, ports.as_slice());
+    config.set_option(recv_buffer_size, send_buffer_size, read_buffer_capacity, write_buffer_capacity);
+    let buffer = WriteBufferPool::new(10000, 10, 3).ok().unwrap();
+    match SocketListener::<S, _>::bind(factory, buffer, config, pool_size, stack_size, 1024, Some(timeout)) {
+        Err(e) => {
+            panic!("Bind tcp port Error, reason: {:?}", e);
+        },
+        Ok(_) => {
+            info!("===> Bind tcp port ok, ports: {:?}", ports.iter().cloned().unzip::<_, _, Vec<u16>, Vec<TlsConfig>>().0);
         }
     }
 }
