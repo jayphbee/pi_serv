@@ -79,6 +79,10 @@ lazy_static! {
     static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     static ref SECURE_SERVICES: Arc<RwLock<Vec<SecureServices>>> = Arc::new(RwLock::new(vec![]));
     static ref INSECURE_SERVICES: Arc<RwLock<Vec<InsecureServices>>> = Arc::new(RwLock::new(vec![]));
+    // 每个端口的证书配置 (port, (cert_path, priv_key_path))
+    static ref CERTIFICATES: Arc<RwLock<FnvHashMap<u16, (String, String)>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    static ref SECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    static ref INSECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
 }
 
 struct InsecureServices((u16, Box<dyn AsyncServiceFactory<Connect = TcpSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>));
@@ -1324,197 +1328,231 @@ pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String) {
     }
 }
 
-pub fn establish_http_server(http_config: HttpConfig) -> Result<(), String> {
-    let http_config = Arc::new(http_config);
-
-    let enable_cache = http_config.static_cache_max_len > 0 && http_config.static_cache_max_size > 0 && http_config.static_cache_collect_time > 0;
-    
-    //构建中间件
-    let cors_handler = Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), http_config.cors));
-
-    if http_config.cors {
-        for config in http_config.cors_allows.borrow().iter() {
-            cors_handler.allow_origin(config.scheme.clone(), config.host.clone(), config.port, &config.methods, &[], config.max_age).map_err(|e| e.to_string())?;
-        }
-    }
-
-    let parser = Arc::new(DefaultParser::with(http_config.parser_min_plain_text_size, http_config.parse_compress_level));
-    let multi_parts = Arc::new(MutilParts::with(http_config.multi_parts_block_size));
-    let range_load = Arc::new(RangeLoad::new());
-
-    let file_load;
-    let files_load;
-    let batch_load;
-
-    if enable_cache {
-        let cache = Arc::new(StaticCache::new(http_config.static_cache_max_size, http_config.static_cache_max_len));
-        StaticCache::run_collect(cache.clone(), "test https cache".to_string(), http_config.static_cache_collect_time);
-        file_load = Arc::new(FileLoad::new(http_config.file_load_location.clone(), Some(cache.clone()), http_config.file_load_need_cache, true, true, false, http_config.file_load_max_age));
-        files_load = Arc::new(FilesLoad::new(http_config.files_load_location.clone(), Some(cache.clone()), http_config.files_load_need_cache, true, true, false, http_config.files_load_max_age));
-        batch_load = Arc::new(BatchLoad::new(http_config.batch_load_location.clone(), Some(cache.clone()), http_config.batch_load_need_cache, true, true, false, http_config.batch_load_max_age));
-    } else {
-        file_load = Arc::new(FileLoad::new(http_config.file_load_location.clone(), None, http_config.file_load_need_cache, true, true, false, http_config.file_load_max_age));
-        files_load = Arc::new(FilesLoad::new(http_config.files_load_location.clone(), None, http_config.files_load_need_cache, true, true, false, http_config.files_load_max_age));
-        batch_load = Arc::new(BatchLoad::new(http_config.batch_load_location.clone(), None, http_config.batch_load_need_cache, true, true, false, http_config.batch_load_max_age));
-    }
-
-    let upload = Arc::new(UploadFile::new(http_config.upload_file_location.clone()));
-
-
-    if http_config.http_port {
+fn build_secure_service() -> Result<(), String> {
+    for (port, http_configs) in SECURE_HTTP_CONFIGS.read().iter() {
         let handler = Arc::new(SecureHttpRpcRequestHandler::new(&get_gray_table()));
-        let port = Arc::new(HttpPort::with_handler(None, handler));
+        let http_port = Arc::new(HttpPort::with_handler(None, handler));
 
-        let r = build_middleware::<FTlsSocket>(http_config.clone(), cors_handler.clone(), parser.clone(), range_load, multi_parts.clone(), file_load.clone(), files_load.clone(), batch_load.clone(), upload.clone(), port.clone());
+        let r = build_service::<FTlsSocket>(port.clone(), http_configs, http_port);
         SECURE_SERVICES.write().push(SecureServices(r));
-
-    } else {
-        let handler = Arc::new(InsecureHttpRpcRequstHandler::new(&get_gray_table()));
-        let port = Arc::new(HttpPort::with_handler(None, handler));
-
-        let r = build_middleware::<TcpSocket>(http_config.clone(), cors_handler.clone(), parser.clone(), range_load, multi_parts.clone(), file_load.clone(), files_load.clone(), batch_load.clone(), upload.clone(), port.clone());
-        INSECURE_SERVICES.write().push(InsecureServices(r));
     }
-    
     Ok(())
 }
 
-fn build_middleware<S: SocketTrait + StreamTrait + 'static>(http_config: Arc<HttpConfig>, cors_handler: Arc<CORSHandler>, parser: Arc<DefaultParser>, range_load: Arc<RangeLoad>, multi_parts: Arc<MutilParts>, file_load: Arc<FileLoad>, files_load: Arc<FilesLoad>, batch_load: Arc<BatchLoad>, upload: Arc<UploadFile>, port: Arc<HttpPort<S>>) -> (u16, Box<dyn AsyncServiceFactory<Connect = S, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>){
-    //构建处理CORS的Options方法的请求的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.finish();
-    let cors_middleware = Arc::new(chain);
+fn build_insecure_service() -> Result<(), String> {
+    for (port, http_configs) in INSECURE_HTTP_CONFIGS.read().iter() {
+        let handler = Arc::new(InsecureHttpRpcRequstHandler::new(&get_gray_table()));
+        let http_port = Arc::new(HttpPort::with_handler(None, handler));
 
-    //构建处理文件加载的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.push_back(parser.clone());
-    chain.push_back(range_load.clone());
-    chain.push_back(file_load);
-    chain.finish();
-    let file_load_middleware = Arc::new(chain);
+        let r = build_service::<TcpSocket>(port.clone(), http_configs, http_port);
+        INSECURE_SERVICES.write().push(InsecureServices(r));
+    }
 
-    //构建处理文件批量加载的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.push_back(parser.clone());
-    chain.push_back(range_load.clone());
-    chain.push_back(files_load);
-    chain.finish();
-    let files_load_middleware = Arc::new(chain);
+    Ok(())
+}
 
-    //构建改进的处理文件批量加载的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.push_back(parser.clone());
-    chain.push_back(range_load.clone());
-    chain.push_back(batch_load);
-    chain.finish();
-    let batch_load_middleware = Arc::new(chain);
+fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<HttpConfig>, http_port: Arc<HttpPort<S>>) -> (u16, Box<dyn AsyncServiceFactory<Connect = S, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>) {
+    let mut hosts = VirtualHostTab::new();
+    let mut keep_alive = 60000;
+    for http_config in http_configs {
+        if http_config.keep_alive_timeout > 0 {
+            keep_alive = http_config.keep_alive_timeout;
+        }
+        let enable_cache = http_config.static_cache_max_len > 0 && http_config.static_cache_max_size > 0 && http_config.static_cache_collect_time > 0;
+        let cors_handler = Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), http_config.cors));
 
-    //构建处理文件上传的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.push_back(parser.clone());
-    chain.push_back(multi_parts.clone());
-    chain.push_back(upload);
-    chain.finish();
-    let upload_middleware = Arc::new(chain);
+        if http_config.cors {
+            for config in http_config.cors_allows.borrow().iter() {
+                cors_handler.allow_origin(config.scheme.clone(), config.host.clone(), config.port, &config.methods, &[], config.max_age);
+            }
+        }
 
-    //构建处理动态资源访问的中间件链
-    let mut chain = MiddlewareChain::new();
-    chain.push_back(cors_handler.clone());
-    chain.push_back(parser);
-    chain.push_back(port);
-    chain.finish();
-    let port_middleware = Arc::new(chain);
+        let parser = Arc::new(DefaultParser::with(http_config.parser_min_plain_text_size, http_config.parse_compress_level));
+        let multi_parts = Arc::new(MutilParts::with(http_config.multi_parts_block_size));
+        let range_load = Arc::new(RangeLoad::new());
 
-    //构建路由
-    let mut route = HttpRoute::new();
-    route
-        .at("/").options(cors_middleware.clone())
-        .at("/**").options(cors_middleware);
+        let file_load;
+        let files_load;
+        let batch_load;
 
-    for r in http_config.route_table.borrow().iter() {
-        match r.handler_name.as_str() {
-            "fileLoad" => {
-                if r.methods.contains(&"GET".to_string()) {
-                    route.at(&r.endpoint).get(file_load_middleware.clone());
-                } else if r.methods.contains(&"POST".to_string()) {
-                    route.at(&r.endpoint).post(file_load_middleware.clone());
-                } else if r.methods.contains(&"OPTIONS".to_string()) {
-                    route.at(&r.endpoint).options(file_load_middleware.clone());
+        if enable_cache {
+            let cache = Arc::new(StaticCache::new(http_config.static_cache_max_size, http_config.static_cache_max_len));
+            StaticCache::run_collect(cache.clone(), "http cache".to_string(), http_config.static_cache_collect_time);
+            file_load = Arc::new(FileLoad::new(http_config.file_load_location.clone(), Some(cache.clone()), http_config.file_load_need_cache, true, true, false, http_config.file_load_max_age));
+            files_load = Arc::new(FilesLoad::new(http_config.files_load_location.clone(), Some(cache.clone()), http_config.files_load_need_cache, true, true, false, http_config.files_load_max_age));
+            batch_load = Arc::new(BatchLoad::new(http_config.batch_load_location.clone(), Some(cache.clone()), http_config.batch_load_need_cache, true, true, false, http_config.batch_load_max_age));
+        } else {
+            file_load = Arc::new(FileLoad::new(http_config.file_load_location.clone(), None, http_config.file_load_need_cache, true, true, false, http_config.file_load_max_age));
+            files_load = Arc::new(FilesLoad::new(http_config.files_load_location.clone(), None, http_config.files_load_need_cache, true, true, false, http_config.files_load_max_age));
+            batch_load = Arc::new(BatchLoad::new(http_config.batch_load_location.clone(), None, http_config.batch_load_need_cache, true, true, false, http_config.batch_load_max_age));
+        }
+
+        let upload = Arc::new(UploadFile::new(http_config.upload_file_location.clone()));
+
+        //构建处理CORS的Options方法的请求的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.finish();
+        let cors_middleware = Arc::new(chain);
+
+        //构建处理文件加载的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.push_back(parser.clone());
+        chain.push_back(range_load.clone());
+        chain.push_back(file_load);
+        chain.finish();
+        let file_load_middleware = Arc::new(chain);
+
+        //构建处理文件批量加载的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.push_back(parser.clone());
+        chain.push_back(range_load.clone());
+        chain.push_back(files_load);
+        chain.finish();
+        let files_load_middleware = Arc::new(chain);
+
+        //构建改进的处理文件批量加载的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.push_back(parser.clone());
+        chain.push_back(range_load.clone());
+        chain.push_back(batch_load);
+        chain.finish();
+        let batch_load_middleware = Arc::new(chain);
+
+        //构建处理文件上传的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.push_back(parser.clone());
+        chain.push_back(multi_parts.clone());
+        chain.push_back(upload);
+        chain.finish();
+        let upload_middleware = Arc::new(chain);
+
+        //构建处理动态资源访问的中间件链
+        let mut chain = MiddlewareChain::new();
+        chain.push_back(cors_handler.clone());
+        chain.push_back(parser);
+        chain.push_back(http_port.clone());
+        chain.finish();
+        let port_middleware = Arc::new(chain);
+
+        for (vhs, routes) in http_config.virtual_hosts.borrow().iter() {
+            //构建路由
+            let mut route = HttpRoute::new();
+            route
+                .at("/").options(cors_middleware.clone())
+                .at("/**").options(cors_middleware.clone());
+
+            for r in routes {
+                match r.handler_name.as_str() {
+                    "fileLoad" => {
+                        if r.methods.contains(&"GET".to_string()) {
+                            route.at(&r.endpoint).get(file_load_middleware.clone());
+                        } else if r.methods.contains(&"POST".to_string()) {
+                            route.at(&r.endpoint).post(file_load_middleware.clone());
+                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                            route.at(&r.endpoint).options(file_load_middleware.clone());
+                        }
+                    }
+
+                    "filesLoad" => {
+                        if r.methods.contains(&"GET".to_string()) {
+                            route.at(&r.endpoint).get(files_load_middleware.clone());
+                        } else if r.methods.contains(&"POST".to_string()) {
+                            route.at(&r.endpoint).post(files_load_middleware.clone());
+                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                            route.at(&r.endpoint).options(files_load_middleware.clone());
+                        }
+                    }
+
+                    "batchLoad" => {
+                        if r.methods.contains(&"GET".to_string()) {
+                            route.at(&r.endpoint).get(batch_load_middleware.clone());
+                        } else if r.methods.contains(&"POST".to_string()) {
+                            route.at(&r.endpoint).post(batch_load_middleware.clone());
+                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                            route.at(&r.endpoint).options(batch_load_middleware.clone());
+                        }
+                    }
+
+                    "upload" => {
+                        if r.methods.contains(&"GET".to_string()) {
+                            route.at(&r.endpoint).get(upload_middleware.clone());
+                        } else if r.methods.contains(&"POST".to_string()) {
+                            route.at(&r.endpoint).post(upload_middleware.clone());
+                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                            route.at(&r.endpoint).options(upload_middleware.clone());
+                        }
+                    }
+
+                    "port" => {
+                        if r.methods.contains(&"GET".to_string()) {
+                            route.at(&r.endpoint).get(port_middleware.clone());
+                        } else if r.methods.contains(&"POST".to_string()) {
+                            route.at(&r.endpoint).post(port_middleware.clone());
+                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                            route.at(&r.endpoint).options(port_middleware.clone());
+                        }
+                    }
+
+                    _ => {
+                        panic!("unsupported secure middleware");
+                    }
                 }
             }
 
-            "filesLoad" => {
-                if r.methods.contains(&"GET".to_string()) {
-                    route.at(&r.endpoint).get(files_load_middleware.clone());
-                } else if r.methods.contains(&"POST".to_string()) {
-                    route.at(&r.endpoint).post(files_load_middleware.clone());
-                } else if r.methods.contains(&"OPTIONS".to_string()) {
-                    route.at(&r.endpoint).options(files_load_middleware.clone());
-                }
-            }
+            //构建虚拟主机
+            let host = VirtualHost::with(route);
 
-            "batchLoad" => {
-                if r.methods.contains(&"GET".to_string()) {
-                    route.at(&r.endpoint).get(batch_load_middleware.clone());
-                } else if r.methods.contains(&"POST".to_string()) {
-                    route.at(&r.endpoint).post(batch_load_middleware.clone());
-                } else if r.methods.contains(&"OPTIONS".to_string()) {
-                    route.at(&r.endpoint).options(batch_load_middleware.clone());
-                }
-            }
-
-            "upload" => {
-                if r.methods.contains(&"GET".to_string()) {
-                    route.at(&r.endpoint).get(upload_middleware.clone());
-                } else if r.methods.contains(&"POST".to_string()) {
-                    route.at(&r.endpoint).post(upload_middleware.clone());
-                } else if r.methods.contains(&"OPTIONS".to_string()) {
-                    route.at(&r.endpoint).options(upload_middleware.clone());
-                }
-            }
-
-            "port" => {
-                if r.methods.contains(&"GET".to_string()) {
-                    route.at(&r.endpoint).get(port_middleware.clone());
-                } else if r.methods.contains(&"POST".to_string()) {
-                    route.at(&r.endpoint).post(port_middleware.clone());
-                } else if r.methods.contains(&"OPTIONS".to_string()) {
-                    route.at(&r.endpoint).options(port_middleware.clone());
-                }
-            }
-
-            _ => {
-                panic!("unsupported secure middleware");
+            // 多个主机共享一个路由表
+            for vh in vhs {
+                println!("add insecure host = {:?}, port = {:?}", vh, http_config.port);
+                let _ = hosts.add(vh, host.clone());
             }
         }
     }
 
-    //构建虚拟主机
-    let host = VirtualHost::with(route);
-
-    //设置虚拟主机
-    let mut hosts = VirtualHostTab::new();
-
-    for h in http_config.virtual_hosts.borrow().iter() {
-        hosts.add(&h, host.clone());
-    }
-
-    (http_config.port, Box::new(HttpListenerFactory::with_hosts(hosts, http_config.keep_alive_timeout)))
+    (port.clone(), Box::new(HttpListenerFactory::with_hosts(hosts.clone(), keep_alive)))
 }
 
-pub fn start_network_services(net_kernel_options: NetKernelOptions, cert_path: Option<String>, priv_key_path: Option<String>) {
+pub fn config_certificate(port: u16, cert_path: String, priv_key_path: String) {
+    CERTIFICATES.write().insert(port, (cert_path, priv_key_path));
+}
+
+pub fn start_network_services(net_kernel_options: NetKernelOptions) -> Result<(), String> {
+    // 准备安全服务配置
+    build_secure_service()?;
+    // 准备非安全服务配置
+    build_insecure_service()?;
+
     let mut secure_services: Vec<(u16, TlsConfig, Box<dyn AsyncServiceFactory<Connect = FTlsSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
     for SecureServices((port, service)) in  SECURE_SERVICES.write().drain(..).into_iter() {
-        secure_services.push((port, TlsConfig::empty(), service));
+        println!("start_network_services secure service port = {:?}", port);
+        match CERTIFICATES.read().get(&port) {
+            Some((cert_path, priv_key_path)) => {
+                let tls_config = TlsConfig::new_server("",
+                                                        false,
+                                                        cert_path,
+                                                        priv_key_path,
+                                                        "",
+                                                        "",
+                                                        "",
+                                                        512,
+                                                        false,
+                                                        "").unwrap();
+
+                secure_services.push((port, tls_config, service));
+            }
+            None => panic!("port {:?} configured use TLS, but no certificate specified", port),
+        }
     }
 
     let mut insecure_services: Vec<(u16, Box<dyn AsyncServiceFactory<Connect = TcpSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
     for InsecureServices((port, service)) in INSECURE_SERVICES.write().drain(..).into_iter() {
+        debug!("start_network_services insecure service port = {:?}", port);
         insecure_services.push((port, service));
     }
 
@@ -1523,28 +1561,16 @@ pub fn start_network_services(net_kernel_options: NetKernelOptions, cert_path: O
     }
 
     if secure_services.len() > 0 {
-        if cert_path.is_none() || priv_key_path.is_none() {
-            panic!("certificate path or private key path not found");
-        }
-        let tls_config = TlsConfig::new_server("",
-                                                false,
-                                                cert_path.unwrap().as_str(),
-                                                priv_key_path.unwrap().as_str(),
-                                                "",
-                                                "",
-                                                "",
-                                                512,
-                                                false,
-                                                "").unwrap();
-
-
         global_bind_tls_ports("0.0.0.0".to_string(), secure_services, net_kernel_options.recv_buf_size, net_kernel_options.send_buf_size, net_kernel_options.read_buf_cap, net_kernel_options.write_buf_cap, net_kernel_options.pool_size, net_kernel_options.stack_size, net_kernel_options.timeout);
     }
+
+    Ok(())
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct HttpConfig {
-    virtual_hosts: RefCell<Vec<String>>,
+    // 多个主机可以共享一个路由表， 也可以使用不同的路由表
+    virtual_hosts: RefCell<FnvHashMap<Vec<String>, Vec<HttpRouteTable>>>,
     port: u16,
 
     keep_alive_timeout: usize,
@@ -1579,9 +1605,10 @@ pub struct HttpConfig {
 
     // 安全连接还是非安全连接
     http_port: bool,
-
-    route_table: RefCell<Vec<HttpRouteTable>>
 }
+
+unsafe impl Send for HttpConfig {}
+unsafe impl Sync for HttpConfig {}
 
 impl HttpConfig {
     pub fn new() -> Self {
@@ -1590,10 +1617,6 @@ impl HttpConfig {
 
     pub fn bind_http_port(&mut self, port: u16) {
         self.port = port;
-    }
-
-    pub fn add_virtual_host(&mut self, host: String) {
-        self.virtual_hosts.borrow_mut().push(host);
     }
 
     pub fn config_static_cache(&mut self, max_size: usize, max_len: usize, collect_time: u64) {
@@ -1649,14 +1672,18 @@ impl HttpConfig {
         self.http_port = secure;
     }
 
-    pub fn add_http_route(&mut self, endpoint: String, methods: Vec<String>, handler_name: String) {
-        let val = HttpRouteTable::new(endpoint, methods, handler_name);
-        self.route_table.borrow_mut().push(val);
+    // 给虚拟主机添加路由表
+    pub fn add_route_for_hosts(&mut self, virtual_hosts: Vec<String>, endpoint: String, methods: Vec<String>, handler_name: String) {
+        let route = HttpRouteTable::new(endpoint, methods, handler_name);
+        self.virtual_hosts.borrow_mut().entry(virtual_hosts).and_modify(|routes| {
+            routes.push(route.clone());
+        }).or_insert_with(|| {
+            vec![route]
+        });
     }
-
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HttpRouteTable {
     endpoint: String,
     methods: Vec<String>,
@@ -1673,7 +1700,7 @@ impl HttpRouteTable {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CorsAllow {
     scheme: String,
     host: String,
@@ -1798,6 +1825,133 @@ pub fn global_bind_tls_ports<S: SocketTrait + StreamTrait>(ip: String,          
         },
         Ok(_) => {
             info!("===> Bind tcp port ok, ports: {:?}", ports.iter().cloned().unzip::<_, _, Vec<u16>, Vec<TlsConfig>>().0);
+        }
+    }
+}
+
+pub fn parse_http_config(jstr: String) {
+    match json::parse(&jstr) {
+        Ok(jobj) => {
+            for config in jobj["httpConfig"].members() {
+                let mut http_config = HttpConfig::new();
+
+                let virtual_host = config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                let mut static_cache_collect_time: u64 = 0;
+                let mut static_cache_max_size: usize = 0;
+                let mut static_cache_max_len: usize = 0;
+                for (key, val) in config["staticCache"].entries() {
+                    match key {
+                        "maxSize" => static_cache_max_size = val.as_usize().unwrap(),
+                        "maxLen" => static_cache_max_len = val.as_usize().unwrap(),
+                        "collectTime" => static_cache_collect_time = val.as_u64().unwrap(),
+                        _ => warn!("unknown field")
+                    }
+                }
+                http_config.config_static_cache(static_cache_max_size, static_cache_max_len, static_cache_collect_time);
+
+                http_config.config_cors(config["CORS"].as_bool().unwrap());
+
+                for cors_allow in config["CORSAllows"].members() {
+                    let scheme = cors_allow["scheme"].as_str().unwrap().to_string();
+                    let host = cors_allow["host"].as_str().unwrap().to_string();
+                    let port = cors_allow["port"].as_u16().unwrap();
+                    let methods = cors_allow["methods"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                    let max_age = cors_allow["maxAge"].as_usize();
+                    let c = CorsAllow::new(scheme, host, port, methods, max_age);
+                    http_config.add_cors_allow(c);
+                }
+                
+                let port = config["port"].as_u16().unwrap();
+                http_config.bind_http_port(port);
+                http_config.config_set_keep_alive_timeout(config["keepAliveTimeout"].as_usize().unwrap());
+
+                let mut parser_min_plain_text_size: usize = 0;
+                let mut parse_compress_level: Option<u32> = None;
+                for (key, val) in config["parser"].entries() {
+                    match key {
+                        "minPlainTextSize" => parser_min_plain_text_size = val.as_usize().unwrap(),
+                        "compressLevel" => parse_compress_level = val.as_u32(),
+                        _ => warn!("unknown field")
+                    }
+                }
+                http_config.config_parser(parser_min_plain_text_size, parse_compress_level);
+
+                let mut multi_parts_block_size: usize = 0;
+                for (key, val) in config["mutilParts"].entries() {
+                    match key {
+                        "blockSize" => multi_parts_block_size = val.as_usize().unwrap(),
+                        _ => warn!("unknown field")
+                    }
+                }
+                http_config.config_multi_parts(multi_parts_block_size);
+
+                let mut file_load_location: String = "".to_string();
+                let mut file_load_need_cache: bool = false;
+                let mut file_load_max_age: usize = 0;
+                for (key, val) in config["fileLoad"].entries() {
+                    match key {
+                        "location" => file_load_location = val.as_str().unwrap().to_string(),
+                        "needCache" => file_load_need_cache = val.as_bool().unwrap(),
+                        "maxAge" => file_load_max_age = val.as_usize().unwrap(),
+                        _ => warn!("unknown field {:?}", key)
+                    }
+                }
+                http_config.config_file_load(file_load_location, file_load_need_cache, file_load_max_age);
+
+                let mut files_load_location: String = "".to_string();
+                let mut files_load_need_cache: bool = false;
+                let mut files_load_max_age: usize = 0;
+                for (key, val) in config["filesLoad"].entries() {
+                    match key {
+                        "location" => files_load_location = val.as_str().unwrap().to_string(),
+                        "needCache" => files_load_need_cache = val.as_bool().unwrap(),
+                        "maxAge" => files_load_max_age = val.as_usize().unwrap(),
+                        _ => warn!("unknown field {:?}", key)
+                    }
+                }
+                http_config.config_files_load(files_load_location, files_load_need_cache, files_load_max_age);
+
+                let mut batch_load_location: String = "".to_string();
+                let mut batch_load_need_cache: bool = false;
+                let mut batch_load_max_age: usize = 0;
+                for (key, val) in config["batchLoad"].entries() {
+                    match key {
+                        "location" => batch_load_location = val.as_str().unwrap().to_string(),
+                        "needCache" => batch_load_need_cache = val.as_bool().unwrap(),
+                        "maxAge" => batch_load_max_age = val.as_usize().unwrap(),
+                        _ => warn!("unknown field {:?}", key)
+                    }
+                }
+                http_config.config_batch_load(batch_load_location, batch_load_need_cache, batch_load_max_age);
+
+                for (key, val) in config["uploadFile"].entries() {
+                    match key {
+                        "location" => http_config.config_upload_file(val.as_str().unwrap().to_string()),
+                        _ => warn!("unknown field {:?}", key)
+                    }
+                }
+
+                let http_port = config["httpPort"].as_bool().unwrap();
+                http_config.config_http_port(config["httpPort"].as_bool().unwrap());
+
+                for route in config["routeTable"].members() {
+                    let endpoint = route["endpoint"].as_str().unwrap().to_string();
+                    let methods = route["methods"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                    let handler_name = route["handlerName"].as_str().unwrap().to_string();
+                    http_config.add_route_for_hosts(virtual_host.clone(), endpoint, methods, handler_name);
+                }
+                debug!("parsed http config ----- {:?}", http_config);
+                if http_port {
+                    SECURE_HTTP_CONFIGS.write().entry(port).and_modify(|configs| configs.push(http_config.clone())).or_insert(vec![http_config]);
+                } else {
+                    INSECURE_HTTP_CONFIGS.write().entry(port).and_modify(|configs| configs.push(http_config.clone())).or_insert(vec![http_config]);
+                }
+
+            }
+        }
+
+        Err(e) => {
+            panic!("JSON parse error, please make sure it is a json string: {:?}, error: {:?}", jstr, e);
         }
     }
 }
