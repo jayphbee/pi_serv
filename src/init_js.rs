@@ -46,7 +46,7 @@ pub fn exec_js(path: String) {
     let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
     mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
 
-    let js = JS::new(1, Atom::from("compile"), auth.clone(), None).unwrap();
+    let js = JS::new(1, Atom::from("init compile"), auth.clone(), None).unwrap();
 
     // 设置当前运行目录
     let build_out_root = env_var("PROJECT_ROOT").unwrap();

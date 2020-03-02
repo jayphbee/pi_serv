@@ -123,15 +123,16 @@ pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
 }
 
 pub fn remove_byte_code(mod_id: String) {
-    let last_version = GRAY_VERSION.load(Ordering::SeqCst);;
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);
     let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
     BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(proj_name).unwrap().remove(&mod_id);
 }
 
 pub fn compile_byte_code(mod_id: String, source_code: String) -> Option<Arc< Vec<u8>>> {
-    let last_version = GRAY_VERSION.load(Ordering::SeqCst);;
+    let last_version = GRAY_VERSION.load(Ordering::SeqCst);
     let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
-    let opts = JS::new(1, Atom::from("compile"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+    let opts = JS::new(1, Atom::from("hot"), Arc::new(NativeObjsAuth::new(None, None)), None).unwrap();
+
 	match opts.compile(mod_id.clone(), source_code) {
 		Some(r) => {
             match BYTE_CODE_CACHE.write().get_mut(&last_version) {

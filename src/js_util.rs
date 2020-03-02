@@ -292,6 +292,10 @@ pub fn decode_json(js: &Arc<JS>, bon: &mut ReadBuffer) -> Result<JSType, String>
 		if t == 2 {
 			r = js.new_array();
 			let mut i = 0;
+			// 读长度
+			if ((bb.head - old_head) as u64) < l {
+				u32::decode(bb);
+			}
 			loop {
 				if ((bb.head - old_head) as u64) < l {
 					let mut v = match decode_any(js, bb) {
