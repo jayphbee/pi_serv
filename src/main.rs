@@ -30,7 +30,10 @@ extern crate guid;
 extern crate handler;
 extern crate hash_value;
 extern crate httpc;
+extern crate http;
 extern crate https;
+extern crate https_external;
+extern crate hash;
 extern crate libc;
 extern crate mqtt;
 extern crate mqtt3;
@@ -45,6 +48,7 @@ extern crate util as lib_util;
 extern crate worker;
 extern crate ws;
 extern crate parking_lot;
+extern crate futures;
 
 #[macro_use]
 extern crate lazy_static;
@@ -72,6 +76,7 @@ pub mod js_net_rpc_client;
 pub mod js_vm;
 pub mod util;
 pub mod webshell;
+pub mod ptmgr;
 
 mod def_build;
 mod js_util;
@@ -130,6 +135,21 @@ use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
 use apm::common::SysStat;
+use ptmgr::PLAT_MGR;
+
+use js_net::InsecureHttpRpcRequstHandler;
+use http::{server::HttpListenerFactory,
+    virtual_host::{VirtualHostTab, VirtualHost},
+    route::HttpRoute,
+    middleware::MiddlewareChain,
+    default_parser::DefaultParser,
+    port::HttpPort};
+use http::virtual_host::VirtualHostPool;
+use tcp::server::{AsyncPortsFactory, SocketListener};
+use tcp::connect::TcpSocket;
+use tcp::driver::{SocketConfig};
+use tcp::buffer_pool::WriteBufferPool;
+use tcp::util::{TlsConfig};
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;

@@ -20,6 +20,7 @@ use js_env::{ env_var };
 use js_file::read_file_string_sync;
 use js_net::{ RequestHandler, create_rpc_service, register_rpc_topic };
 use init_js::{read_code, load_core_env};
+use js_net::get_all_http_endpoint;
 
 
 lazy_static! {
@@ -125,7 +126,13 @@ pub fn get_byte_code(mod_id: String) -> Option<Arc<Vec<u8>>> {
 pub fn remove_byte_code(mod_id: String) {
     let last_version = GRAY_VERSION.load(Ordering::SeqCst);
     let proj_name = mod_id.split("/").collect::<Vec<&str>>()[0];
-    BYTE_CODE_CACHE.write().get_mut(&last_version).unwrap().get_mut(proj_name).unwrap().remove(&mod_id);
+
+    BYTE_CODE_CACHE.write().entry(last_version)
+        .and_modify(|version| {
+            version.entry(proj_name.to_string()).and_modify(|code|{
+                code.remove(&mod_id);
+            });
+        });
 }
 
 pub fn compile_byte_code(mod_id: String, source_code: String) -> Option<Arc< Vec<u8>>> {
@@ -269,55 +276,111 @@ pub fn hotfix_listen(path: String) {
 }
 
 fn module_changed(path: PathBuf) {
-    let mod_id = normalize_module_id(path.to_str().unwrap());
+    let path = match path.to_str() {
+        Some(path) => path,
+        None => {
+            error!("module change path is None");
+            return
+        }
+    };
+    let mod_id = normalize_module_id(path);
 
     let mut gray_tab = GRAY_TABLE.write();
-    let mut jsgrays = gray_tab.jsgrays.last_mut().unwrap();
-    for (k, v) in jsgrays.iter_mut() {
-        let auth = Arc::new(NativeObjsAuth::new(None, None));
-        let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
-        load_core_env(&js);
+    if let Some(jsgrays) = gray_tab.jsgrays.last_mut() {
+        for (k, v) in jsgrays.iter_mut() {
+            let auth = Arc::new(NativeObjsAuth::new(None, None));
+            let js = match JS::new(1, Atom::from("hotfix compile"), auth.clone(), None) {
+                Some(js) => js,
+                None => {
+                    error!("new hotfix compile vm failed, change path: {:?}", path);
+                    return
+                }
+            };
 
-        let cur_exe = env::current_exe().unwrap();
-        let env_code = read_code(&cur_exe.join("../env.js"));
-        let core_code = read_code(&cur_exe.join("../core.js"));
+            load_core_env(&js);
 
-        let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-        let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+            let cur_exe = match env::current_exe() {
+                Ok(cur_exe) => cur_exe,
+                Err(e) => {
+                    error!("get current exe failed, change path: {:?}, error: {:?}", path, e);
+                    return
+                }
+            };
 
-        let mgr = v.mgr.clone();
-        let auth = Arc::new(NativeObjsAuth::new(None, None));
-        let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
+            let env_code = read_code(&cur_exe.join("../env.js"));
+            let core_code = read_code(&cur_exe.join("../core.js"));
 
-        // env.js / core.js 代码
-        vmf = vmf.append(Arc::new(env_code));
-        vmf = vmf.append(Arc::new(core_code));
+            let env_code = match js.compile("env.js".to_string(), env_code) {
+                Some(env_code) => env_code,
+                None => {
+                    error!("compile env.js code failed, change path: {:?}", path);
+                    return
+                }
+            };
+            let core_code = match js.compile("core.js".to_string(), core_code) {
+                Some(env_code) => env_code,
+                None => {
+                    error!("compile core.js code failed, change path: {:?}", path);
+                    return
+                }
+            };
 
-        let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+            let mgr = v.mgr.clone();
+            let auth = Arc::new(NativeObjsAuth::new(None, None));
+            let mut vmf = VMFactory::new(k.as_str(), 128, 2, 33554432, 33554432, auth);
 
-        remove_byte_code(mod_id.clone());
+            // env.js / core.js 代码
+            vmf = vmf.append(Arc::new(env_code));
+            vmf = vmf.append(Arc::new(core_code));
 
-        let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-        let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
-        let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
+            let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
 
-        // rpc 功能依赖的代码，和实际处理rpc需要的代码
-        vmf = vmf.append(Arc::new(extra_code));
-        vmf.produce(2);
+            // 对应pi_pt/init/util.ts 数据库监听器的临时方案
+            let db_listener_code = "pi_pt/db/dblistener.js";
 
-        if v.factory.is_depend(&mod_id) {
-            debug!("{:?} is a depend for {:?}", mod_id, k);
+            // http rpc 的热更新
+            let http_code = get_all_http_endpoint().into_iter().fold("".to_string(), |acc, x| {
+                let mut mod_name = x.split(".").nth(0).unwrap().to_string();
+                mod_name += ".event";
+                acc + format!("Module.require(\'{}\', '');", mod_name).as_str()
+            });
+            debug!("http_code: {:?}", http_code);
 
-            let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
-            // 用新的代码替换
-            *v = Arc::new(jsgray);
-        } else {
-            let deps = get_depends(&js, k.as_str());
-            for dep in deps {
-                vmf = vmf.append_depend(dep);
+            remove_byte_code(mod_id.clone());
+
+            let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+            let extra_code = extra_code + format!("Module.require(\'{}\', '');", db_listener_code).as_str();
+            let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
+            let extra_code = extra_code + http_code.as_str();
+            let extra_code = match js.compile("rpc_entrance".to_string(), extra_code) {
+                Some(extra_code) => extra_code,
+                None => {
+                    error!("compile extra code failed, change path: {:?}", path);
+                    return
+                }
+            };
+
+            // rpc 功能依赖的代码，和实际处理rpc需要的代码
+            vmf = vmf.append(Arc::new(extra_code));
+            if let Err(e) = vmf.produce(2) {
+                error!("vm factory produce failed, change path: {:?}, error: {:?}", path, e);
+                return
             }
-            let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
-            *v = Arc::new(jsgray);
+
+            if v.factory.is_depend(&mod_id) {
+                debug!("{:?} is a depend for {:?}", mod_id, k);
+
+                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                // 用新的代码替换
+                *v = Arc::new(jsgray);
+            } else {
+                let deps = get_depends(&js, k.as_str());
+                for dep in deps {
+                    vmf = vmf.append_depend(dep);
+                }
+                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                *v = Arc::new(jsgray);
+            }
         }
     }
 }
@@ -339,9 +402,16 @@ fn get_depends(js: &Arc<JS>, vmf_name: &str) -> Vec<String> {
 }
 
 fn normalize_module_id(mod_id: &str) -> String {
+    let root = match env_var("PROJECT_ROOT") {
+        Ok(root) => root,
+        Err(e) => {
+            error!("Can't get PROJECT_ROOT env, mod_id: {:?}, error: {:?}", mod_id, e);
+            return "".to_string();
+        }
+    };
     mod_id.replace("\\", "/")
         .as_str()
-        .trim_start_matches(&(env_var("PROJECT_ROOT").unwrap() + "/"))
+        .trim_start_matches(&(root + "/"))
         .to_string()
 }
 

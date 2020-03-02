@@ -24,8 +24,10 @@ net = { path = "../pi_net/net" }
 nodec = { path = "../pi_net/nodec" }
 mqtt_tmp = { path = "../pi_net/mqtt_tmp" }
 rpc_tmp = { path = "../pi_net/rpc_tmp" }
+http = { path = "../pi_net/http"}
 httpc = { path = "../pi_net/httpc" }
 https = { path = "../pi_net/https" }
+https_external = { package = "http", version = "0.2" }
 tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 mqtt = { path = "../pi_net/mqtt" }
@@ -47,6 +49,8 @@ ordmap = {path = "../pi_lib/ordmap" }
 apm = {path = "../pi_lib/apm" }
 time = { path = "../pi_lib/time"}
 parking_lot = "0.10.0"
+futures = "0.3"
+hash = { path = "../pi_lib/hash", features = ["xxhash"] }
 
 [target.'cfg(unix)'.dependencies]
 glob = "0.3"
