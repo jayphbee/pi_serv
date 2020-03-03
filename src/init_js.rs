@@ -20,10 +20,11 @@ use js_env::{env_var, set_current_dir};
 use ptmgr::{PLAT_MGR, PlatMgrTrait};
 
 pub fn load_core_env(js: &Arc<JS>) {
-    let cur_exe = env::current_exe().unwrap();
+    let mut cur_exe = env::current_exe().unwrap();
+    cur_exe.pop();
     // 初始化js执行环境
-    let env_code = read_code(&cur_exe.join("../env.js"));
-    let core_code = read_code(&cur_exe.join("../core.js"));
+    let env_code = read_code(&cur_exe.join("env.js"));
+    let core_code = read_code(&cur_exe.join("core.js"));
 
     let env_code = js.compile("env.js".to_string(), env_code).unwrap();
     let core_code = js.compile("core.js".to_string(), core_code).unwrap();
@@ -34,7 +35,8 @@ pub fn load_core_env(js: &Arc<JS>) {
 
 pub fn exec_js(path: String) {
     let path = path.as_str().replace("\\", "/");
-    let cur_exe = env::current_exe().unwrap();
+    let mut cur_exe = env::current_exe().unwrap();
+    cur_exe.pop();
     let auth = Arc::new(NativeObjsAuth::new(None, None));
 
     let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
@@ -49,8 +51,8 @@ pub fn exec_js(path: String) {
     set_current_dir(&build_out_root).expect("set current dir failed");
 
     // 初始化js执行环境
-    let env_code = read_code(&cur_exe.join("../env.js"));
-    let core_code = read_code(&cur_exe.join("../core.js"));
+    let env_code = read_code(&cur_exe.join("env.js"));
+    let core_code = read_code(&cur_exe.join("core.js"));
 
     let env_code = js.compile("env.js".to_string(), env_code).unwrap();
     let core_code = js.compile("core.js".to_string(), core_code).unwrap();

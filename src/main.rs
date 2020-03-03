@@ -100,7 +100,7 @@ mod pi_store_build;
 use std::env;
 use std::io;
 use std::io::{Result as IOResult, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
@@ -234,6 +234,8 @@ fn set_piserv_env_var(matches: &ArgMatches) {
     } else {
         set_env_var("PROJECT_ROOT", &project_root);
     }
+
+    set_env_var("PATH_SEPERATOR", &MAIN_SEPARATOR.to_string());
 }
 
 // 启动存储任务工作线程
