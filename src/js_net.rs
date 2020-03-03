@@ -1361,9 +1361,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
         let enable_cache = http_config.static_cache_max_len > 0 && http_config.static_cache_max_size > 0 && http_config.static_cache_collect_time > 0;
         let cors_handler = Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), http_config.cors));
 
-        if http_config.cors {
+        if !http_config.cors {
             for config in http_config.cors_allows.borrow().iter() {
-                cors_handler.allow_origin(config.scheme.clone(), config.host.clone(), config.port, &config.methods, &[], config.max_age);
+                if let Err(e) = cors_handler.allow_origin(config.scheme.clone(), config.host.clone(), config.port, &config.methods, &[], config.max_age) {
+                    panic!("failed to add origin, error = {:?}, config= {:?}", e, config);
+                }
             }
         }
 
