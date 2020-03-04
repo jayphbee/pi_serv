@@ -198,9 +198,16 @@ pub fn hotfix_listen(path: String) {
 
                     let mgr = GRAY_TABLE.read().jsgrays.last().unwrap().values().take(1).next().unwrap().mgr.clone();
 
-                    let cur_exe = env::current_exe().unwrap();
-                    let env_code = read_code(&cur_exe.join("../env.js"));
-                    let core_code = read_code(&cur_exe.join("../core.js"));
+                    let mut cur_exe = match env::current_exe() {
+                        Ok(cur_exe) => cur_exe,
+                        Err(e) => {
+                            error!("get current exe failed, create path: {:?}, error: {:?}", path, e);
+                            return
+                        }
+                    };
+                    cur_exe.pop();
+                    let env_code = read_code(&cur_exe.join("env.js"));
+                    let core_code = read_code(&cur_exe.join("core.js"));
 
                     let env_code = js.compile("env.js".to_string(), env_code).unwrap();
                     let core_code = js.compile("core.js".to_string(), core_code).unwrap();
@@ -299,16 +306,17 @@ fn module_changed(path: PathBuf) {
 
             load_core_env(&js);
 
-            let cur_exe = match env::current_exe() {
+            let mut cur_exe = match env::current_exe() {
                 Ok(cur_exe) => cur_exe,
                 Err(e) => {
                     error!("get current exe failed, change path: {:?}, error: {:?}", path, e);
                     return
                 }
             };
+            cur_exe.pop();
 
-            let env_code = read_code(&cur_exe.join("../env.js"));
-            let core_code = read_code(&cur_exe.join("../core.js"));
+            let env_code = read_code(&cur_exe.join("env.js"));
+            let core_code = read_code(&cur_exe.join("core.js"));
 
             let env_code = match js.compile("env.js".to_string(), env_code) {
                 Some(env_code) => env_code,
