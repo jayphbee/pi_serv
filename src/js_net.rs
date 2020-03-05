@@ -1227,7 +1227,7 @@ pub fn get_http_endpoint(key: &str) -> Option<String> {
 }
 
 pub fn get_all_http_endpoint() -> Vec<String> {
-    HTTP_ENDPOINT.read().values().map(|s|s.to_string()).collect::<Vec<String>>()
+    HTTP_ENDPOINT.read().keys().map(|s|s.to_string()).collect::<Vec<String>>()
 }
 
 /**
@@ -1453,9 +1453,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
                     "fileLoad" => {
                         if r.methods.contains(&"GET".to_string()) {
                             route.at(&r.endpoint).get(file_load_middleware.clone());
-                        } else if r.methods.contains(&"POST".to_string()) {
+                        }
+                        if r.methods.contains(&"POST".to_string()) {
                             route.at(&r.endpoint).post(file_load_middleware.clone());
-                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                        }
+                        if r.methods.contains(&"OPTIONS".to_string()) {
                             route.at(&r.endpoint).options(file_load_middleware.clone());
                         }
                     }
@@ -1463,9 +1465,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
                     "filesLoad" => {
                         if r.methods.contains(&"GET".to_string()) {
                             route.at(&r.endpoint).get(files_load_middleware.clone());
-                        } else if r.methods.contains(&"POST".to_string()) {
+                        }
+                        if r.methods.contains(&"POST".to_string()) {
                             route.at(&r.endpoint).post(files_load_middleware.clone());
-                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                        }
+                        if r.methods.contains(&"OPTIONS".to_string()) {
                             route.at(&r.endpoint).options(files_load_middleware.clone());
                         }
                     }
@@ -1473,9 +1477,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
                     "batchLoad" => {
                         if r.methods.contains(&"GET".to_string()) {
                             route.at(&r.endpoint).get(batch_load_middleware.clone());
-                        } else if r.methods.contains(&"POST".to_string()) {
+                        }
+                        if r.methods.contains(&"POST".to_string()) {
                             route.at(&r.endpoint).post(batch_load_middleware.clone());
-                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                        }
+                        if r.methods.contains(&"OPTIONS".to_string()) {
                             route.at(&r.endpoint).options(batch_load_middleware.clone());
                         }
                     }
@@ -1483,9 +1489,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
                     "upload" => {
                         if r.methods.contains(&"GET".to_string()) {
                             route.at(&r.endpoint).get(upload_middleware.clone());
-                        } else if r.methods.contains(&"POST".to_string()) {
+                        }
+                        if r.methods.contains(&"POST".to_string()) {
                             route.at(&r.endpoint).post(upload_middleware.clone());
-                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                        }
+                        if r.methods.contains(&"OPTIONS".to_string()) {
                             route.at(&r.endpoint).options(upload_middleware.clone());
                         }
                     }
@@ -1493,9 +1501,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
                     "port" => {
                         if r.methods.contains(&"GET".to_string()) {
                             route.at(&r.endpoint).get(port_middleware.clone());
-                        } else if r.methods.contains(&"POST".to_string()) {
+                        }
+                        if r.methods.contains(&"POST".to_string()) {
                             route.at(&r.endpoint).post(port_middleware.clone());
-                        } else if r.methods.contains(&"OPTIONS".to_string()) {
+                        }
+                        if r.methods.contains(&"OPTIONS".to_string()) {
                             route.at(&r.endpoint).options(port_middleware.clone());
                         }
                     }
