@@ -20,7 +20,7 @@ use js_env::{ env_var };
 use js_file::read_file_string_sync;
 use js_net::{ RequestHandler, create_rpc_service, register_rpc_topic };
 use init_js::{read_code, load_core_env};
-use js_net::get_all_http_endpoint;
+use js_net::get_all_http_rpc_mods;
 
 
 lazy_static! {
@@ -347,7 +347,7 @@ fn module_changed(path: PathBuf) {
             let db_listener_code = "pi_pt/db/dblistener.js";
 
             // http rpc 的热更新
-            let http_code = get_all_http_endpoint().into_iter().fold("".to_string(), |acc, x| {
+            let http_code = get_all_http_rpc_mods().into_iter().fold("".to_string(), |acc, x| {
                 let mut mod_name = x.split(".").nth(0).unwrap().to_string();
                 mod_name += ".event";
                 acc + format!("Module.require(\'{}\', '');", mod_name).as_str()

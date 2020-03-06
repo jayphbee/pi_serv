@@ -1230,6 +1230,10 @@ pub fn get_all_http_endpoint() -> Vec<String> {
     HTTP_ENDPOINT.read().keys().map(|s|s.to_string()).collect::<Vec<String>>()
 }
 
+pub fn get_all_http_rpc_mods() -> Vec<String> {
+    HTTP_ENDPOINT.read().values().map(|s|s.to_string()).collect::<Vec<String>>()
+}
+
 /**
 * 创建Rpc服务
 */
