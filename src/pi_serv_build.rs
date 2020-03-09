@@ -3574,6 +3574,16 @@ fn call_1477614042(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
+fn call_1155764239(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_net::get_all_http_rpc_mods();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2333272468(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_rpc_service";
 
@@ -5013,6 +5023,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1296859971), 1296859971);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2045488463), 2045488463);
     mgr.regist_fun_meta(FnMeta::Call(call_1477614042), 1477614042);
+    mgr.regist_fun_meta(FnMeta::Call(call_1155764239), 1155764239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2333272468), 2333272468);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466468899), 466468899);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1703898312), 1703898312);
