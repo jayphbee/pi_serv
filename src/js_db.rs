@@ -16,7 +16,7 @@ use pi_db::memery_db::DB;
 use pi_db::mgr::{Mgr, Monitor, Tr};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_store::file_mem_db::FileMemDB;
-use pi_store::lmdb_file::DB as Lmdb;
+use pi_store::lmdb_file::{DB as Lmdb};
 use pi_vm::adapter::{dukc_pop, JSType, JS};
 use pi_vm::bonmgr::ptr_jstype;
 use pi_vm::pi_vm_impl::{block_set_global_var, BlockError, VMFactory};
@@ -266,7 +266,7 @@ pub fn register_memery_db(mgr: &Mgr, prefix: String, ware: DB) -> bool {
 }
 
 // 注册文件数据库
-pub fn register_file_db(mgr: &Mgr, prefix: String, ware: pi_store::lmdb_file::DB) -> bool {
+pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
     if let Some(w) = mgr.find(&Atom::from(prefix.clone())) {
         false
     } else {
