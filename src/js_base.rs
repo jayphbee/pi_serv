@@ -8,6 +8,7 @@ use rand::RngCore;
 use pi_vm::pi_vm_impl::{VMFactory, register_async_request, push_callback};
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::bonmgr::{BON_MGR};
+use pi_db::db::TabKV;
 use atom::Atom;
 use sinfo::StructInfo;
 use bon::{ReadBuffer, Decode};
@@ -74,6 +75,15 @@ pub fn arc_new<T>(v: T) -> Arc<T>{
 */
 pub fn arc_deref< T>(v: &Arc<T>) -> &T{
     v.deref()
+}
+
+/**
+* 创建一个vec
+* @param v 数组
+* @returns 返回Vec
+*/
+pub fn vec_from<T: Clone>(v: &[T]) -> Vec<T>{
+	Vec::from(v)
 }
 
 /**

@@ -385,3 +385,38 @@ pub fn decode_by_tabkv(js: &Arc<JS>, tabkv: &TabKV, meta: &TabMeta) -> Result<JS
 
     Ok(obj)
 }
+
+//将TabKV转化为js中的Json, value和key是二进制，不进行解析
+pub fn decode_bin_by_tabkv(js: &Arc<JS>, tabkv: &TabKV, meta: &TabMeta) -> Result<JSType, String>{
+    let obj = js.new_object();
+    match js.new_str(tabkv.ware.as_str().to_string()) {
+        Err(e) => {
+            return Err(e);
+        },
+        Ok(mut v) => {
+            js.set_field(&obj, "ware".to_string(), &mut v);
+        },
+    }
+    match js.new_str(tabkv.tab.as_str().to_string()) {
+        Err(e) => {
+            return Err(e);
+        },
+        Ok(mut v) => {
+            js.set_field(&obj, "tab".to_string(), &mut v);
+        },
+	}
+
+	let mut k = js.new_uint8_array(tabkv.key.len() as u32);
+	k.from_bytes(tabkv.key.as_slice());
+	js.set_field(&obj, "key".to_string(), &mut k);
+	match &tabkv.value {
+		&Some(ref v) => {
+			let mut value = js.new_uint8_array(v.len() as u32);
+			value.from_bytes(v.as_slice());
+			js.set_field(&obj, "value".to_string(), &mut value);
+		},
+		None => (),
+	}
+
+    Ok(obj)
+}
