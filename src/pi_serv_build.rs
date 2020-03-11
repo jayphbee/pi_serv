@@ -2964,24 +2964,6 @@ fn call_3039652276(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_648689319(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in add_virtual_host";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 2896061246, false, param_error).expect("");
-	let jst0 = unsafe { &mut *(ptr as *mut js_net::HttpConfig) };
-
-
-	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
-
-
-    js_net::HttpConfig::add_virtual_host(jst0,jst1);
-    Some(CallResult::Ok)
-}
-
-
 fn call_1401957769(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in config_static_cache";
 
@@ -3234,8 +3216,8 @@ fn call_215031008(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_2598029070(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in add_http_route";
+fn call_2183513706(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_route_for_hosts";
 
 	let jst0 = &v[0];
     let ptr = jstype_ptr(&jst0, js.clone(), 2896061246, false, param_error).expect("");
@@ -3243,21 +3225,26 @@ fn call_2598029070(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
 	let jst1 = &v[1];
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
+    let ptr = jstype_ptr(&jst1, js.clone(), 1542823015, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
 
 
 	let jst2 = &v[2];
-    let ptr = jstype_ptr(&jst2, js.clone(), 1542823015, true, param_error).expect("");
-	let jst2 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
 
 
 	let jst3 = &v[3];
-	if !jst3.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst3 = jst3.get_str();
+    let ptr = jstype_ptr(&jst3, js.clone(), 1542823015, true, param_error).expect("");
+	let jst3 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
 
 
-    js_net::HttpConfig::add_http_route(jst0,jst1,jst2,jst3);
+	let jst4 = &v[4];
+	if !jst4.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst4 = jst4.get_str();
+
+
+    js_net::HttpConfig::add_route_for_hosts(jst0,jst1,jst2,jst3,jst4);
     Some(CallResult::Ok)
 }
 
@@ -3800,6 +3787,16 @@ fn call_1477614042(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
+fn call_1155764239(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = js_net::get_all_http_rpc_mods();
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1542823015);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2333272468(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in create_rpc_service";
 
@@ -4023,23 +4020,25 @@ fn call_1819673293(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_3054577773(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in establish_http_server";
+fn call_3156505273(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in config_certificate";
 
 	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 2896061246, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_net::HttpConfig) };
+	if !jst0.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst0 = jst0.get_u16();
 
 
-    let result = js_net::establish_http_server(jst0);let mut result = match result{
-        Ok(r) => { 
-	let array = js.new_array();    let mut r = array;
- r }
-        Err(v) => { 
-            return Some(CallResult::Err(v + ", Result is Err"));
-        }
-    };
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
 
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    js_net::config_certificate(jst0,jst1,jst2);
     Some(CallResult::Ok)
 }
 
@@ -4052,29 +4051,15 @@ fn call_3645633433(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_net::NetKernelOptions) };
 
 
-	let jst1 = &v[1];
-    let jst1 = if jst1.is_undefined() || jst1.is_null(){
-        None
-    }else{
-	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst1 = jst1.get_str();
-
-        Some(jst1)
+    let result = js_net::start_network_services(jst0);let mut result = match result{
+        Ok(r) => { 
+	let array = js.new_array();    let mut r = array;
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
     };
 
-
-	let jst2 = &v[2];
-    let jst2 = if jst2.is_undefined() || jst2.is_null(){
-        None
-    }else{
-	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
-    let jst2 = jst2.get_str();
-
-        Some(jst2)
-    };
-
-
-    js_net::start_network_services(jst0,jst1,jst2);
     Some(CallResult::Ok)
 }
 
@@ -4117,6 +4102,19 @@ fn call_1449642520(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_net::publish_global_mqtt_topic(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_675495936(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in parse_http_config";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    js_net::parse_http_config(jst0);
     Some(CallResult::Ok)
 }
 
@@ -5236,7 +5234,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_860760558), 860760558);
     mgr.regist_fun_meta(FnMeta::Call(call_3888648988), 3888648988);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3039652276), 3039652276);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_648689319), 648689319);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1401957769), 1401957769);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2700405636), 2700405636);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1239355790), 1239355790);
@@ -5248,7 +5245,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3826790159), 3826790159);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1730660399), 1730660399);
     mgr.regist_fun_meta(FnMeta::CallArg(call_215031008), 215031008);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2598029070), 2598029070);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2183513706), 2183513706);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1843212126), 1843212126);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3853501360), 3853501360);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3386886057), 3386886057);
@@ -5267,6 +5264,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1296859971), 1296859971);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2045488463), 2045488463);
     mgr.regist_fun_meta(FnMeta::Call(call_1477614042), 1477614042);
+    mgr.regist_fun_meta(FnMeta::Call(call_1155764239), 1155764239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2333272468), 2333272468);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466468899), 466468899);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1703898312), 1703898312);
@@ -5275,10 +5273,11 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2617351137), 2617351137);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3293246594), 3293246594);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1819673293), 1819673293);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_3054577773), 3054577773);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3156505273), 3156505273);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3645633433), 3645633433);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3953247239), 3953247239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1449642520), 1449642520);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_675495936), 675495936);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1428190872), 1428190872);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466051911), 466051911);
     mgr.regist_fun_meta(FnMeta::Call(call_2208297260), 2208297260);
