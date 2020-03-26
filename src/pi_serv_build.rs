@@ -2913,6 +2913,24 @@ fn call_321438993(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2697810104(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in set_status_code";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 63358028, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_net::HttpConnect) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u16();
+
+
+    js_net::HttpConnect::set_status_code(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
 fn call_860760558(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get";
 
@@ -5231,6 +5249,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1730849612), 1730849612);
     mgr.regist_fun_meta(FnMeta::CallArg(call_54317857), 54317857);
     mgr.regist_fun_meta(FnMeta::CallArg(call_321438993), 321438993);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2697810104), 2697810104);
     mgr.regist_fun_meta(FnMeta::CallArg(call_860760558), 860760558);
     mgr.regist_fun_meta(FnMeta::Call(call_3888648988), 3888648988);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3039652276), 3039652276);
