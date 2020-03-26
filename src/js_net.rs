@@ -1189,6 +1189,20 @@ impl  HttpConnect {
             }
         }
     }
+
+    pub fn set_status_code(&self, code: u16) {
+        match self.conn_type.clone() {
+            ConnectType::InSecure(insecure_handle) => {
+                insecure_handle.status(code);
+            }
+            ConnectType::Secure(secure_handle) => {
+                secure_handle.status(code);
+            }
+            ConnectType::Unknow => {
+                panic!("unknow connect type");
+            }
+        }
+    }
 }
 
 pub struct HttpHeaders {
