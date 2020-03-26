@@ -1203,6 +1203,16 @@ impl  HttpConnect {
             }
         }
     }
+
+    pub fn is_secure(&self) -> bool {
+        match self.conn_type {
+            ConnectType::InSecure(_) => false,
+            ConnectType::Secure(_) => true,
+            ConnectType::Unknow => {
+                panic!("Unknow connect type")
+            }
+        }
+    }
 }
 
 pub struct HttpHeaders {
