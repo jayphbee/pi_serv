@@ -2931,6 +2931,20 @@ fn call_2697810104(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2572050384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in is_secure";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 63358028, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_net::HttpConnect) };
+
+
+    let result = js_net::HttpConnect::is_secure(jst0);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_860760558(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get";
 
@@ -5250,6 +5264,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_54317857), 54317857);
     mgr.regist_fun_meta(FnMeta::CallArg(call_321438993), 321438993);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2697810104), 2697810104);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2572050384), 2572050384);
     mgr.regist_fun_meta(FnMeta::CallArg(call_860760558), 860760558);
     mgr.regist_fun_meta(FnMeta::Call(call_3888648988), 3888648988);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3039652276), 3039652276);
