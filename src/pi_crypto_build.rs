@@ -294,6 +294,22 @@ fn call_835933247(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1239750690(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in public_key";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1545795468, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::signature::Rsa) };
+
+
+    let result = pi_crypto::signature::Rsa::public_key(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2850709748(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in sign";
 
@@ -369,6 +385,158 @@ fn call_901229592(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = pi_crypto::signature::Rsa::verify(jst0,jst1,jst2,jst3,jst4);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2041863833(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in generate_pkcs8";
+
+	let jst0 = &v[0];
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::signature::EcdsaAlg::ECDSA_P256_SHA256_ASN1,
+        1 => pi_crypto::signature::EcdsaAlg::ECDSA_P384_SHA384_ASN1,
+        _ => panic!("enum type error")
+    };
+
+
+    let result = pi_crypto::signature::EcdsaKeyPair::generate_pkcs8(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3809028580(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in from_private_key_and_public_key";
+
+	let jst0 = &v[0];
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::signature::EcdsaAlg::ECDSA_P256_SHA256_ASN1,
+        1 => pi_crypto::signature::EcdsaAlg::ECDSA_P384_SHA384_ASN1,
+        _ => panic!("enum type error")
+    };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+	let jst2 = &v[2];
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.to_bytes();
+
+
+
+    let result = pi_crypto::signature::EcdsaKeyPair::from_private_key_and_public_key(jst0,jst1,jst2);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1190264576);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3841573761(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in from_pkcs8";
+
+	let jst0 = &v[0];
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::signature::EcdsaAlg::ECDSA_P256_SHA256_ASN1,
+        1 => pi_crypto::signature::EcdsaAlg::ECDSA_P384_SHA384_ASN1,
+        _ => panic!("enum type error")
+    };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+    let result = pi_crypto::signature::EcdsaKeyPair::from_pkcs8(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,1190264576);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1413668685(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in sign";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1190264576, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::signature::EcdsaKeyPair) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+    let result = pi_crypto::signature::EcdsaKeyPair::sign(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1006720087(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in public_key";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1190264576, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_crypto::signature::EcdsaKeyPair) };
+
+
+    let result = pi_crypto::signature::EcdsaKeyPair::public_key(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2103960165(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in ecdsa_verify";
+
+	let jst0 = &v[0];
+    if !jst0.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = match jst0.get_u32(){
+        0 => pi_crypto::signature::EcdsaAlg::ECDSA_P256_SHA256_ASN1,
+        1 => pi_crypto::signature::EcdsaAlg::ECDSA_P384_SHA384_ASN1,
+        _ => panic!("enum type error")
+    };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+	let jst2 = &v[2];
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.to_bytes();
+
+
+
+	let jst3 = &v[3];
+	if !jst3.is_uint8_array() && !jst3.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst3 = jst3.to_bytes();
+
+
+
+    let result = pi_crypto::signature::ecdsa_verify(jst0,jst1,jst2,jst3);let mut result = js.new_boolean(result);
 
     Some(CallResult::Ok)
 }
@@ -1785,6 +1953,14 @@ fn drop_142204220(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_crypto::signature::PaddingAlg) };
 }
 
+fn drop_3559558627(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::signature::EcdsaAlg) };
+}
+
+fn drop_1190264576(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_crypto::signature::EcdsaKeyPair) };
+}
+
 fn drop_1875205449(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_crypto::bls::BlsIdVec) };
 }
@@ -1845,6 +2021,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::signature::ECDSASecp256k1"), drop_fn: drop_3761116463}, 3761116463);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::signature::Rsa"), drop_fn: drop_1545795468}, 1545795468);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::signature::PaddingAlg"), drop_fn: drop_142204220}, 142204220);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::signature::EcdsaAlg"), drop_fn: drop_3559558627}, 3559558627);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::signature::EcdsaKeyPair"), drop_fn: drop_1190264576}, 1190264576);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsIdVec"), drop_fn: drop_1875205449}, 1875205449);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsSecKeyVec"), drop_fn: drop_2934268916}, 2934268916);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_crypto::bls::BlsPubKeyVec"), drop_fn: drop_3840517932}, 3840517932);
@@ -1869,8 +2047,15 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1378957447), 1378957447);
     mgr.regist_fun_meta(FnMeta::CallArg(call_758410087), 758410087);
     mgr.regist_fun_meta(FnMeta::CallArg(call_835933247), 835933247);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1239750690), 1239750690);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2850709748), 2850709748);
     mgr.regist_fun_meta(FnMeta::CallArg(call_901229592), 901229592);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2041863833), 2041863833);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3809028580), 3809028580);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3841573761), 3841573761);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1413668685), 1413668685);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1006720087), 1006720087);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2103960165), 2103960165);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3851862966), 3851862966);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1252421489), 1252421489);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2592527877), 2592527877);
