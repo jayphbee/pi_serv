@@ -3,9 +3,15 @@ use std::sync::Mutex;
 use std::io::{Result as IOResult};
 use std::sync::Arc;
 use std::ffi::CStr;
+use std::env;
 use libc::c_char;
 
 use pi_vm::shell::SHELL_MANAGER;
+use pi_vm::adapter::JS;
+use pi_vm::bonmgr::NativeObjsAuth;
+use init_js::read_code;
+use hotfix::BYTE_CODE_CACHE;
+use atom::Atom;
 
 type ReqCb = Option<Box<FnOnce(Arc<Vec<u8>>)>>;
 
@@ -85,4 +91,32 @@ impl WebShell {
             Err(e) => return e.to_string()
         }
     }
+}
+
+pub fn init_shell() {
+    let mut byte_code = vec![];
+    for (version, proj_codes) in BYTE_CODE_CACHE.read().iter() {
+        for (proj, codes) in proj_codes {
+            for (mod_id, code) in codes {
+                debug!("version = {:?}, proj = {:?}, mod_id = {:?}, code_len = {:?}", version, proj, mod_id, code.len());
+                byte_code.push(code.clone());
+            }
+        }
+    }
+
+    let auth = Arc::new(NativeObjsAuth::new(None, None));
+    let js = JS::new(1, Atom::from("init shell"), auth.clone(), None).unwrap();
+    let mut cur_exe = env::current_exe().unwrap();
+    cur_exe.pop();
+    // 初始化js执行环境
+    let env_code = read_code(&cur_exe.join("env.js"));
+    let core_code = read_code(&cur_exe.join("core.js"));
+
+    let env_code = js.compile("env.js".to_string(), env_code).unwrap();
+    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
+
+    byte_code.push(Arc::new(env_code));
+    byte_code.push(Arc::new(core_code));
+
+    SHELL_MANAGER.write().unwrap().init(Some(byte_code));
 }

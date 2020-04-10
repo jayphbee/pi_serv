@@ -129,6 +129,7 @@ use worker::worker::WorkerType;
 use worker::worker_pool::WorkerPool;
 
 use init_js::exec_js;
+use webshell::init_shell;
 use js_base::IS_END;
 
 use js_env::{current_dir, env_var, set_current_dir, set_env_var};
@@ -471,6 +472,10 @@ fn main() {
     set_vm_max_heap(&matches, &sys);
     set_piserv_env_var(&matches);
     init_js(&matches);
+
+    // 初始化虚拟机执行完毕没有通知机制, 如果不延迟一段时间启动shell, 项目的字节码还未完全准备好，导致只能加载部分字节码
+    thread::sleep(Duration::from_secs(5));
+    init_shell();
 
     // 启动全局虚拟机堆整理
     set_vm_timeout(60000);

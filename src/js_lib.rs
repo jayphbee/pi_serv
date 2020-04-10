@@ -73,15 +73,15 @@ pub fn guid_gen(guid: &GuidGen, ctrl_id: u16) -> u128 {
 * @returns 返回比较结果，-1表示小于，0表示相同，1表示大于
 */
 pub fn bonbuf_cmp(b1: &[u8], b2: &[u8]) -> Option<i32> {
-    let mut b1= ReadBuffer::new(b1, 0);
-    let mut b2 = ReadBuffer::new(b2, 0);
+    let b1= ReadBuffer::new(b1, 0);
+    let b2 = ReadBuffer::new(b2, 0);
 
-    match partial_cmp(&mut b1, &mut b2) {
+    match b1.partial_cmp(&b2) {
         Some(Ordering::Less) => Some(-1),
         Some(Ordering::Equal) => Some(0),
-        Some(Ordering::Greater) => Some(1),
+		Some(Ordering::Greater) => Some(1),
         None => None
-    }
+	}
 }
 
 pub struct Json (json::JsonValue);
