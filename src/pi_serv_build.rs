@@ -1355,6 +1355,375 @@ fn call_2674074487(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1608455338(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in write_file_string_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+    if !jst2.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = match jst2.get_u32(){
+        0 => js_file::FileWriteOptions::OnlyWrite,
+        1 => js_file::FileWriteOptions::OnlyAppend,
+        2 => js_file::FileWriteOptions::ReadAppend,
+        3 => js_file::FileWriteOptions::ReadWrite,
+        4 => js_file::FileWriteOptions::TruncateWrite,
+        _ => panic!("enum type error")
+    };
+
+
+    let result = js_file::write_file_string_sync(jst0,jst1,jst2);let mut result = match result{
+        Ok(r) => { 
+	let array = js.new_array();    let mut r = array;
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3313391211(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in write_file_buffer_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 104530634, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+
+
+	let jst2 = &v[2];
+    if !jst2.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = match jst2.get_u32(){
+        0 => js_file::FileWriteOptions::OnlyWrite,
+        1 => js_file::FileWriteOptions::OnlyAppend,
+        2 => js_file::FileWriteOptions::ReadAppend,
+        3 => js_file::FileWriteOptions::ReadWrite,
+        4 => js_file::FileWriteOptions::TruncateWrite,
+        _ => panic!("enum type error")
+    };
+
+
+    let result = js_file::write_file_buffer_sync(jst0,jst1,jst2);let mut result = match result{
+        Ok(r) => { 
+	let array = js.new_array();    let mut r = array;
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_803980070_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in write_file_string";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+	let jst2 = &v[2];
+    if !jst2.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = match jst2.get_u32(){
+        0 => js_file::FileWriteOptions::OnlyWrite,
+        1 => js_file::FileWriteOptions::OnlyAppend,
+        2 => js_file::FileWriteOptions::ReadAppend,
+        3 => js_file::FileWriteOptions::ReadWrite,
+        4 => js_file::FileWriteOptions::TruncateWrite,
+        _ => panic!("enum type error")
+    };
+
+    let call_index = &v[3];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_803980070_async1"));
+    };
+
+    js_file::write_file_string(jst0,jst1,jst2,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_2129495237_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in write_file_buffer";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 104530634, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+
+	let jst2 = &v[2];
+    if !jst2.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = match jst2.get_u32(){
+        0 => js_file::FileWriteOptions::OnlyWrite,
+        1 => js_file::FileWriteOptions::OnlyAppend,
+        2 => js_file::FileWriteOptions::ReadAppend,
+        3 => js_file::FileWriteOptions::ReadWrite,
+        4 => js_file::FileWriteOptions::TruncateWrite,
+        _ => panic!("enum type error")
+    };
+
+    let call_index = &v[3];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_2129495237_async1"));
+    };
+
+    js_file::write_file_buffer(jst0,jst1,jst2,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_3777472700(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in rename_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = js_file::rename_sync(jst0,jst1);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4237424252_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in rename";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+    let call_index = &v[2];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_4237424252_async1"));
+    };
+
+    js_file::rename(jst0,jst1,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_1217784519(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_file_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    let result = js_file::remove_file_sync(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_675831864_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in remove_file";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_675831864_async1"));
+    };
+
+    js_file::remove_file(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_1824609838(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_dir_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    let result = js_file::remove_dir_sync(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_874811570_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in remove_dir";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_874811570_async1"));
+    };
+
+    js_file::remove_dir(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_1574489642(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_dir_all_sync";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    let result = js_file::remove_dir_all_sync(jst0);let mut result = match result{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_376425814_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in remove_dir_all";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_376425814_async1"));
+    };
+
+    js_file::remove_dir_all(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
 fn call_3649129955(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in walk_dir_sync";
 
@@ -4905,6 +5274,10 @@ fn drop_591726708(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_env::EnvVars) };
 }
 
+fn drop_776853760(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut js_file::FileWriteOptions) };
+}
+
 fn drop_1846921536(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<sinfo::StructInfo>) };
 }
@@ -5106,6 +5479,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBWare"), drop_fn: drop_1675843967}, 1675843967);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::Args"), drop_fn: drop_1694133887}, 1694133887);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::EnvVars"), drop_fn: drop_591726708}, 591726708);
+    mgr.regist_struct_meta(StructMeta{name:String::from("js_file::FileWriteOptions"), drop_fn: drop_776853760}, 776853760);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_async::AsyncRequestHandler"), drop_fn: drop_259136547}, 259136547);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_async::AsyncRequestHandler>"), drop_fn: drop_374659923}, 374659923);
@@ -5198,6 +5572,18 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3061910455_async), 3061910455);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3728513126), 3728513126);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2674074487), 2674074487);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1608455338), 1608455338);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3313391211), 3313391211);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_803980070_async), 803980070);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2129495237_async), 2129495237);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3777472700), 3777472700);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4237424252_async), 4237424252);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1217784519), 1217784519);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_675831864_async), 675831864);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1824609838), 1824609838);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_874811570_async), 874811570);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1574489642), 1574489642);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_376425814_async), 376425814);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3649129955), 3649129955);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3007613864), 3007613864);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3595492395), 3595492395);

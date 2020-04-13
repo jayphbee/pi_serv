@@ -1,9 +1,9 @@
-use std::fs::{read_dir, File};
-use std::io::Read;
+use std::fs::{read_dir, File, OpenOptions, write, rename as std_rename, remove_file as std_remove_file, remove_dir as std_remove_dir, remove_dir_all as std_remove_dir_all};
+use std::io::{Write, Read};
 use std::path::Path;
 use std::sync::Arc;
 
-use file::file::{AsyncFile, AsyncFileOptions};
+use file::file::{AsyncFile, AsyncFileOptions, WriteOptions};
 
 
 
@@ -95,6 +95,170 @@ pub fn read_file_string_sync(path: &str) -> Result<String, String> {
 }
 
 /**
+ * 同步写文件
+*/
+pub fn write_file_string_sync(path: String, text: String, file_write_option: FileWriteOptions) -> Result<(), String> {
+	match file_write_option {
+		FileWriteOptions::OnlyWrite | FileWriteOptions::ReadWrite | FileWriteOptions::OnlyAppend | FileWriteOptions::ReadAppend => {
+			let mut open_option = OpenOptions::new();
+			open_option.read(true).write(true).append(true).create(true);
+			match open_option.open(path) {
+				Ok(mut file) => {
+					file.write(text.as_bytes()).map(|_| ()).map_err(|e| e.to_string())
+				}
+				Err(e) => Err(e.to_string())
+			}
+		}
+		FileWriteOptions::TruncateWrite => {
+			write(path, text.as_bytes()).map_err(|e| e.to_string())
+		}
+	}
+}
+
+pub fn write_file_buffer_sync(path: String, bytes: Vec<u8>, file_write_option: FileWriteOptions) -> Result<(), String> {
+	match file_write_option {
+		FileWriteOptions::OnlyWrite | FileWriteOptions::ReadWrite | FileWriteOptions::OnlyAppend | FileWriteOptions::ReadAppend => {
+			let mut open_option = OpenOptions::new();
+			open_option.read(true).write(true).append(true).create(true).create_new(true);
+			match open_option.open(path) {
+				Ok(mut file) => {
+					file.write(&bytes).map(|_| ()).map_err(|e| e.to_string())
+				}
+				Err(e) => Err(e.to_string())
+			}
+		}
+		FileWriteOptions::TruncateWrite => {
+			write(path, &bytes).map_err(|e| e.to_string())
+		}
+	}
+}
+
+/**
+ * 异步写文件
+*/
+pub fn write_file_string(path: String, text: String, file_write_option: FileWriteOptions, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	let option = match file_write_option {
+		FileWriteOptions::OnlyWrite => AsyncFileOptions::OnlyWrite(1),
+		FileWriteOptions::ReadWrite => AsyncFileOptions::ReadWrite(1),
+		FileWriteOptions::TruncateWrite => AsyncFileOptions::TruncateWrite(1),
+		FileWriteOptions::ReadAppend => AsyncFileOptions::ReadAppend(1),
+		FileWriteOptions::OnlyAppend => AsyncFileOptions::OnlyAppend(1)
+	};
+	AsyncFile::open(path, option, Box::new(|r: std::io::Result<AsyncFile>| {
+		match r {
+			Ok(r) => {
+				r.write(WriteOptions::None,0, text.into_bytes(), Box::new(|_s: AsyncFile, r: std::io::Result<()>| {
+					match r {
+						Ok(()) => call_back(Ok("".to_string())),
+						Err(e) => call_back(Err(e.to_string())),
+					}
+				}))
+			},
+			Err(e) => call_back(Err(e.to_string())),
+		}
+	}));
+}
+
+pub fn write_file_buffer(path: String, bytes: Vec<u8>, file_write_option: FileWriteOptions, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	let option = match file_write_option {
+		FileWriteOptions::OnlyWrite => AsyncFileOptions::OnlyWrite(1),
+		FileWriteOptions::ReadWrite => AsyncFileOptions::ReadWrite(1),
+		FileWriteOptions::TruncateWrite => AsyncFileOptions::TruncateWrite(1),
+		FileWriteOptions::ReadAppend => AsyncFileOptions::ReadAppend(1),
+		FileWriteOptions::OnlyAppend => AsyncFileOptions::OnlyAppend(1)
+	};
+	AsyncFile::open(path, option, Box::new(|r: std::io::Result<AsyncFile>| {
+		match r {
+			Ok(r) => {
+				r.write(WriteOptions::None,0, bytes, Box::new(|_s: AsyncFile, r: std::io::Result<()>| {
+					match r {
+						Ok(()) => call_back(Ok("".to_string())),
+						Err(e) => call_back(Err(e.to_string())),
+					}
+				}))
+			},
+			Err(e) => call_back(Err(e.to_string())),
+		}
+	}));
+}
+
+/**
+ * 同步改名
+*/
+pub fn rename_sync(from: String, to: String) -> Result<String, String> {
+	std_rename(from, to).map(|r|"".to_string()).map_err(|e| e.to_string())
+}
+
+/**
+ * 异步改名
+*/
+pub fn rename(from: String, to: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	AsyncFile::rename(from, to, Box::new(|_from, _to, res| {
+		match res {
+			Ok(()) => call_back(Ok("".to_string())),
+			Err(e) => call_back(Err(e.to_string()))
+		}
+	}));
+}
+
+/** 
+ * 同步删除文件
+*/
+pub fn remove_file_sync(path: String) -> Result<String, String> {
+	std_remove_file(path).map(|r|"".to_string()).map_err(|e| e.to_string())
+}
+
+/** 
+ * 异步删除文件
+*/
+pub fn remove_file(path: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	AsyncFile::remove(path, Box::new(|res| {
+		match res {
+			Ok(()) => call_back(Ok("".to_string())),
+			Err(e) => call_back(Err(e.to_string()))
+		}
+	}))
+}
+
+/**
+* 同步删除空文件夹
+*/
+pub fn remove_dir_sync(path: String) -> Result<String, String> {
+	std_remove_dir(path).map(|_r| "".to_string()).map_err(|e| e.to_string())
+}
+
+/**
+* 异步删除空文件夹
+*/
+pub fn remove_dir(path: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	AsyncFile::remove_dir(path, Box::new(|res| {
+		match res {
+			Ok(()) => call_back(Ok("".to_string())),
+			Err(e) => call_back(Err(e.to_string()))
+		}
+	}))
+}
+
+/**
+* 同步删除非空文件夹
+*/
+pub fn remove_dir_all_sync(path: String) -> Result<String, String> {
+	std_remove_dir_all(path).map(|_r| "".to_string()).map_err(|e| e.to_string())
+}
+
+/**
+* 异步删除非空文件夹
+*/
+pub fn remove_dir_all(path: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	AsyncFile::remove_dir_all(path, Box::new(|res| {
+		match res {
+			Ok(()) => call_back(Ok("".to_string())),
+			Err(e) => call_back(Err(e.to_string()))
+		}
+	}))
+}
+
+/**
  * 同步读目录里面的所有文件
  */
 pub fn walk_dir_sync(path: &str) -> Result<Vec<String>, String> {
@@ -159,4 +323,12 @@ pub fn full_path(path: &str) -> Option<String> {
 		}
 		Err(_e) => None
 	}
+}
+
+pub enum FileWriteOptions {
+    OnlyWrite,
+    OnlyAppend,
+    ReadAppend,
+    ReadWrite,
+    TruncateWrite,
 }
