@@ -1,7 +1,6 @@
-use std::fs::{read_dir, File, OpenOptions, write, rename as std_rename, remove_file as std_remove_file, remove_dir as std_remove_dir, remove_dir_all as std_remove_dir_all};
+use std::fs::{read_dir, File, OpenOptions, write, rename as std_rename, remove_file as std_remove_file, remove_dir as std_remove_dir};
 use std::io::{Write, Read};
 use std::path::Path;
-use std::sync::Arc;
 
 use file::file::{AsyncFile, AsyncFileOptions, WriteOptions};
 
@@ -115,14 +114,14 @@ pub fn write_file_string_sync(path: String, text: String, file_write_option: Fil
 	}
 }
 
-pub fn write_file_buffer_sync(path: String, bytes: Vec<u8>, file_write_option: FileWriteOptions) -> Result<(), String> {
+pub fn write_file_buffer_sync(path: String, bytes: &[u8], file_write_option: FileWriteOptions) -> Result<(), String> {
 	match file_write_option {
 		FileWriteOptions::OnlyWrite | FileWriteOptions::ReadWrite | FileWriteOptions::OnlyAppend | FileWriteOptions::ReadAppend => {
 			let mut open_option = OpenOptions::new();
 			open_option.read(true).write(true).append(true).create(true).create_new(true);
 			match open_option.open(path) {
 				Ok(mut file) => {
-					file.write(&bytes).map(|_| ()).map_err(|e| e.to_string())
+					file.write(bytes).map(|_| ()).map_err(|e| e.to_string())
 				}
 				Err(e) => Err(e.to_string())
 			}
@@ -159,7 +158,7 @@ pub fn write_file_string(path: String, text: String, file_write_option: FileWrit
 	}));
 }
 
-pub fn write_file_buffer(path: String, bytes: Vec<u8>, file_write_option: FileWriteOptions, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+pub fn write_file_buffer(path: String, bytes: &[u8], file_write_option: FileWriteOptions, call_back: Box<dyn FnOnce(Result<String, String>)>) {
 	let option = match file_write_option {
 		FileWriteOptions::OnlyWrite => AsyncFileOptions::OnlyWrite(1),
 		FileWriteOptions::ReadWrite => AsyncFileOptions::ReadWrite(1),
@@ -167,6 +166,7 @@ pub fn write_file_buffer(path: String, bytes: Vec<u8>, file_write_option: FileWr
 		FileWriteOptions::ReadAppend => AsyncFileOptions::ReadAppend(1),
 		FileWriteOptions::OnlyAppend => AsyncFileOptions::OnlyAppend(1)
 	};
+	let bytes = bytes.to_vec();
 	AsyncFile::open(path, option, Box::new(|r: std::io::Result<AsyncFile>| {
 		match r {
 			Ok(r) => {
@@ -232,25 +232,6 @@ pub fn remove_dir_sync(path: String) -> Result<String, String> {
 */
 pub fn remove_dir(path: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
 	AsyncFile::remove_dir(path, Box::new(|res| {
-		match res {
-			Ok(()) => call_back(Ok("".to_string())),
-			Err(e) => call_back(Err(e.to_string()))
-		}
-	}))
-}
-
-/**
-* 同步删除非空文件夹
-*/
-pub fn remove_dir_all_sync(path: String) -> Result<String, String> {
-	std_remove_dir_all(path).map(|_r| "".to_string()).map_err(|e| e.to_string())
-}
-
-/**
-* 异步删除非空文件夹
-*/
-pub fn remove_dir_all(path: String, call_back: Box<dyn FnOnce(Result<String, String>)>) {
-	AsyncFile::remove_dir_all(path, Box::new(|res| {
 		match res {
 			Ok(()) => call_back(Ok("".to_string())),
 			Err(e) => call_back(Err(e.to_string()))
