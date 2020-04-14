@@ -11,6 +11,7 @@ use parking_lot::RwLock;
 use pi_vm::pi_vm_impl::{ VMFactory };
 use pi_vm::adapter::{ JS };
 use pi_vm::bonmgr::{NativeObjsAuth};
+use pi_vm::shell::SHELL_MANAGER;
 use atom::Atom;
 
 use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
@@ -377,18 +378,24 @@ fn module_changed(path: PathBuf) {
 
             if v.factory.is_depend(&mod_id) {
                 debug!("{:?} is a depend for {:?}", mod_id, k);
+                let arc_vmf = Arc::new(vmf);
 
-                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                let jsgray = JSGray::new(&mgr, arc_vmf.clone(), k.as_str());
                 // 用新的代码替换
                 *v = Arc::new(jsgray);
+                SHELL_MANAGER.write().unwrap().set_factory(arc_vmf.clone());
             } else {
                 let deps = get_depends(&js, k.as_str());
                 for dep in deps {
                     vmf = vmf.append_depend(dep);
                 }
-                let jsgray = JSGray::new(&mgr, Arc::new(vmf), k.as_str());
+                let arc_vmf = Arc::new(vmf);
+
+                let jsgray = JSGray::new(&mgr, arc_vmf.clone(), k.as_str());
                 *v = Arc::new(jsgray);
+                SHELL_MANAGER.write().unwrap().set_factory(arc_vmf.clone());
             }
+
         }
     }
 }
