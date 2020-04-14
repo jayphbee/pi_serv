@@ -24,22 +24,28 @@ extern crate apm;
 extern crate atom;
 extern crate base;
 extern crate bon;
+extern crate chrono;
 extern crate file;
+extern crate futures;
 extern crate gray;
 extern crate guid;
 extern crate handler;
+extern crate hash;
 extern crate hash_value;
-extern crate httpc;
+extern crate hex;
 extern crate http;
+extern crate httpc;
 extern crate https;
 extern crate https_external;
-extern crate hash;
 extern crate libc;
 extern crate mqtt;
 extern crate mqtt3;
 extern crate ordmap;
+extern crate parking_lot;
 extern crate pi_store;
+extern crate regex;
 extern crate rpc;
+extern crate serde_json;
 extern crate sinfo;
 extern crate tcp;
 extern crate time;
@@ -47,8 +53,6 @@ extern crate timer;
 extern crate util as lib_util;
 extern crate worker;
 extern crate ws;
-extern crate parking_lot;
-extern crate futures;
 
 #[macro_use]
 extern crate lazy_static;
@@ -74,9 +78,9 @@ pub mod js_lib;
 pub mod js_net;
 pub mod js_net_rpc_client;
 pub mod js_vm;
+pub mod ptmgr;
 pub mod util;
 pub mod webshell;
-pub mod ptmgr;
 
 mod def_build;
 mod js_util;
@@ -92,13 +96,17 @@ mod pi_net_rpc_build;
 mod pi_serv_build;
 mod pi_vm_build;
 // mod pi_p2p_build;
+mod license_client;
 mod pi_net_httpc_build;
 mod pi_net_https_build;
 mod pi_net_rpc_tmp_build;
 mod pi_store_build;
 
 use std::env;
+use std::fs::File;
 use std::io;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::io::{Result as IOResult, Write};
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::str::FromStr;
@@ -137,19 +145,22 @@ use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystem
 use apm::common::SysStat;
 use ptmgr::PLAT_MGR;
 
-use js_net::InsecureHttpRpcRequstHandler;
-use http::{server::HttpListenerFactory,
-    virtual_host::{VirtualHostTab, VirtualHost},
-    route::HttpRoute,
-    middleware::MiddlewareChain,
-    default_parser::DefaultParser,
-    port::HttpPort};
 use http::virtual_host::VirtualHostPool;
-use tcp::server::{AsyncPortsFactory, SocketListener};
-use tcp::connect::TcpSocket;
-use tcp::driver::{SocketConfig};
+use http::{
+    default_parser::DefaultParser,
+    middleware::MiddlewareChain,
+    port::HttpPort,
+    route::HttpRoute,
+    server::HttpListenerFactory,
+    virtual_host::{VirtualHost, VirtualHostTab},
+};
+use js_net::InsecureHttpRpcRequstHandler;
+use license_client::License;
 use tcp::buffer_pool::WriteBufferPool;
-use tcp::util::{TlsConfig};
+use tcp::connect::TcpSocket;
+use tcp::driver::SocketConfig;
+use tcp::server::{AsyncPortsFactory, SocketListener};
+use tcp::util::TlsConfig;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -437,6 +448,8 @@ fn enable_shell(matches: &ArgMatches) {
 }
 
 fn main() {
+    // 启动license服务
+    license_handle();
     // 启动日志系统
     env_logger::builder().format_timestamp_millis().init();
 
@@ -536,4 +549,22 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
 
 fn register(mgr: &BonMgr) {
     mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
+}
+
+// 执行license服务
+fn license_handle() {
+    let file = File::open("license");
+    let license_str = match file {
+        Ok(result) => {
+            let mut buf_reader = BufReader::new(result);
+            let mut contents = String::new();
+            match buf_reader.read_to_string(&mut contents) {
+                Ok(_) => contents,
+                _ => "".to_string(),
+            }
+        },
+        _ => "".to_string(),
+    };
+    let mut license = License::new(license_str);
+    License::set_timer(&mut license, 1 * 60 * 1000);
 }
