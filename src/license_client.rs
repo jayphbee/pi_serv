@@ -89,7 +89,7 @@ impl License {
                     String,
                 >| {
                     match result {
-                        Err(s) => {
+                        Err(_s) => {
                             let heart_count = license.heart_count.load(Ordering::Relaxed);
                             let heart_error = license.heart_error.load(Ordering::Relaxed);
                             if heart_error >= heart_count {
@@ -121,7 +121,7 @@ impl License {
                                         ENABLE_ALLOC.store(false, Ordering::Relaxed);
                                     }
                                 }
-                                Err(s) => {
+                                Err(_s) => {
                                     let heart_count = license.heart_count.load(Ordering::Relaxed);
                                     let heart_error = license.heart_error.load(Ordering::Relaxed);
                                     if heart_error >= heart_count {
@@ -168,8 +168,8 @@ fn check_license(text: String) -> Result<(u64, u64, u64), String> {
                 let license = &data["license"].as_str().unwrap();
                 let overtime = &data["overtime"].as_u64().unwrap();
                 let timestamp = &data["timestamp"].as_u64().unwrap();
-                let heartbeat = &data["heartbeat"].as_u64().unwrap();
-                let heart_count = &data["heart_count"].as_u64().unwrap();
+                let heartbeat = &license_data["heartbeat"].as_u64().unwrap();
+                let heart_count = &license_data["heart_count"].as_u64().unwrap();
                 let mut msg = "license=".to_string();
                 msg = msg
                     + license
