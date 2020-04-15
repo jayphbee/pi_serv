@@ -1,7 +1,6 @@
 use apm::allocator::ENABLE_ALLOC;
 use apm::common::{NetIPType, NetProtocolType, SysStat};
 use atom::Atom;
-use chrono::prelude::*;
 use hex::FromHex;
 use js_httpc;
 use pi_crypto::digest::{digest, DigestAlgorithm};
@@ -12,17 +11,18 @@ use std::process::Command;
 use std::sync::atomic::{AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::vec::Vec;
+use time::now_millisecond;
 use timer::{FuncRuner, TIMER};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct License {
-    os: String,                  // 系统
-    license: String,             // 授权码
-    overtime: Arc<AtomicU64>,    // 到期时间
-    client_id: String,           // 客户端唯一标识
-    heartbeat: Arc<AtomicUsize>, // 心跳间隔毫秒
-    heart_count: Arc<AtomicU8>,  // 尝试次数/已尝试次数
-    heart_error: Arc<AtomicU8>,  // 尝试次数/已尝试次数
+    os: String,             // 系统
+    license: String,        // 授权码
+    overtime: AtomicU64,    // 到期时间
+    client_id: String,      // 客户端唯一标识
+    heartbeat: AtomicUsize, // 心跳间隔毫秒
+    heart_count: AtomicU8,  // 尝试次数/已尝试次数
+    heart_error: AtomicU8,  // 尝试次数/已尝试次数
 }
 
 impl License {
@@ -32,11 +32,11 @@ impl License {
         Arc::new(License {
             os: String::from("Windows"),
             license: license,
-            overtime: Arc::new(AtomicU64::new(0)),
+            overtime: AtomicU64::new(0),
             client_id: uuid,
-            heartbeat: Arc::new(AtomicUsize::new(1 * 24 * 60 * 60 * 1000)),
-            heart_count: Arc::new(AtomicU8::new(3)),
-            heart_error: Arc::new(AtomicU8::new(0)),
+            heartbeat: AtomicUsize::new(1 * 60 * 60 * 1000),
+            heart_count: AtomicU8::new(3),
+            heart_error: AtomicU8::new(0),
         })
     }
     #[cfg(any(unix))]
@@ -45,11 +45,11 @@ impl License {
         Arc::new(License {
             os: String::from("Linux"),
             license: license,
-            overtime: Arc::new(AtomicU64::new(0)),
+            overtime: AtomicU64::new(0),
             client_id: uuid,
-            heartbeat: Arc::new(AtomicUsize::new(1 * 24 * 60 * 60 * 1000)),
-            heart_count: Arc::new(AtomicU8::new(3)),
-            heart_error: Arc::new(AtomicU8::new(0)),
+            heartbeat: AtomicUsize::new(1 * 60 * 60 * 1000),
+            heart_count: AtomicU8::new(3),
+            heart_error: AtomicU8::new(0),
         })
     }
     // 定时处理
@@ -81,7 +81,7 @@ impl License {
             js_httpc::create_http_client("license_client".to_string(), options).unwrap();
         js_httpc::post(
             &mut client,
-            Atom::from("https://license.yinengyun.com/license/verify"),
+            Atom::from("https://license.yinengyun.com:10443/license/verify"),
             body,
             Box::new(
                 move |result: Result<
@@ -93,7 +93,7 @@ impl License {
                             let heart_count = license.heart_count.load(Ordering::Relaxed);
                             let heart_error = license.heart_error.load(Ordering::Relaxed);
                             if heart_error >= heart_count {
-                                close();
+                                ENABLE_ALLOC.store(false, Ordering::Relaxed);
                             } else {
                                 let new_error = heart_error + 1;
                                 license.heart_error.store(new_error, Ordering::SeqCst);
@@ -102,22 +102,30 @@ impl License {
                         Ok((_, mut resp)) => {
                             let text = resp.text().unwrap();
                             match check_license(text) {
-                                Ok(overtime) => {
+                                Ok((overtime, heartbeat, heart_count)) => {
                                     let new_overtime = overtime;
                                     // 更新license到期时间
                                     license.overtime.store(new_overtime, Ordering::SeqCst);
                                     // 重置失败尝试次数
                                     license.heart_error.store(0, Ordering::SeqCst);
-                                    let now = get_timestamp();
+                                    // 更新心跳间隔
+                                    license
+                                        .heartbeat
+                                        .store(heartbeat as usize, Ordering::SeqCst);
+                                    // 更新心跳尝试次数
+                                    license
+                                        .heart_count
+                                        .store(heart_count as u8, Ordering::SeqCst);
+                                    let now = now_millisecond();
                                     if new_overtime < now {
-                                        close();
+                                        ENABLE_ALLOC.store(false, Ordering::Relaxed);
                                     }
                                 }
                                 Err(s) => {
                                     let heart_count = license.heart_count.load(Ordering::Relaxed);
                                     let heart_error = license.heart_error.load(Ordering::Relaxed);
                                     if heart_error >= heart_count {
-                                        close();
+                                        ENABLE_ALLOC.store(false, Ordering::Relaxed);
                                     } else {
                                         let new_error = heart_error + 1;
                                         license.heart_error.store(new_error, Ordering::SeqCst);
@@ -147,19 +155,8 @@ fn get_info() -> (usize, u64, u64, usize) {
     return (cpu, mem, disk, socket_size);
 }
 
-// 关闭服务
-fn close() {
-    ENABLE_ALLOC.store(false, Ordering::Relaxed);
-}
-
-// 获取当前时间戳
-fn get_timestamp() -> u64 {
-    let dt = Local::now();
-    return dt.timestamp_millis() as u64;
-}
-
 // 验证签名
-fn check_license(text: String) -> Result<u64, String> {
+fn check_license(text: String) -> Result<(u64, u64, u64), String> {
     let license_data: Value = serde_json::from_str(&text).unwrap();
     let code = license_data["return_code"].as_str();
     match code {
@@ -171,6 +168,8 @@ fn check_license(text: String) -> Result<u64, String> {
                 let license = &data["license"].as_str().unwrap();
                 let overtime = &data["overtime"].as_u64().unwrap();
                 let timestamp = &data["timestamp"].as_u64().unwrap();
+                let heartbeat = &data["heartbeat"].as_u64().unwrap();
+                let heart_count = &data["heart_count"].as_u64().unwrap();
                 let mut msg = "license=".to_string();
                 msg = msg
                     + license
@@ -183,7 +182,7 @@ fn check_license(text: String) -> Result<u64, String> {
                 let pk = Vec::from_hex("0440990801123db1cfe33d43ca968d684f76e9f23b9dff885eacb94c9c896b38fba6259a275d0ef6e18464b9800193034d5cb90a1640a9b6190f118943a662137d").unwrap();
                 let sign_bin = Vec::from_hex(&sign).unwrap();
                 if secp.verify(&hash, sign_bin.as_ref(), pk.as_ref()) {
-                    return Result::Ok(overtime.clone());
+                    return Result::Ok((overtime.clone(), heartbeat.clone(), heart_count.clone()));
                 } else {
                     return Result::Err("sign error".to_string());
                 }
