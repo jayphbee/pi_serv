@@ -515,7 +515,7 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
 
     let jscopy = js.clone();
 
-    println!("index: {}, timeout: {}", call_index, timeout);
+    // println!("index: {}, timeout: {}", call_index, timeout);
     match push_callback(
         jscopy.clone(),
         call_index,
