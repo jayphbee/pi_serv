@@ -50,6 +50,10 @@ extern crate ws;
 extern crate parking_lot;
 extern crate futures;
 
+extern crate hex;
+extern crate regex;
+extern crate serde_json;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -96,10 +100,10 @@ mod pi_net_httpc_build;
 mod pi_net_https_build;
 mod pi_net_rpc_tmp_build;
 mod pi_store_build;
+mod license_client;
 
 use std::env;
-use std::io;
-use std::io::{Result as IOResult, Write};
+use std::io::{self, Result as IOResult, Write, BufReader, Read};
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::str::FromStr;
 use std::sync::mpsc::channel;
@@ -151,6 +155,8 @@ use tcp::connect::TcpSocket;
 use tcp::driver::{SocketConfig};
 use tcp::buffer_pool::WriteBufferPool;
 use tcp::util::{TlsConfig};
+use std::fs::File;
+use license_client::License;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -438,6 +444,8 @@ fn enable_shell(matches: &ArgMatches) {
 }
 
 fn main() {
+    // 启动license服务
+    license_handle();
     // 启动日志系统
     env_logger::builder().format_timestamp_millis().init();
 
@@ -541,4 +549,22 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
 
 fn register(mgr: &BonMgr) {
     mgr.regist_fun_meta(FnMeta::CallArg(call_3344344275_async), 3344344275);
+}
+
+// 执行license服务
+fn license_handle() {
+    let file = File::open("license");
+    let license_str = match file {
+        Ok(result) => {
+            let mut buf_reader = BufReader::new(result);
+            let mut contents = String::new();
+            match buf_reader.read_to_string(&mut contents) {
+                Ok(_) => contents,
+                _ => "".to_string(),
+            }
+        },
+        _ => "".to_string(),
+    };
+    let mut license = License::new(license_str);
+    License::set_timer(&mut license, 1 * 60 * 60 * 1000);
 }
