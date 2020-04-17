@@ -103,9 +103,7 @@ mod pi_store_build;
 mod license_client;
 
 use std::env;
-use std::io;
-use std::io::prelude::*;
-use std::io::{Result as IOResult, Write, BufReader};
+use std::io::{self, Result as IOResult, Write, BufReader, Read};
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::str::FromStr;
 use std::sync::mpsc::channel;
