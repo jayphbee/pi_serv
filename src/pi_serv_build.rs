@@ -39,6 +39,7 @@ use hotfix;
 use webshell;
 use js_net_rpc_client;
 use ptmgr;
+use binary;
 
 
 
@@ -5143,6 +5144,52 @@ fn call_854437954(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_2646302258(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+
+
+    let result = binary::Binary::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3610954401);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1855390718(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in len";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3610954401, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const binary::Binary) };
+
+
+    let result = binary::Binary::len(jst0);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_329716891(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in as_arc_vec";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3610954401, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const binary::Binary) };
+
+
+    let result = binary::Binary::as_arc_vec(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
+
+
+    Some(CallResult::Ok)
+}
+
 fn drop_3289224548(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBIter) };
 }
@@ -5410,6 +5457,10 @@ fn drop_4288401962(ptr: usize){
 fn drop_1017644051(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut ptmgr::GlobalPlatMgr) };
 }
+
+fn drop_3610954401(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut binary::Binary) };
+}
 pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_db::DBIter"), drop_fn: drop_3289224548}, 3289224548);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<Vec<u8>>"), drop_fn: drop_2886438122}, 2886438122);
@@ -5478,6 +5529,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::RPCClient"), drop_fn: drop_4088898725}, 4088898725);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_net_rpc_client::CloseHandler"), drop_fn: drop_4288401962}, 4288401962);
     mgr.regist_struct_meta(StructMeta{name:String::from("ptmgr::GlobalPlatMgr"), drop_fn: drop_1017644051}, 1017644051);
+    mgr.regist_struct_meta(StructMeta{name:String::from("binary::Binary"), drop_fn: drop_3610954401}, 3610954401);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3763610783_sync), 3763610783);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2701929727_sync), 2701929727);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1993779671), 1993779671);
@@ -5680,4 +5732,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1390968299), 1390968299);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2085560380), 2085560380);
     mgr.regist_fun_meta(FnMeta::CallArg(call_854437954), 854437954);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2646302258), 2646302258);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1855390718), 1855390718);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_329716891), 329716891);
 }
