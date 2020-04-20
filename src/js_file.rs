@@ -3,6 +3,7 @@ use std::io::{Write, Read};
 use std::path::Path;
 
 use file::file::{AsyncFile, AsyncFileOptions, WriteOptions};
+use binary::Binary;
 
 
 
@@ -280,6 +281,52 @@ pub fn walk_dir_sync(path: &str) -> Result<Vec<String>, String> {
 // pub fn walk_dir(path: &str, call_back: Arc<dyn FnOnce(Result<String, String>)>) {
 // 	// TODO
 // }
+
+// ======================  use Binary as param =====================
+pub fn write_file_buffer_binary(path: String, bin: Binary, file_write_option: FileWriteOptions, call_back: Box<dyn FnOnce(Result<String, String>)>) {
+	let option = match file_write_option {
+		FileWriteOptions::OnlyWrite => AsyncFileOptions::OnlyWrite(1),
+		FileWriteOptions::ReadWrite => AsyncFileOptions::ReadWrite(1),
+		FileWriteOptions::TruncateWrite => AsyncFileOptions::TruncateWrite(1),
+		FileWriteOptions::ReadAppend => AsyncFileOptions::ReadAppend(1),
+		FileWriteOptions::OnlyAppend => AsyncFileOptions::OnlyAppend(1)
+	};
+	if let Some(bytes) = bin.take() {
+		AsyncFile::open(path, option, Box::new(|r: std::io::Result<AsyncFile>| {
+			match r {
+				Ok(r) => {
+					r.write(WriteOptions::None,0, bytes, Box::new(|_s: AsyncFile, r: std::io::Result<()>| {
+						match r {
+							Ok(()) => call_back(Ok("".to_string())),
+							Err(e) => call_back(Err(e.to_string())),
+						}
+					}))
+				},
+				Err(e) => call_back(Err(e.to_string())),
+			}
+		}));
+	} else {
+		call_back(Err("Binary has been taken!!!".to_string()))
+	}
+	
+}
+
+pub fn read_file_buffer_binary(path: String, call_back: Box<dyn FnOnce(Result<Binary, String>)>) {
+	AsyncFile::open(path, AsyncFileOptions::OnlyRead(1), Box::new(|r: std::io::Result<AsyncFile>| {
+		match r {
+			Ok(r) => {
+				let len = r.get_size();
+				r.read(0, len as usize, Box::new(|_s: AsyncFile, r: std::io::Result<Vec<u8>>| {
+					match r {
+						Ok(r) => call_back(Ok(Binary::new(r))),
+						Err(e) => call_back(Err(e.to_string())),
+					}
+				}))
+			},
+			Err(e) => call_back(Err(e.to_string())),
+		}
+	}));
+}
 
 pub fn is_absolute(path: &str) -> bool {
 	Path::new(path).is_absolute()
