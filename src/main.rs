@@ -53,6 +53,7 @@ extern crate futures;
 extern crate hex;
 extern crate regex;
 extern crate serde_json;
+extern crate dashmap;
 
 #[macro_use]
 extern crate lazy_static;
@@ -81,6 +82,7 @@ pub mod js_vm;
 pub mod util;
 pub mod webshell;
 pub mod ptmgr;
+pub mod binary;
 
 mod def_build;
 mod js_util;
@@ -157,6 +159,7 @@ use tcp::buffer_pool::WriteBufferPool;
 use tcp::util::{TlsConfig};
 use std::fs::File;
 use license_client::License;
+use binary::Binary;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;

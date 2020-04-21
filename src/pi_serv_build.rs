@@ -39,6 +39,7 @@ use hotfix;
 use webshell;
 use js_net_rpc_client;
 use ptmgr;
+use binary;
 
 
 
@@ -1696,6 +1697,81 @@ fn call_3649129955(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     };
 
     Some(CallResult::Ok)
+}
+
+
+fn call_3524878800_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in write_file_buffer_binary";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 3610954401, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut binary::Binary) };
+
+	let jst2 = &v[2];
+    if !jst2.is_number(){return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = match jst2.get_u32(){
+        0 => js_file::FileWriteOptions::OnlyWrite,
+        1 => js_file::FileWriteOptions::OnlyAppend,
+        2 => js_file::FileWriteOptions::ReadAppend,
+        3 => js_file::FileWriteOptions::ReadWrite,
+        4 => js_file::FileWriteOptions::TruncateWrite,
+        _ => panic!("enum type error")
+    };
+
+    let call_index = &v[3];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<String,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { let mut r = js.new_str(r).unwrap();
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_3524878800_async1"));
+    };
+
+    js_file::write_file_buffer_binary(jst0,jst1,jst2,Box::new(call_back));
+	Some(CallResult::Ok)
+}
+
+
+fn call_1213849201_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+
+    let param_error = "param error in read_file_buffer_binary";
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+    let call_index = &v[1];
+    if !call_index.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+    let call_index = call_index.get_u32();
+    
+    let jscopy = js.clone();
+	let call_back = move |r: Result<binary::Binary,String>| {
+		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,3610954401);
+
+ r }
+        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        }
+    };
+
+            1
+        } ), None, Atom::from("call_1213849201_async1"));
+    };
+
+    js_file::read_file_buffer_binary(jst0,Box::new(call_back));
+	Some(CallResult::Ok)
 }
 
 
@@ -5143,6 +5219,56 @@ fn call_854437954(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_2646302258(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in new";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+
+
+    let result = binary::Binary::new(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3610954401);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1855390718(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in len";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3610954401, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const binary::Binary) };
+
+
+    let result = binary::Binary::len(jst0);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_4216586235(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in take";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3610954401, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const binary::Binary) };
+
+
+    let result = binary::Binary::take(jst0);let mut result = match result{
+        Some(v) => { 
+    let ptr = Box::into_raw(Box::new(v)) as usize;let mut v = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
+
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
 fn drop_3289224548(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBIter) };
 }
@@ -5229,6 +5355,10 @@ fn drop_591726708(ptr: usize){
 
 fn drop_776853760(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_file::FileWriteOptions) };
+}
+
+fn drop_3610954401(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut binary::Binary) };
 }
 
 fn drop_1846921536(ptr: usize){
@@ -5433,6 +5563,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::Args"), drop_fn: drop_1694133887}, 1694133887);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_env::EnvVars"), drop_fn: drop_591726708}, 591726708);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_file::FileWriteOptions"), drop_fn: drop_776853760}, 776853760);
+    mgr.regist_struct_meta(StructMeta{name:String::from("binary::Binary"), drop_fn: drop_3610954401}, 3610954401);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<sinfo::StructInfo>"), drop_fn: drop_1846921536}, 1846921536);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_async::AsyncRequestHandler"), drop_fn: drop_259136547}, 259136547);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<js_async::AsyncRequestHandler>"), drop_fn: drop_374659923}, 374659923);
@@ -5536,6 +5667,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1824609838), 1824609838);
     mgr.regist_fun_meta(FnMeta::CallArg(call_874811570_async), 874811570);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3649129955), 3649129955);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3524878800_async), 3524878800);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1213849201_async), 1213849201);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3007613864), 3007613864);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3595492395), 3595492395);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3126070271), 3126070271);
@@ -5680,4 +5813,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1390968299), 1390968299);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2085560380), 2085560380);
     mgr.regist_fun_meta(FnMeta::CallArg(call_854437954), 854437954);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2646302258), 2646302258);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1855390718), 1855390718);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_4216586235), 4216586235);
 }

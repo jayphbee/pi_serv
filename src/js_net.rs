@@ -15,7 +15,7 @@ use futures::future::BoxFuture;
 
 use pi_vm::adapter::{JS};
 use pi_vm::pi_vm_impl::{new_queue, remove_queue};
-use pi_vm::bonmgr::{ptr_jstype};
+use pi_vm::bonmgr::{ptr_jstype, NObject};
 use handler::{Args, Handler, SGenType};
 use gray::{GrayVersion, GrayTab};
 use atom::Atom;
@@ -71,6 +71,8 @@ use http::response::{ResponseHandler, HttpResponse};
 use http::util::HttpRecvResult;
 use http::gateway::GatewayContext;
 use http::range_load::RangeLoad;
+
+use binary::Binary;
 
 use hotfix::get_gray_table;
 
@@ -941,15 +943,17 @@ impl RequestHandler {
 // 设置http请求参数
 fn set_data(vm: Arc<JS>, msg: Arc<RefCell<XHashMap<String, SGenType>>>) {
     let data = vm.new_object();
-    for (key, val) in msg.borrow().iter() {
+    for (key, val) in msg.borrow_mut().drain() {
         match val {
             SGenType::Str(s) => {
                 vm.set_field(&data, String::from(key), &mut vm.new_str(s.to_string()).unwrap());
             }
             SGenType::Bin(bin) => {
-                let mut buffer = vm.new_uint8_array(bin.len() as u32);
-                buffer.from_bytes(bin.as_slice());
-                vm.set_field(&data, String::from(key), &mut buffer);
+                let ptr = Box::into_raw(Box::new(Binary::new(bin))) as usize;
+                let nobj = NObject{meta_hash: 3610954401};
+                vm.get_objs().borrow_mut().insert(ptr, nobj);
+                let mut n = vm.new_native_object(ptr);
+                vm.set_field(&data, String::from(key), &mut n);
             }
             _ => {
                 unimplemented!();
@@ -1465,6 +1469,7 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
         let mut chain = MiddlewareChain::new();
         chain.push_back(cors_handler.clone());
         chain.push_back(parser);
+        chain.push_back(multi_parts.clone());
         chain.push_back(http_port.clone());
         chain.finish();
         let port_middleware = Arc::new(chain);
