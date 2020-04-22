@@ -1391,7 +1391,11 @@ fn build_service<S: SocketTrait + StreamTrait>(port: u16, http_configs: &Vec<Htt
             keep_alive = http_config.keep_alive_timeout;
         }
         let enable_cache = http_config.static_cache_max_len > 0 && http_config.static_cache_max_size > 0 && http_config.static_cache_collect_time > 0;
-        let cors_handler = Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), http_config.cors));
+        let cors_handler = if http_config.cors {
+            Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), Some(365 * 24 * 60 * 60)))
+        } else {
+            Arc::new(CORSHandler::new("OPTIONS, GET, POST".to_string(), None))
+        };
 
         if !http_config.cors {
             for config in http_config.cors_allows.borrow().iter() {
