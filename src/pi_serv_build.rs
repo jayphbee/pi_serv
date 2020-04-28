@@ -1055,7 +1055,9 @@ fn call_3830865479_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,2886438122);
 
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1272,7 +1274,9 @@ fn call_215229799_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1301,7 +1305,9 @@ fn call_3061910455_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1464,7 +1470,9 @@ fn call_803980070_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1509,7 +1517,9 @@ fn call_2129495237_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1567,7 +1577,9 @@ fn call_4237424252_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1616,7 +1628,9 @@ fn call_675831864_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1665,7 +1679,9 @@ fn call_874811570_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1731,7 +1747,9 @@ fn call_3524878800_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 		push_callback(jscopy.clone(), call_index, Box::new(move |js: Arc<JS>| {let mut r = match r{
         Ok(r) => { let mut r = js.new_str(r).unwrap();
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -1762,7 +1780,9 @@ fn call_1213849201_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,3610954401);
 
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -2827,7 +2847,9 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -2919,7 +2941,9 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -3011,7 +3035,9 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -3103,7 +3129,9 @@ js.set_index(&array, 0, &mut r_elem);
 
 js.set_index(&array, 1, &mut r_elem);    let mut r = array;
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -4800,7 +4828,9 @@ fn call_3581032719_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
@@ -4848,7 +4878,9 @@ fn call_3808530099_async( js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
         None => js.new_null()
     };
  r }
-        Err(v) => { js.new_str(v + ", Result is Err").unwrap()
+        Err(v) => { 
+			js.get_type("Error".to_string());js.new_str(v + ", Result is Err").unwrap();
+			js.new_type("Error".to_string(), 1)
         }
     };
 
