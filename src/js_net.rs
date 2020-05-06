@@ -72,6 +72,9 @@ use http::util::HttpRecvResult;
 use http::gateway::GatewayContext;
 use http::range_load::RangeLoad;
 
+use pi_db::db::TabMeta;
+use sinfo::EnumType;
+
 use binary::Binary;
 
 use hotfix::get_gray_table;
@@ -791,11 +794,32 @@ impl Handler for NetEventHandler {
             None => gray_tab.get_last().clone(),
         };
 
+        let mgr = gray.mgr.clone();
+
+        match event_name.as_ref() {
+            "rpc_net_connect" => {
+                let tr = mgr.transaction(true);
+                let str_meta = TabMeta::new(EnumType::Str, EnumType::Str);
+                let num_meta = TabMeta::new(EnumType::Str, EnumType::U32);
+                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_str", id)), Some(Arc::new(str_meta)), Arc::new(move |_r| {}));
+                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_num", id)), Some(Arc::new(num_meta)), Arc::new(move |_r| {}));
+                tr.prepare(Arc::new(move |_r| {}));
+                tr.commit(Arc::new(move |_r| {}));
+            }
+            "rpc_net_connect_close" => {
+                let tr = mgr.transaction(true);
+                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_str", id)), None, Arc::new(move |_r| {}));
+                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_num", id)), None, Arc::new(move |_r| {}));
+                tr.prepare(Arc::new(move |_r| {}));
+                tr.commit(Arc::new(move |_r| {}));
+            }
+            _ => {}
+        }
+
         let queue = new_queue(id); //创建指定socket的同步静态队列
         let handler_name = self.handler.clone();
         let event_name_copy = event_name.clone();
         let func = Box::new(move |lock: Option<isize>| {
-            let mgr = gray.mgr.clone();
             let event_name1 = event_name.clone();
             let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                 //事件对象
