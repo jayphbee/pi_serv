@@ -806,13 +806,6 @@ impl Handler for NetEventHandler {
                 tr.prepare(Arc::new(move |_r| {}));
                 tr.commit(Arc::new(move |_r| {}));
             }
-            "rpc_net_connect_close" => {
-                let tr = mgr.transaction(true);
-                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_str", id)), None, Arc::new(move |_r| {}));
-                tr.alter(&Atom::from("_$session"), &Atom::from(format!("{}_num", id)), None, Arc::new(move |_r| {}));
-                tr.prepare(Arc::new(move |_r| {}));
-                tr.commit(Arc::new(move |_r| {}));
-            }
             _ => {}
         }
 
