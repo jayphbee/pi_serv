@@ -414,6 +414,30 @@ fn call_2215620835(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3615442995(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_log_file_db";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 2976191628, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const pi_db::mgr::Mgr) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 1492732803, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_store::log_file_db::LogFileDB) };
+
+
+    let result = js_db::register_log_file_db(jst0,jst1,jst2);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_360427781(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_all_wares";
 
@@ -5357,6 +5381,10 @@ fn drop_2325173571(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut pi_store::file_mem_db::FileMemDB) };
 }
 
+fn drop_1492732803(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut pi_store::log_file_db::LogFileDB) };
+}
+
 fn drop_1542823015(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Vec<String>) };
 }
@@ -5587,6 +5615,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_db::memery_db::DB"), drop_fn: drop_1237457629}, 1237457629);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::lmdb_file::DB"), drop_fn: drop_568147534}, 568147534);
     mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::file_mem_db::FileMemDB"), drop_fn: drop_2325173571}, 2325173571);
+    mgr.regist_struct_meta(StructMeta{name:String::from("pi_store::log_file_db::LogFileDB"), drop_fn: drop_1492732803}, 1492732803);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<String>"), drop_fn: drop_1542823015}, 1542823015);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<pi_db::db::TabMeta>"), drop_fn: drop_4164638564}, 4164638564);
     mgr.regist_struct_meta(StructMeta{name:String::from("Vec<u8>"), drop_fn: drop_104530634}, 104530634);
@@ -5652,6 +5681,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1905006775), 1905006775);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3038249291), 3038249291);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2215620835), 2215620835);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3615442995), 3615442995);
     mgr.regist_fun_meta(FnMeta::CallArg(call_360427781), 360427781);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2573413979), 2573413979);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2097131752), 2097131752);

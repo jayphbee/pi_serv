@@ -17,6 +17,7 @@ use pi_db::mgr::{Mgr, Monitor, Tr};
 use pi_db::util::{dump as db_dump, restore as db_restore};
 use pi_store::file_mem_db::FileMemDB;
 use pi_store::lmdb_file::{DB as Lmdb};
+use pi_store::log_file_db::LogFileDB;
 use pi_vm::adapter::{dukc_pop, JSType, JS};
 use pi_vm::bonmgr::ptr_jstype;
 use pi_vm::pi_vm_impl::{block_set_global_var, BlockError, VMFactory};
@@ -276,6 +277,14 @@ pub fn register_file_db(mgr: &Mgr, prefix: String, ware: Lmdb) -> bool {
 
 pub fn register_file_mem_db(mgr: &Mgr, prefix: String, ware: FileMemDB) -> bool {
     mgr.register(Atom::from(prefix), Arc::new(ware))
+}
+
+pub fn register_log_file_db(mgr: &Mgr, prefix: String, ware: LogFileDB) -> bool {
+    if let Some(w) = mgr.find(&Atom::from(prefix.clone())) {
+        false
+    } else {
+        mgr.register(Atom::from(prefix), Arc::new(ware))
+    }
 }
 
 pub fn get_all_wares(mgr: &Mgr) -> Vec<String> {
