@@ -239,7 +239,7 @@ pub fn hotfix_listen(path: String) {
                     let json_file = mod_id.as_str().split(".").collect::<Vec<&str>>()[0].to_string() + "_event.cfg.json";
                     if let Ok(jstr) = read_file_string_sync(&json_file) {
                         let mut parsed = json::parse(&jstr).unwrap();
-                        for s in parsed["pi_sys/modules/event/entrance.Entrance"].members_mut() {
+                        for s in parsed["pi_utils/event/entrance.Entrance"].members_mut() {
                             register_rpc_topic(s[0].take_string().unwrap() , &service);
                         }
                     } else {
