@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex };
 use std::sync::{ RwLock as StdRwlock };
 use std::net::SocketAddr;
 use std::io::{Error, ErrorKind};
+use std::env;
 
 use std::time::SystemTime;
 use std::sync::atomic::Ordering;
@@ -1896,12 +1897,33 @@ pub fn global_bind_tls_ports<S: SocketTrait + StreamTrait>(ip: String,          
 }
 
 pub fn parse_http_config(jstr: String) {
+    // 环境变量的ip是以分号分隔的字符串
+    let replace_ip = match env::var("PTCONFIG_IP") {
+        Ok(ip) => Some(ip),
+        Err(_) => None,
+    };
+
     match json::parse(&jstr) {
         Ok(jobj) => {
             for config in jobj["httpConfig"].members() {
                 let mut http_config = HttpConfig::new();
 
-                let virtual_host = config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                let http_port = config["httpPort"].as_bool().unwrap();
+                http_config.config_http_port(config["httpPort"].as_bool().unwrap());
+
+                // 如果配置了环境变量PTCONFIG_IP，则新增虚拟主机
+                let virtual_host = match replace_ip.clone() {
+                    Some(ip) => {
+                        // 如果是 https 配置, 不要用 ip 替换
+                        if http_port {
+                            config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
+                        } else {
+                            ip.split(";").map(|s| s.to_string()).collect::<Vec<String>>()
+                        }
+                    }
+                    None => config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
+                };
+
                 let mut static_cache_collect_time: u64 = 0;
                 let mut static_cache_max_size: usize = 0;
                 let mut static_cache_max_len: usize = 0;
@@ -1923,6 +1945,17 @@ pub fn parse_http_config(jstr: String) {
                     let port = cors_allow["port"].as_u16().unwrap();
                     let methods = cors_allow["methods"].members().map(|s|s.to_string()).collect::<Vec<String>>();
                     let max_age = cors_allow["maxAge"].as_usize();
+
+                    // 如果配置了环境变量PTCONFIG_IP，则需要新增跨域规则
+                    if let Some(ips) = replace_ip.clone() {
+                        // 非https跨域配置
+                        if !http_port {
+                            for ip in ips.split(";") {
+                                let c = CorsAllow::new(scheme.clone(), ip.to_string(), port, methods.clone(), max_age);
+                                http_config.add_cors_allow(c);
+                            }
+                        }
+                    }
                     let c = CorsAllow::new(scheme, host, port, methods, max_age);
                     http_config.add_cors_allow(c);
                 }
@@ -1996,9 +2029,6 @@ pub fn parse_http_config(jstr: String) {
                         _ => warn!("unknown field {:?}", key)
                     }
                 }
-
-                let http_port = config["httpPort"].as_bool().unwrap();
-                http_config.config_http_port(config["httpPort"].as_bool().unwrap());
 
                 for route in config["routeTable"].members() {
                     let endpoint = route["endpoint"].as_str().unwrap().to_string();
