@@ -42,6 +42,7 @@ pub fn exec_js(path: String) {
     let mgr = Mgr::new(GuidGen::new(0, 0)); //创建数据库管理器
     // 保存数据库管理器
     PLAT_MGR.register_db_mgr(None, mgr.clone());
+    let x = PLAT_MGR.db_mgr().clone().unwrap();
     mgr.register(Atom::from("memory"), Arc::new(DB::new())); //注册一个内存数据库
 
     let js = JS::new(1, Atom::from("init compile"), auth.clone(), None).unwrap();

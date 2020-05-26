@@ -45,6 +45,8 @@ use tcp::util::{close_socket, TlsConfig};
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
 use mqtt::tls_v311::WssMqtt311Factory;
+use mqtt::util::AsyncResult;
+use mqtt_proxy::service::{MqttEvent, MqttConnectHandle, MqttProxyListener, MqttProxyService};
 use base::service::{BaseListener, BaseService};
 use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
@@ -1264,6 +1266,326 @@ impl HttpHeaders {
     }
 }
 
+
+// 处理连接和关闭连接
+#[derive(Clone)]
+struct MqttConnectHandler {
+    gray_tab: Arc<RwLock<GrayTable>>,
+}
+
+impl MqttConnectHandler {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
+        MqttConnectHandler {
+            gray_tab: gray.clone()
+        }
+    }
+}
+
+impl Handler for MqttConnectHandler {
+    type A = MqttEvent;
+    type B = ();
+    type C = ();
+    type D = ();
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = ();
+
+    fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        println!("MqttConnectHandler topic --------- {:?}", topic);
+        let topic_handler = self.clone();
+        let id = env.get_id();
+        let queue = new_queue(id);
+        let func = Box::new(move |lock: Option<isize>| {
+            let gray_tab = topic_handler.gray_tab.read();
+            let gray = match gray_tab.jsgrays.last() {
+                Some(g) => {
+                    g.values().last()
+                }
+                None => panic!("gray is not exist"),
+            };
+
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let mgr_ptr = Box::into_raw(Box::new(mgr.clone())) as usize; // 数据库管理器
+                let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
+                match args {
+                    Args::OneArgs(MqttEvent::Connect(socket_id, client_id, keep_alive, is_clean_session, user, pwd, result)) => {
+                        //处理Mqtt连接
+                        debug!("mqtt connect event ++++++++++++++++");
+                        let client_id_clone = client_id.clone();
+                        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                            debug!("in real_args +++++++ ");
+                            ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
+                            let mqtt_connection = MqttConnection::new(connect, Some(result), socket_id, client_id, Some(keep_alive), Some(is_clean_session), user, pwd);
+                            let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), mqtt_connection_ptr, 1629990554);
+                            2
+                        });
+
+                        gray.factory.call(Some(id), Atom::from("_$mqttConnect"), real_args, Atom::from(format!("mqtt connect, client_id = {:?}, socket_id = {:?}, keep_alive = {:?}", client_id_clone, socket_id, keep_alive)));
+                    }
+                    Args::OneArgs(MqttEvent::Disconnect(socket_id, client_id, reason)) => {
+                        //处理Mqtt连接关闭
+                        debug!("mqtt disconnect event ++++++++++++++++");
+
+                        let client_id_clone = client_id.clone();
+                        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                            ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
+                            let mqtt_connection = MqttConnection::new(connect, None, socket_id, client_id, None, None, None, None);
+                            let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), mqtt_connection_ptr, 1629990554);
+    
+                            match reason {
+                                Ok(_) => {
+                                    let _ = vm.new_str("".to_string());
+                                }
+                                Err(e) => {
+                                    let _ = vm.new_str(e.to_string());
+                                }
+                            }
+                            3
+                        });
+
+                        gray.factory.call(Some(id), Atom::from("_$mqttDisconnect"), real_args, Atom::from(format!("mqtt disconnect, client_id = {:?}, socket_id = {:?}", client_id_clone, socket_id)));
+                    },
+                    _ => panic!("invalid MqttConnectHandler handler args"),
+                }
+
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> MqttConnectHandler Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("MqttConnectHandler"));
+    }
+}
+
+// 处理mqtt 订阅，退订和消息发布
+#[derive(Clone)]
+struct MqttRequestHandler {
+    gray_tab: Arc<RwLock<GrayTable>>,
+}
+
+impl MqttRequestHandler {
+    pub fn new(gray: &Arc<RwLock<GrayTable>>) -> Self {
+        MqttRequestHandler {
+            gray_tab: gray.clone()
+        }
+    }
+}
+
+impl Handler for MqttRequestHandler {
+    type A = MqttEvent;
+    type B = ();
+    type C = ();
+    type D = ();
+    type E = ();
+    type F = ();
+    type G = ();
+    type H = ();
+    type HandleResult = ();
+
+    fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
+        let topic_handler = self.clone();
+        let id = env.get_id();
+        let queue = new_queue(id);
+
+        let func = Box::new(move |lock: Option<isize>| {
+            let gray_tab = topic_handler.gray_tab.read();
+            let gray = match gray_tab.jsgrays.last() {
+                Some(g) => {
+                    g.values().last()
+                }
+                None => panic!("gray is not exist"),
+            };
+
+            if let Some(gray) = gray {
+                let mgr = gray.mgr.clone();
+                let mgr_ptr = Box::into_raw(Box::new(mgr.clone())) as usize; // 数据库管理器
+                let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
+
+                match args {
+                    Args::OneArgs(MqttEvent::Sub(socket_id, client_id, topics, result)) => {
+                        //处理Mqtt订阅主题
+                        debug!("mqtt sub +++++++++++++++++++++++, topics = {:?}", topics);
+                        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                            ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
+                            let mqtt_connection = MqttConnection::new(connect, Some(result), socket_id, client_id, None, None, None, None);
+                            let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), mqtt_connection_ptr, 1629990554);
+
+                            let arr = vm.new_array();
+                            for (index, topic) in topics.into_iter().enumerate() {
+                                let mut value = vm.new_str(topic.0).unwrap();
+                                vm.set_index(&arr, index as u32, &mut value);
+                            }
+
+                            3
+                        });
+                        gray.factory.call(Some(id), Atom::from("_$mqttSub"), real_args, Atom::from("MqttRequestHandler _$mqttSub"));
+                    },
+                    Args::OneArgs(MqttEvent::Unsub(socket_id, client_id, topics)) => {
+                        //处理Mqtt退订主题
+                        debug!("mqtt unsub +++++++++++++++++++++++++ topics = {:?}", topics);
+                        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                            ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
+                            let mqtt_connection = MqttConnection::new(connect, None, socket_id, client_id, None, None, None, None);
+                            let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), mqtt_connection_ptr, 1629990554);
+    
+                            let arr = vm.new_array();
+                            for (index, topic) in topics.into_iter().enumerate() {
+                                let mut value = vm.new_str(topic).unwrap();
+                                vm.set_index(&arr, index as u32, &mut value);
+                            }
+                            3
+                        });
+                        gray.factory.call(Some(id), Atom::from("_$mqttUnSub"), real_args, Atom::from("MqttRequestHandler _$mqttUnSub"));
+                    },
+                    Args::OneArgs(MqttEvent::Publish(socket_id, client_id, address, topic, payload)) => {
+                        //处理Mqtt发布主题
+                        debug!("mqttSend +++++++++++++++++++++, topic = {:?}, address = {:?}", topic, address);
+                        let real_args = Box::new(move |vm: Arc<JS>| -> usize {
+                            ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
+                            let mqtt_connection = MqttConnection::new(connect, None, socket_id, client_id, None, None, None, None);
+                            let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
+                            ptr_jstype(vm.get_objs(), vm.clone(), mqtt_connection_ptr, 1629990554);
+    
+                            if let Some(addr) = address {
+                                let _ = vm.new_str(addr.to_string());
+                            } else {
+                                let _ = vm.new_str("".to_string());
+                            }
+                            let _ = vm.new_str(topic);
+                            let buffer = vm.new_uint8_array(payload.len() as u32);
+                            buffer.from_bytes(payload.as_ref());
+                            5
+                        });
+                        gray.factory.call(Some(id), Atom::from("_$mqttSend"), real_args, Atom::from("MqttRequestHandler _$mqttSend"));
+                    },
+                    _ => panic!("invalid MqttRequestHandler handler args"),
+                }
+
+                if !unlock_js_task_queue(queue) {
+                    warn!("!!!> MqttRequestHandler Error, unlock task queue failed, queue: {:?}", queue);
+                }
+            } else {
+                error!("can't found handler for topic: {:?}", topic);
+            }
+        });
+        cast_js_task(TaskType::Sync(true), 0, Some(queue), func, Atom::from("MqttRequestHandler"));
+    }
+}
+
+pub struct MqttConnection {
+    handle: Arc<MqttConnectHandle>,
+    connection_result: Option<AsyncResult>,
+    socket_id: usize,
+    client_id: String,
+    keep_alive: Option<u16>,
+    is_clean_session: Option<bool>,
+    user: Option<String>,
+    pwd: Option<String>,
+}
+
+impl MqttConnection {
+    pub fn new(handle: Arc<MqttConnectHandle>, connection_result: Option<AsyncResult>, socket_id: usize, client_id: String, keep_alive: Option<u16>, is_clean_session: Option<bool>, user: Option<String>, pwd: Option<String>) -> Self {
+        Self {
+            handle,
+            connection_result,
+            socket_id,
+            client_id,
+            keep_alive,
+            is_clean_session,
+            user,
+            pwd,
+        }
+    }
+
+    pub fn socket_id(&self) -> usize {
+        self.socket_id
+    }
+
+    pub fn client_id(&self) -> String {
+        self.client_id.clone()
+    }
+
+    pub fn keep_alive(&self) -> Option<u16> {
+        self.keep_alive
+    }
+
+    pub fn is_clean_session(&self) -> Option<bool> {
+        self.is_clean_session
+    }
+
+    pub fn user(&self) -> Option<String> {
+        self.user.clone()
+    }
+
+    pub fn pwd(&self) -> Option<String> {
+        self.pwd.clone()
+    }
+
+    pub fn get_token(&self) -> Option<usize> {
+        self.handle.get_token()
+    }
+
+    pub fn get_local_addr(&self) -> Option<String> {
+        self.handle.get_local_addr().map(|addr| addr.to_string())
+    }
+
+    pub fn get_remote_addr(&self) -> Option<String> {
+        self.handle.get_remote_addr().map(|addr| addr.to_string())
+    }
+
+    pub fn is_security(&self) -> bool {
+        self.handle.is_security()
+    }
+
+    pub fn set_connection_result(&self, result: bool) {
+        if result {
+            match &self.connection_result {
+                Some(res) => res.set(Ok(())),
+                None => {}
+            }
+        } else {
+            match &self.connection_result {
+                Some(res) => res.set(Err(Error::new(ErrorKind::Other, "connection refused by user"))),
+                None => {}
+            }
+        }
+    }
+
+    pub fn wakeup(&self) {
+        let _= self.handle.wakeup();
+    }
+
+    pub fn sub(&self, topic: String) {
+        self.handle.sub(topic)
+    }
+
+    pub fn unsub(&self, topic: String) {
+        self.handle.unsub(topic)
+    }
+
+    pub fn send(&self, topic: String, bin: &[u8]) {
+        self.handle.send(&topic, bin.to_vec());
+    }
+
+    pub fn reply(&self, bin: &[u8]) {
+        self.handle.reply(bin.to_vec());
+    }
+
+    pub fn close(&self, reason: String) {
+        debug!("close, reason = {:?}", reason);
+        let _ = self.handle.close(Ok(()));
+    }
+ }
+
 pub fn register_http_endpoint(key: String, val: String) {
     HTTP_ENDPOINT.write().insert(key, val);
 }
@@ -1311,7 +1633,7 @@ pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_han
 * 为指定的Mqtt主题，注册指定的Rpc服务
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<BaseService>) {
-    WS_MQTT3_BROKER.register_service(topic, service.clone());
+    WS_MQTT3_BROKER.register_topic_service(topic, service.clone());
 }
 
 /*
@@ -1594,6 +1916,13 @@ pub fn start_network_services(net_kernel_options: NetKernelOptions) -> Result<()
     build_secure_service()?;
     // 准备非安全服务配置
     build_insecure_service()?;
+
+    let event_handler = Arc::new(MqttConnectHandler::new(&get_gray_table()));
+    let rpc_handler = Arc::new(MqttRequestHandler::new(&get_gray_table()));
+    let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));
+    let service = Arc::new(MqttProxyService::with_handler(Some(rpc_handler)));
+    WS_MQTT3_BROKER.register_listener(listener);
+    WS_MQTT3_BROKER.register_service(service.clone());
 
     let mut secure_services: Vec<(u16, TlsConfig, Box<dyn AsyncServiceFactory<Connect = FTlsSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>)> = vec![];
     for SecureServices((port, service)) in  SECURE_SERVICES.write().drain(..).into_iter() {

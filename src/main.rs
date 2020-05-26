@@ -36,6 +36,7 @@ extern crate https_external;
 extern crate hash;
 extern crate libc;
 extern crate mqtt;
+extern crate mqtt_proxy;
 extern crate mqtt3;
 extern crate ordmap;
 extern crate pi_store;

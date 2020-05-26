@@ -31,6 +31,7 @@ https_external = { package = "http", version = "0.2" }
 tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 mqtt = { path = "../pi_net/mqtt" }
+mqtt_proxy = { path = "../pi_net/mqtt_proxy"}
 base = { path = "../pi_net/base" }
 rpc = { path = "../pi_net/rpc" }
 # pi_p2p = { path = "../pi_p2p" }
