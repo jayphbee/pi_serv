@@ -1918,7 +1918,7 @@ pub fn parse_http_config(jstr: String) {
                         if http_port {
                             config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
                         } else {
-                            ip.split(";").map(|s| s.to_string()).collect::<Vec<String>>()
+                            config["virtualHost"].members().map(|s|s.to_string()).chain(ip.split(";").map(|s|s.to_string())).collect::<Vec<String>>()
                         }
                     }
                     None => config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
