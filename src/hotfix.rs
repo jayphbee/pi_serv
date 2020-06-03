@@ -219,9 +219,11 @@ pub fn hotfix_listen(path: String) {
                     vmf = vmf.append(Arc::new(env_code));
                     vmf = vmf.append(Arc::new(core_code));
 
-                    let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+                    let old_rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+                    let rpc_boot_code = "pi_pt/net/mqtt_broker.js";
 
                     let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+                    let extra_code = extra_code + format!("Module.require(\'{}\', '');", old_rpc_boot_code).as_str();
                     let extra_code = extra_code + format!("Module.require(\'{}\', '');", mod_id).as_str();
                     let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
 
@@ -342,7 +344,8 @@ fn module_changed(path: PathBuf) {
             vmf = vmf.append(Arc::new(env_code));
             vmf = vmf.append(Arc::new(core_code));
 
-            let rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+            let old_rpc_boot_code = "pi_pt/net/rpc_entrance.js";
+            let rpc_boot_code = "pi_pt/net/mqtt_broker.js";
 
             // 对应pi_pt/init/util.ts 数据库监听器的临时方案
             let db_listener_code = "pi_pt/db/dblistener.js";
@@ -358,6 +361,7 @@ fn module_changed(path: PathBuf) {
             remove_byte_code(mod_id.clone());
 
             let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
+            let extra_code = extra_code + format!("Module.require(\'{}\', '');", old_rpc_boot_code).as_str();
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", db_listener_code).as_str();
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
             let extra_code = extra_code + http_code.as_str();
