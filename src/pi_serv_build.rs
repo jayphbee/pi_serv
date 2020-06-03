@@ -2550,6 +2550,22 @@ fn call_2937777264(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2113618061(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in body";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
+
+
+    let result:js_httpc::HttpClientBody<Vec<u8>> = js_httpc::HttpClientBody::<Vec<u8>>::body(jst0);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4139279264);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2175286088(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_json_val";
 
@@ -2691,22 +2707,6 @@ fn call_2344044784(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_2113618061(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
-	let param_error = "param error in body";
-
-	let jst0 = &v[0];
-    let ptr = jstype_ptr(&jst0, js.clone(), 104530634, true, param_error).expect("");
-	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<u8>) };
-
-
-    let result:js_httpc::HttpClientBody<Vec<u8>> = js_httpc::HttpClientBody::<Vec<u8>>::body(jst0);
-    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,4139279264);
-
-
-    Some(CallResult::Ok)
-}
-
-
 fn call_794872933(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in body";
 
@@ -2760,6 +2760,134 @@ fn call_2118843620(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result:js_httpc::HttpClientBody<String> = js_httpc::HttpClientBody::<String>::form(jst0,jst1);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3642917301);
 
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3521021743(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in get_json_val";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3642917301, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_httpc::HttpClientBody<String>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = js_httpc::HttpClientBody::<String>::get_json_val(jst0,jst1);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(String::from(v.as_str())).unwrap();
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3644244044(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_json_kv";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3642917301, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    let result = js_httpc::HttpClientBody::<String>::add_json_kv(jst0,jst1,jst2);let mut result = js.new_u32(result as u32);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1435304248(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in remove_json_kv";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3642917301, false, param_error).expect("");
+	let jst0 = unsafe { &mut *(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    let result = js_httpc::HttpClientBody::<String>::remove_json_kv(jst0,jst1);let mut result = match result{
+        Some(v) => { let mut v = js.new_str(v).unwrap();
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2598337938(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_form_kv";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3642917301, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    let result:js_httpc::HttpClientBody<String> = js_httpc::HttpClientBody::<String>::add_form_kv(jst0,jst1,jst2);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,3642917301);
+
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_2037030808(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in add_form_file";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 3642917301, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientBody<String>) };
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+	let jst2 = &v[2];
+	if !jst2.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst2 = jst2.get_str();
+
+
+    let result = js_httpc::HttpClientBody::<String>::add_form_file(jst0,jst1,jst2);let mut result = match result{
+        Ok(r) => { 
+    let ptr = Box::into_raw(Box::new(r)) as usize;let mut r = ptr_jstype(js.get_objs(), js.clone(), ptr,3642917301);
+
+ r }
+        Err(v) => { 
+            return Some(CallResult::Err(v + ", Result is Err"));
+        }
+    };
 
     Some(CallResult::Ok)
 }
@@ -5765,16 +5893,21 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2887071833), 2887071833);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2011091417), 2011091417);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2937777264), 2937777264);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2113618061), 2113618061);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2175286088), 2175286088);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1065006446), 1065006446);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1500292772), 1500292772);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2345066455), 2345066455);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1016322459), 1016322459);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2344044784), 2344044784);
-    mgr.regist_fun_meta(FnMeta::CallArg(call_2113618061), 2113618061);
     mgr.regist_fun_meta(FnMeta::CallArg(call_794872933), 794872933);
     mgr.regist_fun_meta(FnMeta::CallArg(call_965054041), 965054041);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2118843620), 2118843620);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3521021743), 3521021743);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3644244044), 3644244044);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1435304248), 1435304248);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2598337938), 2598337938);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2037030808), 2037030808);
     mgr.regist_fun_meta(FnMeta::CallArg(call_997239765), 997239765);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2282211344_sync), 2282211344);
     mgr.regist_fun_meta(FnMeta::CallArg(call_739596726_async), 739596726);
