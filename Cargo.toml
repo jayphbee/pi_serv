@@ -48,6 +48,7 @@ timer = {path = "../pi_lib/timer" }
 ordmap = {path = "../pi_lib/ordmap" }
 apm = {path = "../pi_lib/apm" }
 time = { path = "../pi_lib/time"}
+wheel = { path = "../pi_lib/wheel"}
 parking_lot = "0.10.0"
 futures = "0.3"
 hash = { path = "../pi_lib/hash", features = ["xxhash"] }
@@ -55,6 +56,7 @@ serde_json = "1.0.51"
 hex = "0.3.2"
 regex = "1.3.6"
 dashmap = "3.11.0"
+crossbeam-channel = "0.4.2"
 
 [target.'cfg(unix)'.dependencies]
 glob = "0.3"
