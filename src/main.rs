@@ -54,6 +54,8 @@ extern crate hex;
 extern crate regex;
 extern crate serde_json;
 extern crate dashmap;
+extern crate wheel;
+extern crate crossbeam_channel;
 
 #[macro_use]
 extern crate lazy_static;
@@ -83,6 +85,7 @@ pub mod util;
 pub mod webshell;
 pub mod ptmgr;
 pub mod binary;
+pub mod timer_task;
 
 mod def_build;
 mod js_util;
@@ -158,6 +161,7 @@ use tcp::util::{TlsConfig};
 use std::fs::File;
 use license_client::License;
 use binary::Binary;
+use timer_task::tick;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -491,9 +495,11 @@ fn main() {
     // 根据命令行参数决定是否启动shell
     enable_shell(&matches);
 
+    println!("\n\n################# pi_serv initialized successfully #################\n\n");
+
     while !IS_END.lock().unwrap().0 {
-        println!("###############loop, {}", now_millisecond());
-        thread::sleep(Duration::from_millis(10000));
+        thread::sleep(Duration::from_millis(10));
+        tick();
     }
 }
 

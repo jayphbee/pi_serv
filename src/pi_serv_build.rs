@@ -38,6 +38,7 @@ use webshell;
 use js_net_rpc_client;
 use ptmgr;
 use binary;
+use timer_task;
 
 
 
@@ -5204,6 +5205,78 @@ fn call_4216586235(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_685908689(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_timer_task_vm_factory";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 2643678751, true, param_error).expect("");
+	let jst1 = *unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::pi_vm_impl::VMFactory>)}.clone();
+
+
+	let jst2 = &v[2];
+    let ptr = jstype_ptr(&jst2, js.clone(), 2976191628, true, param_error).expect("");
+	let jst2 = *unsafe { Box::from_raw(ptr as *mut pi_db::mgr::Mgr) };
+
+
+    timer_task::register_timer_task_vm_factory(jst0,jst1,jst2);
+    Some(CallResult::Ok)
+}
+
+
+fn call_309806702(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in insert_oneshot_task";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    timer_task::insert_oneshot_task(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_2847898186(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in insert_periodic_task";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_number(){ return Some(CallResult::Err(String::from(param_error)));}
+	let jst1 = jst1.get_u32() as usize;
+
+
+    timer_task::insert_periodic_task(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_3320526898(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in cancel_task";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+    timer_task::cancel_task(jst0);
+    Some(CallResult::Ok)
+}
+
 fn drop_3289224548(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_db::DBIter) };
 }
@@ -5700,4 +5773,8 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2646302258), 2646302258);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1855390718), 1855390718);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4216586235), 4216586235);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_685908689), 685908689);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_309806702), 309806702);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2847898186), 2847898186);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3320526898), 3320526898);
 }
