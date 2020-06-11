@@ -32,8 +32,6 @@ tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 mqtt = { path = "../pi_net/mqtt" }
 mqtt_proxy = { path = "../pi_net/mqtt_proxy"}
-base = { path = "../pi_net/base" }
-rpc = { path = "../pi_net/rpc" }
 # pi_p2p = { path = "../pi_p2p" }
 pi_store = { path = "../pi_store" }
 atom = { path = "../pi_lib/atom" }

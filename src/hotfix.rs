@@ -19,7 +19,6 @@ use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
 use js_lib::JSGray;
 use js_env::{ env_var };
 use js_file::read_file_string_sync;
-use js_net::{ RequestHandler, create_rpc_service, register_rpc_topic };
 use init_js::{read_code, load_core_env};
 use js_net::get_all_http_rpc_mods;
 
@@ -187,67 +186,8 @@ pub fn gray_table_to_arc(gray_tab: GrayTable) -> Arc<RwLock<GrayTable>> {
 pub fn hotfix_listen(path: String) {
     let listener = FSListener(Arc::new(move |event: FSChangeEvent| {
         match event {
-            FSChangeEvent::Create(path) => {
-                // 创建新的模块，其他地方引入时会自己 require
-                // 需要处理创建的是 .event.js 文件的情况
-                let mod_id = normalize_module_id(path.to_str().unwrap());
-                if mod_id.ends_with(".event.js") {
-                    debug!("create mod id {:?}", mod_id);
-                    let auth = Arc::new(NativeObjsAuth::new(None, None));
-                    let js = JS::new(1, Atom::from("hotfix compile"), auth.clone(), None).unwrap();
-                    load_core_env(&js);
-
-                    let mgr = GRAY_TABLE.read().jsgrays.last().unwrap().values().take(1).next().unwrap().mgr.clone();
-
-                    let mut cur_exe = match env::current_exe() {
-                        Ok(cur_exe) => cur_exe,
-                        Err(e) => {
-                            error!("get current exe failed, create path: {:?}, error: {:?}", path, e);
-                            return
-                        }
-                    };
-                    cur_exe.pop();
-                    let env_code = read_code(&cur_exe.join("env.js"));
-                    let core_code = read_code(&cur_exe.join("core.js"));
-
-                    let env_code = js.compile("env.js".to_string(), env_code).unwrap();
-                    let core_code = js.compile("core.js".to_string(), core_code).unwrap();
-
-                    let mut vmf = VMFactory::new(&mod_id, 128, 2, 33554432, 33554432, auth);
-
-                    // env.js / core.js 代码
-                    vmf = vmf.append(Arc::new(env_code));
-                    vmf = vmf.append(Arc::new(core_code));
-
-                    let old_rpc_boot_code = "pi_pt/net/rpc_entrance.js";
-                    let rpc_boot_code = "pi_pt/net/mqtt_broker.js";
-
-                    let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-                    let extra_code = extra_code + format!("Module.require(\'{}\', '');", old_rpc_boot_code).as_str();
-                    let extra_code = extra_code + format!("Module.require(\'{}\', '');", mod_id).as_str();
-                    let extra_code = js.compile("rpc_entrance".to_string(), extra_code).unwrap();
-
-                    // rpc 功能依赖的代码，和实际处理rpc需要的代码
-                    vmf = vmf.append(Arc::new(extra_code));
-                    vmf.produce(2);
-
-                    let jsgray = JSGray::new(&mgr, Arc::new(vmf), mod_id.as_str());
-                    register_jsgray(get_gray_table(), None, jsgray);
-                    let handler = RequestHandler::new(&get_gray_table());
-                    let service = create_rpc_service(&handler);
-
-                    // 读取.event.js 文件编译生成的 .cfg.json 文件， 解析topic名字
-
-                    let json_file = mod_id.as_str().split(".").collect::<Vec<&str>>()[0].to_string() + "_event.cfg.json";
-                    if let Ok(jstr) = read_file_string_sync(&json_file) {
-                        let mut parsed = json::parse(&jstr).unwrap();
-                        for s in parsed["pi_utils/event/entrance.Entrance"].members_mut() {
-                            register_rpc_topic(s[0].take_string().unwrap() , &service);
-                        }
-                    } else {
-                        println!("not found json file");
-                    }
-                }
+            FSChangeEvent::Create(_path) => {
+                // 不处理这个事件
             },
             // 每次文件改变都会增加一个灰度版本号
             FSChangeEvent::Write(path) => {
@@ -344,11 +284,9 @@ fn module_changed(path: PathBuf) {
             vmf = vmf.append(Arc::new(env_code));
             vmf = vmf.append(Arc::new(core_code));
 
-            let old_rpc_boot_code = "pi_pt/net/rpc_entrance.js";
-            let rpc_boot_code = "pi_pt/net/mqtt_broker.js";
-
-            // 对应pi_pt/init/util.ts 数据库监听器的临时方案
-            let db_listener_code = "pi_pt/db/dblistener.js";
+            let files = ["pi_pt/net/rpc_entrance.js", "pi_pt/net/mqtt_broker.js", "pi_pt/util/migration.struct.js"
+                    , "pi_pt/util/platmgr.struct.js", "pi_pt/rust/pi_serv/webshell.js", "pi_pt/util/migration.event.js"
+                    , "pi_pt/util/hotback.struct.js", "pi_pt/db/dblistener.js"];
 
             // http rpc 的热更新
             let http_code = get_all_http_rpc_mods().into_iter().fold("".to_string(), |acc, x| {
@@ -360,9 +298,11 @@ fn module_changed(path: PathBuf) {
 
             remove_byte_code(mod_id.clone());
 
-            let extra_code = format!("Module.require(\'{}\', '');", rpc_boot_code);
-            let extra_code = extra_code + format!("Module.require(\'{}\', '');", old_rpc_boot_code).as_str();
-            let extra_code = extra_code + format!("Module.require(\'{}\', '');", db_listener_code).as_str();
+            let mut extra_code = String::from("");
+            for file in files.iter() {
+                extra_code += format!("Module.require(\'{}\', '');", file).as_str();
+            }
+
             let extra_code = extra_code + format!("Module.require(\'{}\', '');", k.clone().to_string()).as_str();
             let extra_code = extra_code + http_code.as_str();
             let extra_code = match js.compile("rpc_entrance".to_string(), extra_code) {

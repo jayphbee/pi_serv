@@ -22,7 +22,6 @@ extern crate toml;
 // extern crate pi_p2p;
 extern crate apm;
 extern crate atom;
-extern crate base;
 extern crate bon;
 extern crate file;
 extern crate gray;
@@ -40,7 +39,6 @@ extern crate mqtt_proxy;
 extern crate mqtt3;
 extern crate ordmap;
 extern crate pi_store;
-extern crate rpc;
 extern crate sinfo;
 extern crate tcp;
 extern crate time;
@@ -95,13 +93,11 @@ mod pi_lib_sinfo_build;
 mod pi_math_hash_build;
 mod pi_net_mqtt_build;
 mod pi_net_net_build;
-mod pi_net_rpc_build;
 mod pi_serv_build;
 mod pi_vm_build;
 // mod pi_p2p_build;
 mod pi_net_httpc_build;
 mod pi_net_https_build;
-mod pi_net_rpc_tmp_build;
 mod pi_store_build;
 mod license_client;
 
@@ -299,7 +295,6 @@ fn register_bon_mgr() {
     pi_db_build::register(&BON_MGR);
     def_build::register(&BON_MGR);
     pi_net_mqtt_build::register(&BON_MGR);
-    pi_net_rpc_build::register(&BON_MGR);
     pi_net_net_build::register(&BON_MGR);
     pi_serv_build::register(&BON_MGR);
     pi_vm_build::register(&BON_MGR);
@@ -307,7 +302,6 @@ fn register_bon_mgr() {
     // pi_p2p_build::register(&BON_MGR);
     pi_net_httpc_build::register(&BON_MGR);
     pi_net_https_build::register(&BON_MGR);
-    pi_net_rpc_tmp_build::register(&BON_MGR);
     pi_store_build::register(&BON_MGR);
     register(&BON_MGR);
 }
