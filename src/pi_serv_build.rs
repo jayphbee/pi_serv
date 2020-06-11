@@ -15,6 +15,7 @@ use bon;
 use gray;
 use std::sync::RwLock;
 use guid;
+use guid64;
 use atom;
 use httpc;
 use handler;
@@ -911,6 +912,30 @@ fn call_2239806005(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
     let result = util::read_file(jst0);
     let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,104530634);
 
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_1647749639(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = util::start_seconds();let mut result = js.new_u64(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_3054607247(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = util::run_seconds();let mut result = js.new_u64(result);
+
+    Some(CallResult::Ok)
+}
+
+
+fn call_152248523(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = util::now_seconds();let mut result = js.new_u64(result);
 
     Some(CallResult::Ok)
 }
@@ -2235,6 +2260,20 @@ fn call_3557646357(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     let result = js_lib::guid_gen(jst0,jst1);let mut result = js.new_str(result.to_string()).unwrap(); 
+    Some(CallResult::Ok)
+}
+
+
+fn call_3352648720(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in guid64_gen";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 110584010, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const guid64::GuidGen64) };
+
+
+    let result = js_lib::guid64_gen(jst0);let mut result = js.new_u64(result);
+
     Some(CallResult::Ok)
 }
 
@@ -5297,6 +5336,10 @@ fn drop_1736136244(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut guid::GuidGen) };
 }
 
+fn drop_110584010(ptr: usize){
+    unsafe { Box::from_raw(ptr as *mut guid64::GuidGen64) };
+}
+
 fn drop_1131624585(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut js_httpc::HttpClientOptions) };
 }
@@ -5422,6 +5465,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_struct_meta(StructMeta{name:String::from("js_lib::JSGray"), drop_fn: drop_2566315655}, 2566315655);
     mgr.regist_struct_meta(StructMeta{name:String::from("Arc<RwLock<gray::GrayTab<js_lib::JSGray>>>"), drop_fn: drop_3386914360}, 3386914360);
     mgr.regist_struct_meta(StructMeta{name:String::from("guid::GuidGen"), drop_fn: drop_1736136244}, 1736136244);
+    mgr.regist_struct_meta(StructMeta{name:String::from("guid64::GuidGen64"), drop_fn: drop_110584010}, 110584010);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientOptions"), drop_fn: drop_1131624585}, 1131624585);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<Vec<u8>>"), drop_fn: drop_4139279264}, 4139279264);
     mgr.regist_struct_meta(StructMeta{name:String::from("js_httpc::HttpClientBody<String>"), drop_fn: drop_3642917301}, 3642917301);
@@ -5470,6 +5514,9 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_479322726_sync), 479322726);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2176133173), 2176133173);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2239806005), 2239806005);
+    mgr.regist_fun_meta(FnMeta::Call(call_1647749639), 1647749639);
+    mgr.regist_fun_meta(FnMeta::Call(call_3054607247), 3054607247);
+    mgr.regist_fun_meta(FnMeta::Call(call_152248523), 152248523);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1263843384), 1263843384);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1749960077), 1749960077);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3619493605), 3619493605);
@@ -5530,6 +5577,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3635855143), 3635855143);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1199149424), 1199149424);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3557646357), 3557646357);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3352648720), 3352648720);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3906048478), 3906048478);
     mgr.regist_fun_meta(FnMeta::Call(call_373179692), 373179692);
     mgr.regist_fun_meta(FnMeta::CallArg(call_145125716), 145125716);

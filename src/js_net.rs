@@ -1329,7 +1329,6 @@ pub fn add_global_mqtt_topic(broker_name: String, is_public: bool,   //是否为
 pub fn publish_global_mqtt_topic(broker_name: String, is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                                  topic: String, msg: &[u8]) {
     let r = publish_topic(broker_name, is_public, topic, 0, None, Arc::new(msg.to_vec()));
-    println!("publish_global_mqtt_topic --------- r {:?}", r);
 }
 
 /**
