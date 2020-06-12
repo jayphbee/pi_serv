@@ -55,7 +55,6 @@ extern crate regex;
 extern crate serde_json;
 extern crate dashmap;
 extern crate wheel;
-extern crate crossbeam_channel;
 
 #[macro_use]
 extern crate lazy_static;
@@ -65,6 +64,7 @@ extern crate log;
 
 #[macro_use]
 extern crate env_logger;
+extern crate chrono;
 
 #[cfg(any(unix))]
 extern crate glob;
@@ -162,6 +162,7 @@ use std::fs::File;
 use license_client::License;
 use binary::Binary;
 use timer_task::tick;
+use chrono::Local;
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -450,7 +451,16 @@ fn main() {
     // 启动license服务
     license_handle();
     // 启动日志系统
-    env_logger::builder().format_timestamp_millis().init();
+    env_logger::builder().format(|buf, record| {
+        writeln!(
+            buf,
+            "{} {} [{}] {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            record.level(),
+            record.module_path().unwrap_or("<unnamed>"),
+            &record.args()
+        )
+    }).init();
 
     // 加载堆栈跟踪库
     #[cfg(not(unix))]

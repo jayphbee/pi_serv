@@ -2,9 +2,6 @@
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::thread;
-
-use crossbeam_channel::{unbounded, Receiver, Sender};
 
 use atom::Atom;
 use pi_db::mgr::Mgr;
