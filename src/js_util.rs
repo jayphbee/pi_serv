@@ -3,10 +3,10 @@ use std::mem::transmute_copy;
 
 use pi_vm::adapter::{JSType, JS, dukc_pop};
 use sinfo::{StructInfo, EnumType, EnumInfo};
-use lib_util::err_string;
+use util::err_string;
 use bon::{ReadBuffer, Decode, ReadBonErr};
 use pi_db::db::{TabKV, TabMeta};
-use js_env::{env_var};
+use crate::js_env::{env_var};
 
 
 pub fn decode_by_sinfo(js: &Arc<JS>, bon: &mut ReadBuffer, sinfo: &StructInfo) -> Result<JSType, String> {

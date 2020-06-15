@@ -2,7 +2,7 @@ use apm::allocator::ENABLE_ALLOC;
 use apm::common::{NetIPType, NetProtocolType, SysStat};
 use atom::Atom;
 use hex::FromHex;
-use js_httpc;
+use crate::js_httpc;
 use pi_crypto::digest::{digest, DigestAlgorithm};
 use pi_crypto::signature::ECDSASecp256k1;
 use regex::Regex;

@@ -5,66 +5,13 @@
 #![feature(vec_remove_item)]
 #![feature(nll)]
 #[warn(dead_code)]
-extern crate clap;
-extern crate core;
-extern crate fnv;
-extern crate json;
-extern crate magnetic;
-extern crate mqtt_tmp;
-extern crate net;
-extern crate nodec;
-extern crate pi_crypto;
-extern crate pi_db;
-extern crate pi_vm;
-extern crate rand;
-extern crate rpc_tmp;
-extern crate toml;
-// extern crate pi_p2p;
-extern crate apm;
-extern crate atom;
-extern crate bon;
-extern crate file;
-extern crate gray;
-extern crate guid;
-extern crate guid64;
-extern crate handler;
-extern crate hash_value;
-extern crate httpc;
-extern crate http;
-extern crate https;
-extern crate https_external;
-extern crate hash;
-extern crate libc;
-extern crate mqtt;
-extern crate mqtt_proxy;
-extern crate mqtt3;
-extern crate ordmap;
-extern crate pi_store;
-extern crate sinfo;
-extern crate tcp;
-extern crate time;
-extern crate timer;
-extern crate util as lib_util;
-extern crate worker;
-extern crate ws;
-extern crate parking_lot;
-extern crate futures;
-
-extern crate hex;
-extern crate regex;
-extern crate serde_json;
-extern crate dashmap;
-extern crate wheel;
 
 #[macro_use]
 extern crate lazy_static;
-
 #[macro_use]
 extern crate log;
-
 #[macro_use]
 extern crate env_logger;
-extern crate chrono;
 
 #[cfg(any(unix))]
 extern crate glob;

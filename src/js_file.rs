@@ -3,7 +3,7 @@ use std::io::{Write, Read};
 use std::path::Path;
 
 use file::file::{AsyncFile, AsyncFileOptions, WriteOptions};
-use binary::Binary;
+use crate::binary::Binary;
 
 
 

@@ -14,7 +14,7 @@ use sinfo::StructInfo;
 use bon::{ReadBuffer, Decode};
 use timer::{TIMER, FuncRuner};
 
-use js_async::AsyncRequestHandler;
+use crate::js_async::AsyncRequestHandler;
 use bon::ReadBonErr;
 
 lazy_static! {

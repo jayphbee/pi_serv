@@ -16,8 +16,8 @@ use pi_vm::bonmgr::{ptr_jstype, NativeObjsAuth};
 use pi_vm::duk_proc::DukProcessFactory;
 use pi_vm::proc_pool::set_factory;
 
-use js_env::{env_var, set_current_dir};
-use ptmgr::{PLAT_MGR, PlatMgrTrait};
+use crate::js_env::{env_var, set_current_dir};
+use crate::ptmgr::{PLAT_MGR, PlatMgrTrait};
 
 pub fn load_core_env(js: &Arc<JS>) {
     let mut cur_exe = env::current_exe().unwrap();

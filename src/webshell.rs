@@ -9,8 +9,8 @@ use libc::c_char;
 use pi_vm::shell::SHELL_MANAGER;
 use pi_vm::adapter::JS;
 use pi_vm::bonmgr::NativeObjsAuth;
-use init_js::read_code;
-use hotfix::BYTE_CODE_CACHE;
+use crate::init_js::read_code;
+use crate::hotfix::BYTE_CODE_CACHE;
 use atom::Atom;
 
 type ReqCb = Option<Box<FnOnce(Arc<Vec<u8>>)>>;

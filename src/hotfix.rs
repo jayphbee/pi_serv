@@ -16,11 +16,11 @@ use atom::Atom;
 
 use file::fs_monitor::{FSMonitorOptions, FSListener, FSMonitor, FSChangeEvent};
 
-use js_lib::JSGray;
-use js_env::{ env_var };
-use js_file::read_file_string_sync;
-use init_js::{read_code, load_core_env};
-use js_net::get_all_http_rpc_mods;
+use crate::js_lib::JSGray;
+use crate::js_env::{ env_var };
+use crate::js_file::read_file_string_sync;
+use crate::init_js::{read_code, load_core_env};
+use crate::js_net::get_all_http_rpc_mods;
 
 
 lazy_static! {

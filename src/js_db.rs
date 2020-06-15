@@ -24,7 +24,7 @@ use pi_vm::pi_vm_impl::{block_set_global_var, BlockError, VMFactory};
 //use pi_base::util::now_millisecond;
 //use pi_vm::adapter::dukc_top;
 
-use js_util::{decode_by_tabkv, decode_by_type, decode_bin_by_tabkv};
+use crate::js_util::{decode_by_tabkv, decode_by_type, decode_bin_by_tabkv};
 
 type DBIterTrait = Box<Iter<Item = (Bin, Bin)>>;
 /**

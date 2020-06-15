@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use atom::Atom;
 use gray::{GrayTab, GrayVersion};
 use handler::{Args, GenType, Handler};
-use js_lib::JSGray;
+use crate::js_lib::JSGray;
 use pi_vm::adapter::{JSType, JS};
 use pi_vm::bonmgr::ptr_jstype;
 use pi_vm::bonmgr::{jstype_ptr, BonMgr, CallResult, FnMeta};

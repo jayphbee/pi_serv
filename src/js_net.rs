@@ -24,7 +24,7 @@ use mqtt_tmp::server::{ServerNode, ClientStub};
 use std::io::{Result as IOResult};
 use mqtt_tmp::data::Server;
 use mqtt_tmp::session::Session;
-use js_lib::JSGray;
+use crate::js_lib::JSGray;
 use worker::task::TaskType;
 use worker::impls::{unlock_js_task_queue, cast_js_task};
 use tcp::connect::TcpSocket;
@@ -37,7 +37,7 @@ use ws::server::WebsocketListenerFactory;
 use mqtt::server::{WsMqttBrokerFactory, WssMqttBrokerFactory, register_listener, register_service, add_topic, publish_topic};
 use mqtt::util::AsyncResult;
 use mqtt_proxy::service::{MqttEvent, MqttConnectHandle, MqttProxyListener, MqttProxyService};
-use ptmgr::{PLAT_MGR, PlatMgrTrait};
+use crate::ptmgr::{PLAT_MGR, PlatMgrTrait};
 use https_external::header::HeaderMap;
 use hash::XHashMap;
 
@@ -59,9 +59,9 @@ use http::request::HttpRequest;
 use http::response::{ResponseHandler, HttpResponse};
 use http::range_load::RangeLoad;
 
-use binary::Binary;
+use crate::binary::Binary;
 
-use hotfix::get_gray_table;
+use crate::hotfix::get_gray_table;
 
 
 lazy_static! {
@@ -182,7 +182,7 @@ pub fn mqtt_respond(session: &Arc<Session>, topic: String, data: &[u8]) {
 //     Arc::new(socket)
 // }
 
-use hotfix::GrayTable;
+use crate::hotfix::GrayTable;
 
 // 设置http请求参数
 fn set_data(vm: Arc<JS>, msg: Arc<RefCell<XHashMap<String, SGenType>>>) {

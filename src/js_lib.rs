@@ -12,7 +12,7 @@ use ordmap::sbtree::{Tree};
 use ordmap::ordmap::{Entry, ImOrdMap, Iter};
 use bon::{partial_cmp, ReadBuffer};
 use std::cmp::Ordering;
-use js_env::{env_var};
+use crate::js_env::{env_var};
 use std::str::FromStr;
 use std::cell::RefCell;
 use json;
