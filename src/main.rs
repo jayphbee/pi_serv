@@ -1,38 +1,30 @@
-#![feature(fs_read_write)]
-#![feature(splice)]
 #![feature(exclusive_range_pattern)]
-#![feature(unboxed_closures)]
-#![feature(vec_remove_item)]
-#![feature(nll)]
 #[warn(dead_code)]
 
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate env_logger;
-
 #[cfg(any(unix))]
 extern crate glob;
 
-pub mod hotfix;
-pub mod init_js;
-pub mod js_async;
-pub mod js_base;
-pub mod js_db;
-pub mod js_env;
-pub mod js_file;
-pub mod js_httpc;
-pub mod js_lib;
-pub mod js_net;
-pub mod js_net_rpc_client;
-pub mod js_vm;
-pub mod util;
-pub mod webshell;
-pub mod ptmgr;
-pub mod binary;
-pub mod timer_task;
+mod hotfix;
+mod init_js;
+mod js_async;
+mod js_base;
+mod js_db;
+mod js_env;
+mod js_file;
+mod js_httpc;
+mod js_lib;
+mod js_net;
+mod js_net_rpc_client;
+mod js_vm;
+mod util;
+mod webshell;
+mod ptmgr;
+mod binary;
+mod timer_task;
 
 mod def_build;
 mod js_util;
@@ -55,7 +47,6 @@ mod license_client;
 use std::env;
 use std::io::{self, Result as IOResult, Write, BufReader, Read};
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
-use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::thread;
@@ -68,12 +59,11 @@ use pi_vm::adapter::{
     register_global_vm_heap_collect_timer, register_native_object, set_vm_timeout,
 };
 use pi_vm::adapter::{JSType, JS};
-use pi_vm::bonmgr::{jstype_ptr, ptr_jstype, BonMgr, CallResult, FnMeta, BON_MGR};
+use pi_vm::bonmgr::{ptr_jstype, BonMgr, CallResult, FnMeta, BON_MGR};
 use pi_vm::pi_vm_impl::push_callback;
 use pi_vm::shell::SHELL_MANAGER;
 
 use atom::Atom;
-use time::now_millisecond;
 use timer::TIMER;
 use worker::impls::{
     JS_TASK_POOL, JS_WORKER_WALKER, NET_TASK_POOL, NET_WORKER_WALKER, STORE_TASK_POOL,
@@ -86,28 +76,12 @@ use init_js::exec_js;
 use webshell::init_shell;
 use js_base::IS_END;
 
-use js_env::{current_dir, env_var, set_current_dir, set_env_var};
+use js_env::set_env_var;
 
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
 use apm::common::SysStat;
-use ptmgr::PLAT_MGR;
-
-use js_net::InsecureHttpRpcRequstHandler;
-use http::{server::HttpListenerFactory,
-    virtual_host::{VirtualHostTab, VirtualHost},
-    route::HttpRoute,
-    middleware::MiddlewareChain,
-    default_parser::DefaultParser,
-    port::HttpPort};
-use http::virtual_host::VirtualHostPool;
-use tcp::server::{AsyncPortsFactory, SocketListener};
-use tcp::connect::TcpSocket;
-use tcp::driver::{SocketConfig};
-use tcp::buffer_pool::WriteBufferPool;
-use tcp::util::{TlsConfig};
 use std::fs::File;
 use license_client::License;
-use binary::Binary;
 use timer_task::tick;
 use chrono::Local;
 

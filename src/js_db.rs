@@ -1,15 +1,9 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
-use mqtt3::QoS;
-
 use atom::Atom;
-use bon::{Decode, Encode, ReadBonErr, ReadBuffer, WriteBuffer};
-use hash_value::hex::ToHex;
-use mqtt_tmp::data::Server;
-use mqtt_tmp::server::ServerNode;
+use bon::{Decode, Encode, ReadBuffer, WriteBuffer};
 use pi_db::db::{Bin, Event, EventType, Iter, TabKV, TabMeta, Ware};
 use pi_db::memery_db::DB;
 use pi_db::mgr::{Mgr, Monitor, Tr};
@@ -20,9 +14,6 @@ use pi_store::log_file_db::LogFileDB;
 use pi_vm::adapter::{dukc_pop, JSType, JS};
 use pi_vm::bonmgr::ptr_jstype;
 use pi_vm::pi_vm_impl::{block_set_global_var, BlockError, VMFactory};
-
-//use pi_base::util::now_millisecond;
-//use pi_vm::adapter::dukc_top;
 
 use crate::js_util::{decode_by_tabkv, decode_by_type, decode_bin_by_tabkv};
 
@@ -161,44 +152,6 @@ impl DBIter {
             None => None,
         }
     }
-
-    // pub fn next_elem(&mut self, cb: Arc<Fn(Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>, Vec<u8>)>, String>)>, js: &Arc<JS>) -> Option<Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>, Vec<u8>)>, String>> {
-    //     let meta = self.1.clone();
-    //     let mut wb = WriteBuffer::new();
-    //     meta.encode(&mut wb);
-
-    //     let buf = Arc::new(wb);
-    //     let buf1 = buf.clone();
-
-    //     let call_back = move|r: Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>|{
-    //         match r {
-    //             Ok(v) => {
-    //                 match v {
-    //                     Some(value) => {
-    //                         cb(Ok(Some((value.0, value.1, buf.to_vec()))));
-    //                     },
-    //                     None => cb(Ok(None)),
-    //                 };
-    //             },
-    //             Err(s) => cb(Err(s)),
-    //         }
-    //     };
-
-    //     match self.0.next(Arc::new(call_back)) {
-    //         Some(v) => {
-    //             match v {
-    //                 Ok(v) => {
-    //                     match v {
-    //                         Some(value) => Some(Ok(Some((value.0, value.1, buf1.to_vec())))),
-    //                         None => Some(Ok(None)),
-    //                     }
-    //                 },
-    //                 Err(s) => Some(Err(s)),
-    //             }
-    //         },
-    //         None => None,
-    //     }
-    // }
 }
 
 pub struct DBWare(Arc<Ware>);
