@@ -517,7 +517,6 @@ impl Handler for MqttConnectHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-        println!("MqttConnectHandler topic --------- {:?}", topic);
         let topic_handler = self.clone();
         let id = env.get_id();
         let queue = new_queue(id);
@@ -537,7 +536,6 @@ impl Handler for MqttConnectHandler {
                 match args {
                     Args::OneArgs(MqttEvent::Connect(socket_id, broker_name, client_id, keep_alive, is_clean_session, user, pwd, result)) => {
                         //处理Mqtt连接
-                        debug!("mqtt connect event ++++++++++++++++");
                         let client_id_clone = client_id.clone();
                         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                             ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
@@ -552,8 +550,6 @@ impl Handler for MqttConnectHandler {
                     }
                     Args::OneArgs(MqttEvent::Disconnect(socket_id, broker_name, client_id, reason)) => {
                         //处理Mqtt连接关闭
-                        debug!("mqtt disconnect event ++++++++++++++++");
-
                         let client_id_clone = client_id.clone();
                         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                             ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
@@ -636,7 +632,6 @@ impl Handler for MqttRequestHandler {
                 match args {
                     Args::OneArgs(MqttEvent::Sub(socket_id, broker_name, client_id, topics, result)) => {
                         //处理Mqtt订阅主题
-                        debug!("mqtt sub +++++++++++++++++++++++, topics = {:?}", topics);
                         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                             ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
                             let mqtt_connection = MqttConnection::new(connect, Some(result), socket_id, client_id, None, None, None, None);
@@ -655,7 +650,6 @@ impl Handler for MqttRequestHandler {
                     },
                     Args::OneArgs(MqttEvent::Unsub(socket_id, broker_name, client_id, topics)) => {
                         //处理Mqtt退订主题
-                        debug!("mqtt unsub +++++++++++++++++++++++++ topics = {:?}", topics);
                         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                             ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
                             let mqtt_connection = MqttConnection::new(connect, None, socket_id, client_id, None, None, None, None);
@@ -674,7 +668,6 @@ impl Handler for MqttRequestHandler {
                     },
                     Args::OneArgs(MqttEvent::Publish(socket_id, broker_name, client_id, address, topic, payload)) => {
                         //处理Mqtt发布主题
-                        debug!("mqttSend +++++++++++++++++++++, topic = {:?}, address = {:?}", topic, address);
                         let real_args = Box::new(move |vm: Arc<JS>| -> usize {
                             ptr_jstype(vm.get_objs(), vm.clone(), mgr_ptr, 2976191628);
                             let mqtt_connection = MqttConnection::new(connect, None, socket_id, client_id, None, None, None, None);
