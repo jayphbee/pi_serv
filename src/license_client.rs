@@ -147,8 +147,16 @@ fn get_info() -> (usize, u64, u64, usize) {
     let cpu = SysStat::processor_count(&sys);
     // 内存信息
     let (mem, _, _, _, _, _) = SysStat::memory_usage(&sys);
+    
     // 磁盘信息
-    let (_, _, _, _, _, disk) = SysStat::disk_usage(&sys)[0];
+    let disks = SysStat::disk_usage(&sys);
+    let disk = if disks.len() > 0 {
+        let (_, _, _, _, _, disk2) = disks[0];
+        disk2
+    } else {
+        0 as u64
+    };
+    
     // 连接数
     let socket_size = SysStat::sockets_size(&sys, NetIPType::All, NetProtocolType::All);
 

@@ -448,7 +448,7 @@ fn enable_shell(matches: &ArgMatches) {
 
 fn main() {
     // 启动license服务
-    license_handle();
+    // license_handle();
     // 启动日志系统
     env_logger::builder().format_timestamp_millis().init();
 
