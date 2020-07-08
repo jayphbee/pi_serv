@@ -2,6 +2,7 @@ use std::path::Path;
 use std::fs::read;
 use time::{start_secs, run_second, now_second};
 use guid::Guid;
+use chrono::Utc;
 
 /**
 * 同步的读取指定文件的数据
@@ -24,4 +25,9 @@ pub fn run_seconds() -> u64 {
 
 pub fn now_seconds() -> u64 {
     now_second()
+}
+
+pub fn now_nano() -> u64 {
+    let dt = Utc::now();
+    dt.timestamp_nanos() as u64
 }

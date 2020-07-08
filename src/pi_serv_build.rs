@@ -942,6 +942,14 @@ fn call_152248523(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
+fn call_2187935886(js: Arc<JS>) -> Option<CallResult>{
+
+    let result = util::now_nano();let mut result = js.new_u64(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1263843384(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in get_byte_code";
 
@@ -5590,6 +5598,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::Call(call_1647749639), 1647749639);
     mgr.regist_fun_meta(FnMeta::Call(call_3054607247), 3054607247);
     mgr.regist_fun_meta(FnMeta::Call(call_152248523), 152248523);
+    mgr.regist_fun_meta(FnMeta::Call(call_2187935886), 2187935886);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1263843384), 1263843384);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1749960077), 1749960077);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3619493605), 3619493605);

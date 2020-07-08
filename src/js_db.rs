@@ -43,13 +43,7 @@ impl DBIter {
         &mut self,
         cb: Arc<Fn(Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>)>,
     ) -> Option<Result<Option<(Arc<Vec<u8>>, Arc<Vec<u8>>)>, String>> {
-        match self.0.next(cb.clone()) {
-            Some(v) => {
-                cb(v);
-                None
-            }
-            None => None,
-        }
+        self.0.next(cb.clone())
     }
 
     /**
