@@ -34,6 +34,12 @@ lazy_static! {
         Arc::new(RwLock::new(map))
     };
     pub static ref GRAY_VERSION: AtomicUsize = AtomicUsize::new(0);
+    pub static ref STRUCT_FILES: Arc<RwLock<Vec<String>>> = Arc::new(RwLock::new(vec![]));
+}
+
+pub fn set_struct_files(files: Vec<String>) {
+    STRUCT_FILES.write().extend(files.into_iter());
+    println!("struct file length = {:?}", STRUCT_FILES.read().len());
 }
 
 pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
@@ -284,9 +290,12 @@ fn module_changed(path: PathBuf) {
             vmf = vmf.append(Arc::new(env_code));
             vmf = vmf.append(Arc::new(core_code));
 
-            let files = ["pi_pt/net/rpc_entrance.js", "pi_pt/net/mqtt_broker.js", "pi_pt/util/migration.struct.js"
+            let mut files = vec!["pi_pt/net/rpc_entrance.js", "pi_pt/net/mqtt_broker.js", "pi_pt/util/migration.struct.js"
                     , "pi_pt/util/platmgr.struct.js", "pi_pt/rust/pi_serv/webshell.js", "pi_pt/util/migration.event.js"
                     , "pi_pt/util/hotback.struct.js", "pi_pt/db/dblistener.js"];
+
+            let struct_files = STRUCT_FILES.read();
+            files.extend(struct_files.iter().map(|s| s.as_str()));
 
             // http rpc 的热更新
             let http_code = get_all_http_rpc_mods().into_iter().fold("".to_string(), |acc, x| {

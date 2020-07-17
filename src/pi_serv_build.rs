@@ -4534,6 +4534,19 @@ fn call_2208297260(js: Arc<JS>) -> Option<CallResult>{
 }
 
 
+fn call_1065042791(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in set_struct_files";
+
+	let jst0 = &v[0];
+    let ptr = jstype_ptr(&jst0, js.clone(), 1542823015, true, param_error).expect("");
+	let jst0 = *unsafe { Box::from_raw(ptr as *mut Vec<String>) };
+
+
+    hotfix::set_struct_files(jst0);
+    Some(CallResult::Ok)
+}
+
+
 fn call_4057105552(js: Arc<JS>) -> Option<CallResult>{
 
     let result = hotfix::get_gray_table();
@@ -5751,6 +5764,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1428190872), 1428190872);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466051911), 466051911);
     mgr.regist_fun_meta(FnMeta::Call(call_2208297260), 2208297260);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1065042791), 1065042791);
     mgr.regist_fun_meta(FnMeta::Call(call_4057105552), 4057105552);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1337865535), 1337865535);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1332096267), 1332096267);
