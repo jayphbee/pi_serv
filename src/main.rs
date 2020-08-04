@@ -136,7 +136,6 @@ use worker::worker_pool::WorkerPool;
 
 use init_js::exec_js;
 use webshell::init_shell;
-use js_base::IS_END;
 
 use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 
@@ -495,7 +494,7 @@ fn main() {
     // 根据命令行参数决定是否启动shell
     enable_shell(&matches);
 
-    while !IS_END.lock().unwrap().0 {
+    loop {
         println!("###############loop, {}", now_millisecond());
         thread::sleep(Duration::from_millis(10000));
     }
