@@ -142,6 +142,24 @@ fn call_54848988(js: Arc<JS>) -> Option<CallResult>{
     Some(CallResult::Ok)
 }
 
+
+fn call_231904471(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in name_to_pid";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = &jst0.get_str();
+
+
+    let result = pi_vm::proc_pool::name_to_pid(jst0);let mut result = match result{
+        Some(v) => { let mut v = js.new_u64(v);
+ v}
+        None => js.new_null()
+    };
+
+    Some(CallResult::Ok)
+}
+
 fn drop_510245560(ptr: usize){
     unsafe { Box::from_raw(ptr as *mut Arc<pi_vm::bonmgr::NativeObjsAuth>) };
 }
@@ -168,4 +186,5 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_647083293), 647083293);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1393151886), 1393151886);
     mgr.regist_fun_meta(FnMeta::Call(call_54848988), 54848988);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_231904471), 231904471);
 }
