@@ -44,7 +44,7 @@ use tcp::buffer_pool::WriteBufferPool;
 use tcp::util::{close_socket, TlsConfig};
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
-use mqtt::tls_v311::WssMqtt311Factory;
+use mqtt::tls_v311::{WSS_MQTT3_BROKER, WssMqtt311Factory};
 use base::service::{BaseListener, BaseService};
 use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
@@ -879,7 +879,7 @@ impl Handler for RequestHandler {
     type HandleResult = ();
 
     fn handle(&self, env: Arc<dyn GrayVersion>, topic: Atom, args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>) -> Self::HandleResult {
-		let topic_handler = self.clone();
+        let topic_handler = self.clone();
         let topic_name = topic.clone();
         let jsgray_name = topic.clone().to_string().split(".").collect::<Vec<&str>>()[0].to_string() + ".event.js";
 
@@ -1307,11 +1307,29 @@ pub fn register_rcp_listener(conect_handler: Option<&NetEventHandler>, close_han
     rpc_listener
 }
 
+pub fn register_secure_rcp_listener(conect_handler: Option<&NetEventHandler>, close_handler: Option<&NetEventHandler>) -> Arc<RpcListener> {
+	let mut rpc_listener = RpcListener::new();
+	if let Some(r) = conect_handler {
+        rpc_listener.set_connected_handler(Arc::new(r.clone()));
+	}
+	if let Some(r) = close_handler {
+        rpc_listener.set_closed_handler(Arc::new(r.clone()));
+	}
+    let rpc_listener = Arc::new(rpc_listener);
+    let listener = Arc::new(BaseListener::with_listener(rpc_listener.clone()));
+	WSS_MQTT3_BROKER.register_listener(listener);
+    rpc_listener
+}
+
 /**
 * 为指定的Mqtt主题，注册指定的Rpc服务
 */
 pub fn register_rpc_topic(topic: String, service: &Arc<BaseService>) {
     WS_MQTT3_BROKER.register_service(topic, service.clone());
+}
+
+pub fn register_secure_rpc_topic(topic: String, service: &Arc<BaseService>) {
+    WSS_MQTT3_BROKER.register_service(topic, service.clone());
 }
 
 /*

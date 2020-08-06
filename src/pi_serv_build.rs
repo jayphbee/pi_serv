@@ -4449,6 +4449,39 @@ fn call_466468899(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_3493853240(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_secure_rcp_listener";
+
+	let jst0 = &v[0];
+    let jst0 = if jst0.is_undefined() || jst0.is_null(){
+        None
+    }else{
+    let ptr = jstype_ptr(&jst0, js.clone(), 2899437702, false, param_error).expect("");
+	let jst0 = unsafe { &*(ptr as *const js_net::NetEventHandler) };
+
+        Some(jst0)
+    };
+
+
+	let jst1 = &v[1];
+    let jst1 = if jst1.is_undefined() || jst1.is_null(){
+        None
+    }else{
+    let ptr = jstype_ptr(&jst1, js.clone(), 2899437702, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const js_net::NetEventHandler) };
+
+        Some(jst1)
+    };
+
+
+    let result = js_net::register_secure_rcp_listener(jst0,jst1);
+    let ptr = Box::into_raw(Box::new(result)) as usize;let mut result = ptr_jstype(js.get_objs(), js.clone(), ptr,619541818);
+
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_1703898312(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in register_rpc_topic";
 
@@ -4463,6 +4496,24 @@ fn call_1703898312(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 
 
     js_net::register_rpc_topic(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
+fn call_1600487392(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in register_secure_rpc_topic";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+    let ptr = jstype_ptr(&jst1, js.clone(), 1562130667, false, param_error).expect("");
+	let jst1 = unsafe { &*(ptr as *const Arc<base::service::BaseService>) };
+
+
+    js_net::register_secure_rpc_topic(jst0,jst1);
     Some(CallResult::Ok)
 }
 
@@ -5958,7 +6009,9 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::Call(call_1155764239), 1155764239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2333272468), 2333272468);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466468899), 466468899);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_3493853240), 3493853240);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1703898312), 1703898312);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1600487392), 1600487392);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2329614290), 2329614290);
     mgr.regist_fun_meta(FnMeta::CallArg(call_4082873914), 4082873914);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2617351137), 2617351137);
