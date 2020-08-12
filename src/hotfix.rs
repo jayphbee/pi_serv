@@ -7,6 +7,7 @@ use std::sync::atomic::{ AtomicUsize, Ordering };
 
 use fnv::FnvHashMap;
 use parking_lot::RwLock;
+use crossbeam_channel::{Sender, Receiver, unbounded};
 
 use pi_vm::pi_vm_impl::{ VMFactory };
 use pi_vm::adapter::{ JS };
@@ -35,6 +36,7 @@ lazy_static! {
         Arc::new(RwLock::new(map))
     };
     pub static ref GRAY_VERSION: AtomicUsize = AtomicUsize::new(0);
+    pub static ref NOTIFY_CHAN: (Sender<(usize, Atom)>, Receiver<(usize, Atom)>) = unbounded();
 }
 
 pub fn get_gray_table() -> Arc<RwLock<GrayTable>> {
@@ -294,6 +296,7 @@ fn module_changed(path: PathBuf) {
     let mod_id = normalize_module_id(path);
 
     let mut gray_tab = GRAY_TABLE.write();
+    let current_version = gray_tab.jsgrays.len() - 1;
     if let Some(jsgrays) = gray_tab.jsgrays.last_mut() {
         for (k, v) in jsgrays.iter_mut() {
             let auth = Arc::new(NativeObjsAuth::new(None, None));
@@ -395,7 +398,7 @@ fn module_changed(path: PathBuf) {
                 *v = Arc::new(jsgray);
                 SHELL_MANAGER.write().unwrap().set_factory(arc_vmf.clone());
             }
-
+            let _ = NOTIFY_CHAN.0.send((current_version - 1, k.clone()));
         }
     }
 }
