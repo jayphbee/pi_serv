@@ -49,6 +49,7 @@ extern crate worker;
 extern crate ws;
 extern crate parking_lot;
 extern crate futures;
+extern crate crossbeam_channel;
 
 extern crate hex;
 extern crate regex;
@@ -113,6 +114,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+use crossbeam_channel::unbounded;
 use clap::{App, Arg, ArgMatches};
 #[cfg(not(unix))]
 use pi_vm::adapter::load_lib_backtrace;
@@ -159,6 +161,7 @@ use tcp::util::{TlsConfig};
 use std::fs::File;
 use license_client::License;
 use binary::Binary;
+use hotfix::{NOTIFY_CHAN, GRAY_TABLE};
 
 #[global_allocator]
 static ALLOCATOR: CounterSystemAllocator = CounterSystemAllocator;
@@ -494,9 +497,39 @@ fn main() {
     // 根据命令行参数决定是否启动shell
     enable_shell(&matches);
 
+    let mut counter: u64 = 0;
+
     loop {
-        println!("###############loop, {}", now_millisecond());
-        thread::sleep(Duration::from_millis(10000));
+        counter = counter.wrapping_add(1);
+        let mut to_be_removed = vec![];
+        {
+            let gray_tab = &GRAY_TABLE.read().jsgrays;
+            for (version, vmf_name) in NOTIFY_CHAN.1.try_iter() {
+                if let Some(gray) = gray_tab.get(version) {
+                    if let Some(jsgray) = gray.get(&vmf_name) {
+                        if jsgray.factory.size() == jsgray.factory.free_buf_size() + jsgray.factory.free_pool_size() {
+                            debug!("hotfix remove vmfactory name =  {:?}, version = {:?}", vmf_name, version);
+                            to_be_removed.push((version, vmf_name));
+                            // gray.remove(&vmf_name);
+                        } else {
+                            // 没有回收成功的再次放回队列中
+                            let _ = NOTIFY_CHAN.0.try_send((version, vmf_name));
+                        }
+                    }
+                }
+            }
+        }
+
+        for (version, vmf_name) in to_be_removed {
+            if let Some(gray) = GRAY_TABLE.write().jsgrays.get_mut(version) {
+                gray.remove(&vmf_name);
+            }
+        }
+
+        if counter % 20 == 0 {
+            println!("###############loop, {}", now_millisecond());
+        }
+        thread::sleep(Duration::from_millis(500));
     }
 }
 
