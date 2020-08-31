@@ -18,7 +18,7 @@ rand = "0.5.2"
 mqtt3 = { git = "https://github.com/tekjar/mqtt3" }
 pi_vm = { path = "../pi_vm" }
 hash_value = { path = "../pi_math/hash_value" }
-pi_crypto = { path = "../pi_crypto" }
+pi_crypto = { path = "../pi_crypto", features =  ["bls"] }
 pi_db = { path = "../pi_db" }
 net = { path = "../pi_net/net" }
 nodec = { path = "../pi_net/nodec" }
