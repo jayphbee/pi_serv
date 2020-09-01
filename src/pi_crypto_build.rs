@@ -385,6 +385,33 @@ fn call_901229592(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_2878910515(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in alipay_verify";
+
+	let jst0 = &v[0];
+	if !jst0.is_uint8_array() && !jst0.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst0 = jst0.to_bytes();
+
+
+
+	let jst1 = &v[1];
+	if !jst1.is_uint8_array() && !jst1.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst1 = jst1.to_bytes();
+
+
+
+	let jst2 = &v[2];
+	if !jst2.is_uint8_array() && !jst2.is_array_buffer(){return Some(CallResult::Err(String::from(param_error))); }
+    let jst2 = jst2.to_bytes();
+
+
+
+    let result = pi_crypto::signature::Rsa::alipay_verify(jst0,jst1,jst2);let mut result = js.new_boolean(result);
+
+    Some(CallResult::Ok)
+}
+
+
 fn call_2041863833(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in generate_pkcs8";
 
@@ -2045,6 +2072,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1239750690), 1239750690);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2850709748), 2850709748);
     mgr.regist_fun_meta(FnMeta::CallArg(call_901229592), 901229592);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_2878910515), 2878910515);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2041863833), 2041863833);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3809028580), 3809028580);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3841573761), 3841573761);
