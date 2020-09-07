@@ -26,7 +26,7 @@ use mqtt_tmp::data::Server;
 use mqtt_tmp::session::Session;
 use js_lib::JSGray;
 use worker::task::TaskType;
-use worker::impls::{unlock_js_task_queue, cast_js_task};
+use worker::impls::{unlock_js_task_queue, cast_js_task, cast_net_task};
 use tcp::connect::TcpSocket;
 use tcp::tls_connect::TlsSocket as FTlsSocket;
 use tcp::server::{AsyncWaitsHandle, AsyncPortsFactory, SocketListener};
@@ -58,6 +58,8 @@ use http::static_cache::StaticCache;
 use http::request::HttpRequest;
 use http::response::{ResponseHandler, HttpResponse};
 use http::range_load::RangeLoad;
+use crate::js_httpc::{HttpClientOptions, create_http_client, HttpClientBody, post};
+use httpc::{SharedHttpc, HttpClient};
 
 use binary::Binary;
 
@@ -1551,6 +1553,27 @@ pub fn parse_http_config(jstr: String) {
 */
 pub fn close_tcp_socket(uid: usize, reason: String) -> bool {
     close_socket(uid, Err(Error::new(ErrorKind::Other, reason)))
+}
+
+pub fn post_gi_data(data: String, url: String) {
+    if let Ok(mut client) = create_http_client("test".to_string(), HttpClientOptions::default()) {
+        let func = Box::new(move |_r| {
+            <HttpClient as SharedHttpc>::add_header(&mut client, Atom::from("content-type"), Atom::from("application/json"));
+            let body = HttpClientBody::<String>::body(data);
+            post(&client, Atom::from(url), body, Box::new(|r| {
+                match r {
+                    Ok((a, mut b)) => {
+                        debug!("gi response ============= {:?}", b.text());
+                    }
+                    Err(e) => {
+                        warn!("post gi errro ============ {:?}", e);
+                    }
+                }
+            }));
+        });
+    
+        cast_net_task(TaskType::Async(false), 100, None, func, Atom::from("post gi data"));
+    }
 }
 
 #[derive(Clone)]

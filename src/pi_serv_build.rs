@@ -4501,6 +4501,24 @@ fn call_1428190872(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1575722716(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
+	let param_error = "param error in post_gi_data";
+
+	let jst0 = &v[0];
+	if !jst0.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst0 = jst0.get_str();
+
+
+	let jst1 = &v[1];
+	if !jst1.is_string(){ return Some(CallResult::Err(String::from(param_error)));}
+    let jst1 = jst1.get_str();
+
+
+    js_net::post_gi_data(jst0,jst1);
+    Some(CallResult::Ok)
+}
+
+
 fn call_466051911(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
@@ -5754,6 +5772,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_1449642520), 1449642520);
     mgr.regist_fun_meta(FnMeta::CallArg(call_675495936), 675495936);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1428190872), 1428190872);
+    mgr.regist_fun_meta(FnMeta::CallArg(call_1575722716), 1575722716);
     mgr.regist_fun_meta(FnMeta::CallArg(call_466051911), 466051911);
     mgr.regist_fun_meta(FnMeta::Call(call_2208297260), 2208297260);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1065042791), 1065042791);
