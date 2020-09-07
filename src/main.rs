@@ -137,8 +137,6 @@ use worker::worker_pool::WorkerPool;
 
 use init_js::exec_js;
 use webshell::init_shell;
-use js_base::IS_END;
-
 use js_env::{current_dir, env_var, set_current_dir, set_env_var};
 
 use apm::allocator::{get_max_alloced_limit, set_max_alloced_limit, CounterSystemAllocator};
@@ -507,7 +505,7 @@ fn main() {
 
     println!("\n\n################# pi_serv initialized successfully #################\n\n");
 
-    while !IS_END.lock().unwrap().0 {
+    loop {
         thread::sleep(Duration::from_millis(10));
         tick();
     }

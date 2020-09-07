@@ -2190,13 +2190,6 @@ fn call_370495443(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
-fn call_2041214057(js: Arc<JS>) -> Option<CallResult>{
-
-    js_base::end(&js);
-    Some(CallResult::Ok)
-}
-
-
 fn call_2697841501(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in new";
 
@@ -5667,7 +5660,6 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_2556550051), 2556550051);
     mgr.regist_fun_meta(FnMeta::CallArg(call_957759389), 957759389);
     mgr.regist_fun_meta(FnMeta::CallArg(call_370495443), 370495443);
-    mgr.regist_fun_meta(FnMeta::Call(call_2041214057), 2041214057);
     mgr.regist_fun_meta(FnMeta::CallArg(call_2697841501), 2697841501);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3635855143), 3635855143);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1199149424), 1199149424);
