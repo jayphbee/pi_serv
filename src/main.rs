@@ -504,7 +504,9 @@ fn main() {
         let mut to_be_removed = vec![];
         {
             let gray_tab = &GRAY_TABLE.read().jsgrays;
-            for (version, vmf_name) in NOTIFY_CHAN.1.try_iter() {
+            let vmfs: Vec<_> = NOTIFY_CHAN.1.try_iter().collect();
+
+            for (version, vmf_name) in vmfs {
                 if let Some(gray) = gray_tab.get(version) {
                     if let Some(jsgray) = gray.get(&vmf_name) {
                         if jsgray.factory.size() == jsgray.factory.free_buf_size() + jsgray.factory.free_pool_size() {
