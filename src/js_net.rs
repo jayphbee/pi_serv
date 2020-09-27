@@ -8,6 +8,7 @@ use std::time::SystemTime;
 use std::sync::atomic::Ordering;
 use std::cell::RefCell;
 use std::marker::PhantomData;
+use std::sync::atomic::AtomicBool;
 
 use fnv::FnvHashMap;
 use mqtt3;
@@ -44,7 +45,7 @@ use tcp::buffer_pool::WriteBufferPool;
 use tcp::util::{close_socket, TlsConfig};
 use ws::server::WebsocketListenerFactory;
 use mqtt::v311::{WS_MQTT3_BROKER, WsMqtt311, WsMqtt311Factory, add_topic, publish_topic};
-use mqtt::tls_v311::{WSS_MQTT3_BROKER, WssMqtt311Factory};
+use mqtt::tls_v311::{WSS_MQTT3_BROKER, WssMqtt311Factory, publish_topic as publish_secure_topic, add_topic as add_secure_topic};
 use base::service::{BaseListener, BaseService};
 use base::connect::encode;
 use rpc::service::{RpcService, RpcListener};
@@ -90,6 +91,7 @@ lazy_static! {
     static ref CERTIFICATES: Arc<RwLock<FnvHashMap<u16, (String, String)>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     static ref SECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     static ref INSECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    static ref IS_SECURE_MQTT: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
 }
 
 struct InsecureServices((u16, Box<dyn AsyncServiceFactory<Connect = TcpSocket, Waits = AsyncWaitsHandle, Out = (), Future = BoxFuture<'static, ()>>>));
@@ -1834,7 +1836,12 @@ impl NetKernelOptions {
 pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                              topic: String) {
     PLAT_MGR.register_mqtt_topic("_$global_mqtt".to_string(), topic.clone()); // 注册全局mqtt topic到平台管理器中
-    add_topic(is_public, topic, 0, None);
+
+    if IS_SECURE_MQTT.load(Ordering::Relaxed) {
+        add_secure_topic(is_public, topic, 0, None);
+    } else {
+        add_topic(is_public, topic, 0, None);
+    }
 }
 
 /**
@@ -1843,7 +1850,11 @@ pub fn add_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定
 pub fn publish_global_mqtt_topic(is_public: bool,   //是否为公共主题，指定用户的主题不是公共主题
                                  topic: String, msg: &[u8]) {
     if let Ok(bin) = encode(0, false, 0, msg) {
-        publish_topic(is_public, topic, 0, None, Arc::new(bin));
+        if IS_SECURE_MQTT.load(Ordering::Relaxed) {
+            publish_secure_topic(is_public, topic, 0, None, Arc::new(bin));
+        } else {
+            publish_topic(is_public, topic, 0, None, Arc::new(bin));
+        }
     }
 }
 
@@ -1911,6 +1922,10 @@ pub fn global_bind_tls_ports<S: SocketTrait + StreamTrait>(ip: String,          
             info!("===> Bind tcp port ok, ports: {:?}", ports.iter().cloned().unzip::<_, _, Vec<u16>, Vec<TlsConfig>>().0);
         }
     }
+}
+
+pub fn set_secure_mqtt() {
+    IS_SECURE_MQTT.store(true, Ordering::Relaxed);
 }
 
 pub fn parse_http_config(jstr: String) {

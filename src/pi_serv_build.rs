@@ -4760,6 +4760,13 @@ fn call_1449642520(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 }
 
 
+fn call_1783170331(js: Arc<JS>) -> Option<CallResult>{
+
+    js_net::set_secure_mqtt();
+    Some(CallResult::Ok)
+}
+
+
 fn call_675495936(js: Arc<JS>, v:Vec<JSType>) -> Option<CallResult>{
 	let param_error = "param error in parse_http_config";
 
@@ -6039,6 +6046,7 @@ pub fn register(mgr: &BonMgr){
     mgr.regist_fun_meta(FnMeta::CallArg(call_3645633433), 3645633433);
     mgr.regist_fun_meta(FnMeta::CallArg(call_3953247239), 3953247239);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1449642520), 1449642520);
+    mgr.regist_fun_meta(FnMeta::Call(call_1783170331), 1783170331);
     mgr.regist_fun_meta(FnMeta::CallArg(call_675495936), 675495936);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1428190872), 1428190872);
     mgr.regist_fun_meta(FnMeta::CallArg(call_1575722716), 1575722716);
