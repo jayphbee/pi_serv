@@ -567,6 +567,7 @@ fn call_3344344275_async(js: Arc<JS>, v: Vec<JSType>) -> Option<CallResult> {
         Box::new(move |js: Arc<JS>| {
             let ptr = Box::into_raw(Box::new(js.clone())) as usize;
             ptr_jstype(js.get_objs(), js.clone(), ptr, 2884638791);
+            unsafe { Box::from_raw(ptr as *mut Arc<JS>) };
             1
         }),
         Some(timeout),
