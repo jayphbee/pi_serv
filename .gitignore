@@ -1,11 +1,5 @@
 
-/scripts/*.depend
-/scripts/*.error
-/scripts/build.bat
 /target
-**/*.rs.bk
 /Cargo.lock
 .depend
 /.vscode
-/scripts/build.bat
-/cfg/def_build.cfg
