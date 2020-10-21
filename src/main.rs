@@ -102,9 +102,11 @@ fn main() {
     //主线程循环
     let matches_copy = matches.clone();
     let init_vm_copy = init_vm.clone();
-    MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
+    if let Err(e) = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
         async_main(matches_copy, init_vm_copy, debug_port).await;
-    });
+    }) {
+        panic!("Spawn async main task failed, reason: {:?}", e);
+    }
     while MAIN_RUN_STATUS.load(Ordering::Relaxed) {
         //推动主线程异步运行时
         if let Err(e) = MAIN_ASYNC_RUNNER.run() {
@@ -160,7 +162,7 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
                 panic!("Bind debug listene port failed, reason: {:?}", e);
             }
             Ok(port) => {
-                if port > 1024 && port <= 65535 {
+                if port > 1024 {
                     debug_port = port;
                 } else {
                     panic!(
@@ -319,12 +321,15 @@ fn init_work_vm(matches: &ArgMatches, init_vm: &vm::Vm, debug_port: Option<u16>)
         vec.push(work_vm_copy);
 
         //启动工作线程，并运行工作虚拟机
-        thread::Builder::new()
+        if let Err(e) = thread::Builder::new()
             .name("PI-SERV-WORKER".to_string() + index.to_string().as_str())
             .stack_size(2 * 1024 * 1024)
             .spawn(move || {
                 work_vm_loop(work_vm, index);
-            });
+            })
+        {
+            panic!("Init work vm failed, reason: {:?}", e);
+        }
     }
 
     vec
@@ -341,7 +346,7 @@ fn work_vm_loop(work_vm: vm::Vm, index: usize) {
 
     if let Some(worker_run_status) = worker_run_status {
         info!(
-            "Worker ready, thread name: {}, worker: {}",
+            "Worker ready, thread: {}, worker: {}",
             "PI-SERV-WORKER".to_string() + index.to_string().as_str(),
             "Vm-".to_string() + work_vm_vid.to_string().as_str()
         );
