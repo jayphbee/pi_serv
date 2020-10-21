@@ -1,29 +1,37 @@
+#![allow(unused_imports)]
+
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use std::thread;
 use std::path::PathBuf;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+use std::thread;
 use std::time::Duration;
-use std::sync::{Arc,
-                atomic::{AtomicBool, Ordering}};
 
+use clap::{App, Arg, ArgMatches, SubCommand};
 use env_logger;
-use parking_lot::{Mutex, RwLock, Condvar, WaitTimeoutResult};
-use clap::{Arg, ArgMatches, App, SubCommand};
 use num_cpus::get_physical;
+use parking_lot::{Condvar, Mutex, RwLock, WaitTimeoutResult};
 
-use r#async::rt::{AsyncRuntime,
-                  single_thread::{SingleTaskRunner, SingleTaskRuntime},
-                  multi_thread::{MultiTaskPool, MultiTaskRuntime}};
-use vm_core::{init_v8, vm, debug};
-use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use hash::XHashMap;
-use tcp::{buffer_pool::WriteBufferPool,
-          connect::TcpSocket,
-          driver::SocketConfig,
-          server::{AsyncPortsFactory, SocketListener}};
+use r#async::rt::{
+    multi_thread::{MultiTaskPool, MultiTaskRuntime},
+    single_thread::{SingleTaskRunner, SingleTaskRuntime},
+    AsyncRuntime,
+};
+use tcp::{
+    buffer_pool::WriteBufferPool,
+    connect::TcpSocket,
+    driver::SocketConfig,
+    server::{AsyncPortsFactory, SocketListener},
+};
+use vm_builtin::{ContextHandle, VmStartupSnapshot};
+use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
 lazy_static! {
@@ -61,24 +69,30 @@ fn main() {
     let matches = App::new("Pi Serv Main")
         .version("0.2.0")
         .author("YiNeng <yineng@foxmail.com>")
-        .arg(Arg::with_name("MAX_HEAP_LIMIT") //虚拟机最大堆限制
-            .short("H")
-            .long("MAX_HEAP_LIMIT")
-            .value_name("Mbytes")
-            .help("Set max vm heap limit")
-            .takes_value(true))
-        .arg(Arg::with_name("WORK_VM_MULTIPLE") //工作虚拟机倍数
-            .short("W")
-            .long("WORK_VM_MULTIPLE")
-            .value_name("Multiple")
-            .help("Set multiple of work vm amount")
-            .takes_value(true))
-        .arg(Arg::with_name("DEBUG") //工作虚拟机调试模式
-            .short("D")
-            .long("DEBUG")
-            .value_name("Port")
-            .help("Enable debug work vm on port")
-            .takes_value(true))
+        .arg(
+            Arg::with_name("MAX_HEAP_LIMIT") //虚拟机最大堆限制
+                .short("H")
+                .long("MAX_HEAP_LIMIT")
+                .value_name("Mbytes")
+                .help("Set max vm heap limit")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("WORK_VM_MULTIPLE") //工作虚拟机倍数
+                .short("W")
+                .long("WORK_VM_MULTIPLE")
+                .value_name("Multiple")
+                .help("Set multiple of work vm amount")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("DEBUG") //工作虚拟机调试模式
+                .short("D")
+                .long("DEBUG")
+                .value_name("Port")
+                .help("Enable debug work vm on port")
+                .takes_value(true),
+        )
         .get_matches();
 
     //初始化V8环境，并启动初始虚拟机
@@ -88,11 +102,8 @@ fn main() {
     //主线程循环
     let matches_copy = matches.clone();
     let init_vm_copy = init_vm.clone();
-    MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(),
-                             async move {
-        async_main(matches_copy,
-                   init_vm_copy,
-                   debug_port).await;
+    MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
+        async_main(matches_copy, init_vm_copy, debug_port).await;
     });
     while MAIN_RUN_STATUS.load(Ordering::Relaxed) {
         //推动主线程异步运行时
@@ -111,8 +122,12 @@ fn main() {
                 //如果当前未休眠，则休眠
                 *is_sleep = true;
                 if condvar
-                    .wait_for(&mut is_sleep, Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT))
-                    .timed_out() {
+                    .wait_for(
+                        &mut is_sleep,
+                        Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT),
+                    )
+                    .timed_out()
+                {
                     //条件超时唤醒，则设置状态为未休眠
                     *is_sleep = false;
                 }
@@ -134,7 +149,7 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
                 if num.is_power_of_two() {
                     max_heap_size = size;
                 }
-            },
+            }
         }
     }
 
@@ -143,14 +158,17 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
         match value.parse::<u16>() {
             Err(e) => {
                 panic!("Bind debug listene port failed, reason: {:?}", e);
-            },
+            }
             Ok(port) => {
                 if port > 1024 && port <= 65535 {
                     debug_port = port;
                 } else {
-                    panic!("Bind debug listene port failed, port: {}, reason: invalid port", port);
+                    panic!(
+                        "Bind debug listene port failed, port: {}, reason: invalid port",
+                        port
+                    );
                 }
-            },
+            }
         }
     }
 
@@ -164,15 +182,14 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
 
     if debug_port > 0 {
         //启动虚拟机调试用Websocket服务
-        let ws_server_factory =
-            Arc::new(debug::InspectorWebsocketServerFactory::new::<PathBuf>("", None)); // TODO: 浏览器的调试不能指定路径，但是vscode的调试需要指定路径
+        let ws_server_factory = Arc::new(debug::InspectorWebsocketServerFactory::new::<PathBuf>(
+            "", None,
+        )); // TODO: 浏览器的调试不能指定路径，但是vscode的调试需要指定路径
         let mut factory = AsyncPortsFactory::<TcpSocket>::new();
         factory.bind(
             debug_port,
             Box::new(
-                WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(
-                    ws_server_factory,
-                ),
+                WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(ws_server_factory),
             ),
         );
         let mut config = SocketConfig::new("0.0.0.0", factory.bind_ports().as_slice());
@@ -189,11 +206,14 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
             Some(10),
         ) {
             Err(e) => {
-                panic!("Bind debug listene port failed, port: {}, reason: {:?}", debug_port, e);
-            },
+                panic!(
+                    "Bind debug listene port failed, port: {}, reason: {:?}",
+                    debug_port, e
+                );
+            }
             Ok(_) => {
                 info!("Bind debug listene port ok, port: {}", debug_port);
-            },
+            }
         }
     }
 
@@ -203,8 +223,7 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
 
 //创建初始虚拟机
 fn create_init_vm(debug_port: Option<u16>) -> vm::Vm {
-    let mut builder = vm::VmBuilder::new()
-        .snapshot_template();
+    let mut builder = vm::VmBuilder::new().snapshot_template();
 
     if debug_port.is_some() {
         //允许调试
@@ -217,9 +236,7 @@ fn create_init_vm(debug_port: Option<u16>) -> vm::Vm {
 /*
 * 异步执行入口，退出时不会中止主线程
 */
-async fn async_main(matches: ArgMatches<'static>,
-                    init_vm: vm::Vm,
-                    debug_port: Option<u16>) {
+async fn async_main(matches: ArgMatches<'static>, init_vm: vm::Vm, debug_port: Option<u16>) {
     let snapshot_context = init_snapshot(&init_vm).await;
 
     //TODO 加载项目的入口模块文件, 并加载其静态依赖树中的所有js模块文件
@@ -227,17 +244,30 @@ async fn async_main(matches: ArgMatches<'static>,
     finish_snapshot(&init_vm, snapshot_context).await;
 
     let workers = init_work_vm(&matches, &init_vm, debug_port);
-    workers[0].new_context(None, workers[0].alloc_context_id(), None).await.unwrap();
+    workers[0]
+        .new_context(None, workers[0].alloc_context_id(), None)
+        .await
+        .unwrap();
 }
 
 //初始化快照
 async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
-    let snapshot_context = init_vm.new_context(None, init_vm.alloc_context_id(), None).await.unwrap();
-    if let Err(e) = init_vm.execute(snapshot_context, "Init_Vm_Init_module.js", r#"
+    let snapshot_context = init_vm
+        .new_context(None, init_vm.alloc_context_id(), None)
+        .await
+        .unwrap();
+    if let Err(e) = init_vm
+        .execute(
+            snapshot_context,
+            "Init_Vm_Init_module.js",
+            r#"
                     onerror = function(e) {
                         console.log("catch global error, e:", e.stack);
                     };
-                "#).await {
+                "#,
+        )
+        .await
+    {
         panic!("!!!!!!Init snapshot failed, reason: {:?}", e);
     }
     info!("Init snapshot ok");
@@ -254,18 +284,16 @@ async fn finish_snapshot(init_vm: &vm::Vm, snapshot_context: ContextHandle) {
 }
 
 //初始化工作虚拟机，返回工作虚拟机
-fn init_work_vm(matches: &ArgMatches,
-                init_vm: &vm::Vm,
-                debug_port: Option<u16>) -> Vec<vm::Vm> {
+fn init_work_vm(matches: &ArgMatches, init_vm: &vm::Vm, debug_port: Option<u16>) -> Vec<vm::Vm> {
     let mut work_vm_count: usize = 2 * get_physical(); //默认工作虚拟机数量为本地cpu物理核数的2倍
     if let Some(value) = matches.value_of("WORK_VM_MULTIPLE") {
         match value.parse::<usize>() {
             Err(e) => {
                 panic!("Init work vm failed, reason: {:?}", e);
-            },
+            }
             Ok(count) => {
                 work_vm_count = get_physical() * count;
-            },
+            }
         }
     }
 
@@ -287,8 +315,7 @@ fn init_work_vm(matches: &ArgMatches,
         let work_vm_copy = work_vm.clone();
         WORK_VM_CONDVAR_TABLE
             .write()
-            .insert(work_vm_copy.get_vid(),
-                    Arc::new(AtomicBool::new(true)));
+            .insert(work_vm_copy.get_vid(), Arc::new(AtomicBool::new(true)));
         vec.push(work_vm_copy);
 
         //启动工作线程，并运行工作虚拟机
@@ -313,7 +340,11 @@ fn work_vm_loop(work_vm: vm::Vm, index: usize) {
     }
 
     if let Some(worker_run_status) = worker_run_status {
-        info!("Worker ready, thread name: {}, worker: {}", "PI-SERV-WORKER".to_string() + index.to_string().as_str(), "Vm-".to_string() + work_vm_vid.to_string().as_str());
+        info!(
+            "Worker ready, thread name: {}, worker: {}",
+            "PI-SERV-WORKER".to_string() + index.to_string().as_str(),
+            "Vm-".to_string() + work_vm_vid.to_string().as_str()
+        );
 
         let sleep_timeout = (*WORK_VM_UNCONDITION_SLEEP_TIMEOUT) as u128;
         while worker_run_status.load(Ordering::Relaxed) {
