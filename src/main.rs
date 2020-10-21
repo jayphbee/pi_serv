@@ -103,24 +103,24 @@ fn main() {
         //推动初始虚拟机
         init_vm.run();
 
-        // if MAIN_ASYNC_RUNTIME.len() == 0 {
-        //     //当前没有主线程任务，则休眠主线程
-        //     let (lock, condvar) = &**MAIN_CONDVAR;
-        //     let mut is_sleep = lock.lock();
-        //     if !*is_sleep {
-        //         //如果当前未休眠，则休眠
-        //         *is_sleep = true;
-        //         if condvar
-        //             .wait_for(&mut is_sleep, Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT))
-        //             .timed_out() {
-        //             //条件超时唤醒，则设置状态为未休眠
-        //             *is_sleep = false;
-        //         }
-        //     }
-        // } else {
+        if MAIN_ASYNC_RUNTIME.len() == 0 {
+            //当前没有主线程任务，则休眠主线程
+            let (lock, condvar) = &**MAIN_CONDVAR;
+            let mut is_sleep = lock.lock();
+            if !*is_sleep {
+                //如果当前未休眠，则休眠
+                *is_sleep = true;
+                if condvar
+                    .wait_for(&mut is_sleep, Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT))
+                    .timed_out() {
+                    //条件超时唤醒，则设置状态为未休眠
+                    *is_sleep = false;
+                }
+            }
+        } else {
             //当前主线程有任务，则休眠指定时长后继续执行主线程任务
             thread::sleep(Duration::from_millis(*MAIN_UNCONDITION_SLEEP_TIMEOUT));
-        // }
+        }
     }
 }
 
