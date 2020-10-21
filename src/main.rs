@@ -63,7 +63,7 @@ lazy_static! {
 */
 fn main() {
     //初始化日志服务器
-    env_logger::init();
+    env_logger::Builder::new().init();
 
     //匹配启动时的选项和参数
     let matches = App::new("Pi Serv Main")
