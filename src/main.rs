@@ -158,25 +158,25 @@ fn main() {
 
 //初始化V8环境，如果是调试模式则返回调试端口
 fn init_v8_env(matches: &ArgMatches) -> (usize, usize, Option<u16>) {
-    let mut init_heap_size = 16 * 1024 * 1024; //默认虚拟机最大堆限制为16MB
+    let mut init_heap_size = 16 * 1024 * 1024; //默认虚拟机初始堆大小为16MB
     if let Some(size) = matches.value_of("INIT_HEAP_SIZE") {
         match size.parse::<usize>() {
             Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
             Ok(num) => {
                 if num.is_power_of_two() {
-                    init_heap_size = num;
+                    init_heap_size = num * 1024 * 1024;
                 }
             }
         }
     }
 
-    let mut max_heap_size = 8096 * 1024 * 1024; //默认虚拟机最大堆限制为8GB
+    let mut max_heap_size = 8096 * 1024 * 1024; //默认虚拟机最大堆大小为8GB
     if let Some(size) = matches.value_of("MAX_HEAP_SIZE") {
         match size.parse::<usize>() {
             Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
             Ok(num) => {
                 if num.is_power_of_two() {
-                    max_heap_size = num;
+                    max_heap_size = num * 1024 * 1024;
                 }
             }
         }
