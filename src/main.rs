@@ -63,18 +63,26 @@ lazy_static! {
 */
 fn main() {
     //初始化日志服务器
-    env_logger::Builder::new().init();
+    env_logger::init();
 
     //匹配启动时的选项和参数
     let matches = App::new("Pi Serv Main")
         .version("0.2.0")
         .author("YiNeng <yineng@foxmail.com>")
         .arg(
-            Arg::with_name("MAX_HEAP_LIMIT") //虚拟机最大堆限制
-                .short("H")
-                .long("MAX_HEAP_LIMIT")
+            Arg::with_name("INIT_HEAP_SIZE") //虚拟机初始堆大小
+                .short("I")
+                .long("INIT_HEAP_SIZE")
                 .value_name("Mbytes")
-                .help("Set max vm heap limit")
+                .help("Set init vm heap size")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("MAX_HEAP_SIZE") //虚拟机最大堆大小
+                .short("H")
+                .long("MAX_HEAP_SIZE")
+                .value_name("Mbytes")
+                .help("Set max vm heap size")
                 .takes_value(true),
         )
         .arg(
@@ -96,14 +104,21 @@ fn main() {
         .get_matches();
 
     //初始化V8环境，并启动初始虚拟机
-    let debug_port = init_v8_env(&matches);
-    let init_vm = create_init_vm(debug_port);
+    let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
+    let init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
 
     //主线程循环
     let matches_copy = matches.clone();
     let init_vm_copy = init_vm.clone();
     if let Err(e) = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
-        async_main(matches_copy, init_vm_copy, debug_port).await;
+        async_main(
+            matches_copy,
+            init_vm_copy,
+            init_heap_size,
+            max_heap_size,
+            debug_port,
+        )
+        .await;
     }) {
         panic!("Spawn async main task failed, reason: {:?}", e);
     }
@@ -142,14 +157,26 @@ fn main() {
 }
 
 //初始化V8环境，如果是调试模式则返回调试端口
-fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
-    let mut max_heap_size: &str = "2048"; //默认虚拟机最大堆限制为2GB
-    if let Some(size) = matches.value_of("MAX_HEAP_LIMIT") {
+fn init_v8_env(matches: &ArgMatches) -> (usize, usize, Option<u16>) {
+    let mut init_heap_size = 16 * 1024 * 1024; //默认虚拟机最大堆限制为16MB
+    if let Some(size) = matches.value_of("INIT_HEAP_SIZE") {
         match size.parse::<usize>() {
             Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
             Ok(num) => {
                 if num.is_power_of_two() {
-                    max_heap_size = size;
+                    init_heap_size = num;
+                }
+            }
+        }
+    }
+
+    let mut max_heap_size = 8096 * 1024 * 1024; //默认虚拟机最大堆限制为8GB
+    if let Some(size) = matches.value_of("MAX_HEAP_SIZE") {
+        match size.parse::<usize>() {
+            Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
+            Ok(num) => {
+                if num.is_power_of_two() {
+                    max_heap_size = num;
                 }
             }
         }
@@ -179,7 +206,6 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
         "--no-wasm-async-compilation".to_string(),
         "--harmony-top-level-await".to_string(),
         "--expose-gc".to_string(),
-        "--max-old-space-size=".to_string() + max_heap_size,
     ]));
 
     if debug_port > 0 {
@@ -220,12 +246,13 @@ fn init_v8_env(matches: &ArgMatches) -> Option<u16> {
     }
 
     info!("Init v8 env ok");
-    Some(debug_port)
+    (init_heap_size, max_heap_size, Some(debug_port))
 }
 
 //创建初始虚拟机
-fn create_init_vm(debug_port: Option<u16>) -> vm::Vm {
+fn create_init_vm(init_heap_size: usize, max_heap_size: usize, debug_port: Option<u16>) -> vm::Vm {
     let mut builder = vm::VmBuilder::new().snapshot_template();
+    builder = builder.heap_limit(init_heap_size, max_heap_size);
 
     if debug_port.is_some() {
         //允许调试
@@ -238,14 +265,26 @@ fn create_init_vm(debug_port: Option<u16>) -> vm::Vm {
 /*
 * 异步执行入口，退出时不会中止主线程
 */
-async fn async_main(matches: ArgMatches<'static>, init_vm: vm::Vm, debug_port: Option<u16>) {
+async fn async_main(
+    matches: ArgMatches<'static>,
+    init_vm: vm::Vm,
+    init_heap_size: usize,
+    max_heap_size: usize,
+    debug_port: Option<u16>,
+) {
     let snapshot_context = init_snapshot(&init_vm).await;
 
     //TODO 加载项目的入口模块文件, 并加载其静态依赖树中的所有js模块文件
 
     finish_snapshot(&init_vm, snapshot_context).await;
 
-    let workers = init_work_vm(&matches, &init_vm, debug_port);
+    let workers = init_work_vm(
+        &matches,
+        &init_vm,
+        init_heap_size,
+        max_heap_size,
+        debug_port,
+    );
     workers[0]
         .new_context(None, workers[0].alloc_context_id(), None)
         .await
@@ -286,7 +325,13 @@ async fn finish_snapshot(init_vm: &vm::Vm, snapshot_context: ContextHandle) {
 }
 
 //初始化工作虚拟机，返回工作虚拟机
-fn init_work_vm(matches: &ArgMatches, init_vm: &vm::Vm, debug_port: Option<u16>) -> Vec<vm::Vm> {
+fn init_work_vm(
+    matches: &ArgMatches,
+    init_vm: &vm::Vm,
+    init_heap_size: usize,
+    max_heap_size: usize,
+    debug_port: Option<u16>,
+) -> Vec<vm::Vm> {
     let mut work_vm_count: usize = 2 * get_physical(); //默认工作虚拟机数量为本地cpu物理核数的2倍
     if let Some(value) = matches.value_of("WORK_VM_MULTIPLE") {
         match value.parse::<usize>() {
@@ -306,6 +351,7 @@ fn init_work_vm(matches: &ArgMatches, init_vm: &vm::Vm, debug_port: Option<u16>)
         //使用指定快照，创建工作虚拟机
         let work_vm_snapshot = VmStartupSnapshot::Boxed(snapshot_bytes.to_vec().into_boxed_slice());
         let mut builder = vm::VmBuilder::new().startup_snapshot(work_vm_snapshot);
+        builder = builder.heap_limit(init_heap_size, max_heap_size);
 
         if debug_port.is_some() {
             //允许调试
