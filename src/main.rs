@@ -374,7 +374,7 @@ fn init_work_vm(
             worker_name.as_str(),
             2 * 1024 * 1024,
             Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
-            10,
+            1000,
             Some(10),
             move || {
                 let run_time = work_vm.run();
