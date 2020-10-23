@@ -37,7 +37,7 @@ use ws::server::WebsocketListenerFactory;
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
     static ref MAIN_RUN_STATUS: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
-    static ref MAIN_UNCONDITION_SLEEP_TIMEOUT: u64 = 1;
+    static ref MAIN_UNCONDITION_SLEEP_TIMEOUT: u64 = 10;
 
     //主线程条件变量和线程条件休眠超时时长
     static ref MAIN_CONDVAR: Arc<(AtomicBool, Mutex<()>, Condvar)> = Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new()));
@@ -374,8 +374,8 @@ fn init_work_vm(
             worker_name.as_str(),
             2 * 1024 * 1024,
             Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
-            1,
-            None,
+            10,
+            Some(10),
             move || {
                 let run_time = work_vm.run();
                 (work_vm.queue_len() == 0, run_time)
