@@ -31,7 +31,7 @@ use tcp::{
     server::{AsyncPortsFactory, SocketListener},
 };
 use vm_builtin::{ContextHandle, VmStartupSnapshot};
-use vm_core::{debug, init_v8, vm};
+use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
 lazy_static! {
@@ -40,7 +40,7 @@ lazy_static! {
     static ref MAIN_UNCONDITION_SLEEP_TIMEOUT: u64 = 1;
 
     //主线程条件变量和线程条件休眠超时时长
-    static ref MAIN_CONDVAR: Arc<(Mutex<bool>, Condvar)> = Arc::new((Mutex::new(false), Condvar::new()));
+    static ref MAIN_CONDVAR: Arc<(AtomicBool, Mutex<()>, Condvar)> = Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new()));
     static ref MAIN_CONDITION_SLEEP_TIMEOUT: u64 = 10000;
 
     //初始化主线程异步运行时
@@ -52,10 +52,6 @@ lazy_static! {
         let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical(), 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
-
-    //工作虚拟机运行状态和条件变量表、线程条件休眠超时时长和线程无条件休眠超时时长
-    static ref WORK_VM_CONDVAR_TABLE: Arc<RwLock<XHashMap<usize, Arc<AtomicBool>>>> = Arc::new(RwLock::new(XHashMap::default()));
-    static ref WORK_VM_UNCONDITION_SLEEP_TIMEOUT: u64 = 1;
 }
 
 /*
@@ -129,29 +125,34 @@ fn main() {
         }
 
         //推动初始虚拟机
-        init_vm.run();
+        let run_time = init_vm.run();
 
-        if MAIN_ASYNC_RUNTIME.len() == 0 {
+        if MAIN_ASYNC_RUNTIME.len() == 0 && init_vm.queue_len() == 0 {
             //当前没有主线程任务，则休眠主线程
-            let (lock, condvar) = &**MAIN_CONDVAR;
-            let mut is_sleep = lock.lock();
-            if !*is_sleep {
+            let (is_sleep, lock, condvar) = &**MAIN_CONDVAR;
+            let mut locked = lock.lock();
+            if !is_sleep.load(Ordering::Relaxed) {
                 //如果当前未休眠，则休眠
-                *is_sleep = true;
+                is_sleep.store(true, Ordering::SeqCst);
                 if condvar
                     .wait_for(
-                        &mut is_sleep,
+                        &mut locked,
                         Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT),
                     )
                     .timed_out()
                 {
                     //条件超时唤醒，则设置状态为未休眠
-                    *is_sleep = false;
+                    is_sleep.store(false, Ordering::SeqCst);
                 }
             }
         } else {
-            //当前主线程有任务，则休眠指定时长后继续执行主线程任务
-            thread::sleep(Duration::from_millis(*MAIN_UNCONDITION_SLEEP_TIMEOUT));
+            //当前主线程有任务
+            if let Some(remaining_interval) =
+                Duration::from_millis(*MAIN_UNCONDITION_SLEEP_TIMEOUT).checked_sub(run_time)
+            {
+                //本次运行少于循环间隔，则休眠剩余的循环间隔，并继续执行任务
+                thread::sleep(remaining_interval);
+            }
         }
     }
 }
@@ -259,7 +260,7 @@ fn create_init_vm(init_heap_size: usize, max_heap_size: usize, debug_port: Optio
         builder = builder.enable_inspect();
     }
 
-    builder.build()
+    builder.bind_condvar_waker(MAIN_CONDVAR.clone()).build()
 }
 
 /*
@@ -286,7 +287,8 @@ async fn async_main(
         debug_port,
     );
     workers[0]
-        .new_context(None, workers[0].alloc_context_id(), None)
+        .1
+        .new_context(None, workers[0].1.alloc_context_id(), None)
         .await
         .unwrap();
 }
@@ -331,7 +333,7 @@ fn init_work_vm(
     init_heap_size: usize,
     max_heap_size: usize,
     debug_port: Option<u16>,
-) -> Vec<vm::Vm> {
+) -> Vec<(Arc<AtomicBool>, vm::Vm)> {
     let mut work_vm_count: usize = 2 * get_physical(); //默认工作虚拟机数量为本地cpu物理核数的2倍
     if let Some(value) = matches.value_of("WORK_VM_MULTIPLE") {
         match value.parse::<usize>() {
@@ -358,52 +360,30 @@ fn init_work_vm(
             builder = builder.enable_inspect();
         }
         let work_vm = builder.build();
-
-        //注册工作虚拟机
         let work_vm_copy = work_vm.clone();
-        WORK_VM_CONDVAR_TABLE
-            .write()
-            .insert(work_vm_copy.get_vid(), Arc::new(AtomicBool::new(true)));
-        vec.push(work_vm_copy);
 
         //启动工作线程，并运行工作虚拟机
-        if let Err(e) = thread::Builder::new()
-            .name("PI-SERV-WORKER".to_string() + index.to_string().as_str())
-            .stack_size(2 * 1024 * 1024)
-            .spawn(move || {
-                work_vm_loop(work_vm, index);
-            })
-        {
-            panic!("Init work vm failed, reason: {:?}", e);
-        }
+        let worker_name = "PI-SERV-WORKER".to_string() + index.to_string().as_str();
+        info!(
+            "Worker ready, thread: {}, worker: {}",
+            worker_name,
+            "Vm-".to_string() + work_vm.get_vid().to_string().as_str()
+        );
+
+        let worker_handle = worker::spawn_worker_thread(
+            worker_name.as_str(),
+            2 * 1024 * 1024,
+            Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
+            1,
+            None,
+            move || {
+                let run_time = work_vm.run();
+                (work_vm.queue_len() == 0, run_time)
+            },
+        );
+
+        vec.push((worker_handle, work_vm_copy));
     }
 
     vec
-}
-
-//工作虚拟机线程循环
-fn work_vm_loop(work_vm: vm::Vm, index: usize) {
-    let work_vm_vid = work_vm.get_vid();
-    let mut worker_run_status = None;
-    if let Some(status) = WORK_VM_CONDVAR_TABLE.read().get(&work_vm_vid) {
-        //当前工作虚拟机已注册
-        worker_run_status = Some(status.clone());
-    }
-
-    if let Some(worker_run_status) = worker_run_status {
-        info!(
-            "Worker ready, thread: {}, worker: {}",
-            "PI-SERV-WORKER".to_string() + index.to_string().as_str(),
-            "Vm-".to_string() + work_vm_vid.to_string().as_str()
-        );
-
-        let sleep_timeout = (*WORK_VM_UNCONDITION_SLEEP_TIMEOUT) as u128;
-        while worker_run_status.load(Ordering::Relaxed) {
-            //推动工作虚拟机
-            let runed_time = work_vm.run().as_millis();
-            if runed_time < sleep_timeout {
-                thread::sleep(Duration::from_millis((sleep_timeout - runed_time) as u64));
-            }
-        }
-    }
 }
