@@ -5,7 +5,8 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use std::path::PathBuf;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -54,6 +55,49 @@ lazy_static! {
     };
 }
 
+// 设置pi_pt需要用到的环境变量
+fn set_piserv_env_var(matches: &ArgMatches) {
+    let init_exec_path = matches.value_of("init-file").unwrap();
+    let projs = match matches.values_of("projects") {
+        Some(p) => p
+            .map(|s| s.to_string().replace("\\", "/"))
+            .collect::<Vec<String>>(),
+        None => vec![],
+    };
+    let current_dir = env::current_dir().unwrap();
+    let current_dir_parent = current_dir.parent().unwrap().to_str().unwrap();
+
+    let path = Path::new(init_exec_path)
+        .iter()
+        .filter_map(|x| if x == "." || x == ".." { None } else { Some(x) })
+        .map(|x| x.to_str().unwrap())
+        .collect::<Vec<&str>>();
+
+    let root: PathBuf = [vec![current_dir_parent], path].concat().iter().collect();
+    let project_root = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace("\\", "/");
+
+    env::set_var("PROJECTS", &projs.as_slice().join(" "));
+
+    let cur_dir = env::current_dir();
+
+    println!("current dir ==== {:?}", cur_dir);
+    println!("projects === {:?}", projs);
+
+    // 如果没有出现 -p 参数
+    if matches.occurrences_of("projects") == 0 {
+        env::set_var("PROJECT_ROOT", cur_dir.unwrap().to_str().unwrap());
+    } else {
+        env::set_var("PROJECT_ROOT", &project_root);
+    }
+}
+
 /*
 * 同步执行入口，退出时会中止主线程
 */
@@ -97,7 +141,27 @@ fn main() {
                 .help("Enable debug work vm on port")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("init-file") // pi_pt入口文件
+                .short("i")
+                .long("init-file")
+                .value_name("init-file")
+                .help("pi_pt entry file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("projects") // 要启动的项目
+                .short("p")
+                .long("projects")
+                .value_name("projects")
+                .help("projectw to launch")
+                .multiple(true)
+                .takes_value(true),
+        )
         .get_matches();
+
+    // 设置环境变量参数
+    set_piserv_env_var(&matches);
 
     //初始化V8环境，并启动初始虚拟机
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
