@@ -36,7 +36,7 @@ use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
 use pi_serv_builtin::set_pi_serv_builtin_file_runtime;
-use pi_v8_ext::register_ext_functions;
+use pi_serv_ext::register_ext_functions;
 
 mod init;
 
