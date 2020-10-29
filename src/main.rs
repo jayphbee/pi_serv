@@ -5,13 +5,14 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
 use std::thread;
 use std::time::Duration;
+use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
 use env_logger;
@@ -33,6 +34,13 @@ use tcp::{
 use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
+
+use pi_serv_builtin::set_pi_serv_builtin_file_runtime;
+use pi_v8_ext::register_ext_functions;
+
+mod init;
+
+use init::init_js;
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
@@ -95,6 +103,23 @@ fn main() {
                 .long("DEBUG")
                 .value_name("Port")
                 .help("Enable debug work vm on port")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("init-file") // pi_pt入口文件
+                .short("i")
+                .long("init-file")
+                .value_name("init-file")
+                .help("pi_pt entry file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("projects") // 要启动的项目
+                .short("p")
+                .long("projects")
+                .value_name("projects")
+                .help("projectw to launch")
+                .multiple(true)
                 .takes_value(true),
         )
         .get_matches();
@@ -273,7 +298,15 @@ async fn async_main(
     max_heap_size: usize,
     debug_port: Option<u16>,
 ) {
+    // 加载native funtion
+    register_ext_functions();
+
+    // 注册文件异步运行时
+    set_pi_serv_builtin_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
+
     let snapshot_context = init_snapshot(&init_vm).await;
+
+    init_js(init_vm.clone(), snapshot_context, matches.clone()).await;
 
     //TODO 加载项目的入口模块文件, 并加载其静态依赖树中的所有js模块文件
 

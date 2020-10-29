@@ -22,3 +22,5 @@ vm_builtin = { path = "../pi_v8/vm_builtin" }
 hash = { path = "../pi_lib/hash" }
 tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
+pi_v8_ext = { path = "../pi_v8_ext"}
+pi_serv_builtin = { path = "../pi_serv_builtin" }
