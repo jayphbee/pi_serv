@@ -1,5 +1,32 @@
 use std::env;
 use std::fs::{copy, create_dir_all};
+use std::path::PathBuf;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+use std::thread;
+use std::time::Duration;
+
+use js_proxy_gen::{generate_proxy_crate, parse_crates, spawn};
+
+/*
+* 默认的代理库路径
+*/
+#[cfg(target_os = "windows")]
+const DEFAULT_PI_JS_PROXY_CRATE_PATH: &str = r#"..\pi_serv_ext"#;
+#[cfg(target_os = "unix")]
+const DEFAULT_PI_JS_PROXY_CRATE_PATH: &str = "../pi_serv_ext";
+
+/*
+* 默认的代理库版本
+*/
+const DEFAULT_PI_JS_PROXY_CRATE_VERSION: &str = "0.1.0";
+
+/*
+* 默认的代理库Rust版本
+*/
+const DEFAULT_PI_JS_PROXY_CRATE_EDITION: &str = "2018";
 
 fn main() {
     let current_dir = env::current_dir().unwrap();
@@ -85,5 +112,66 @@ fn main() {
                 }
             }
         }
+    }
+
+    //构建代理代码
+    let ext_crates = if let Some(ext_crates_var) = env::var_os("PI_JS_PROXY_EXT_CRATES") {
+        ext_crates_var
+            .to_str()
+            .unwrap()
+            .split(';')
+            .map(|path| PathBuf::from(path))
+            .collect::<Vec<PathBuf>>()
+    } else {
+        panic!("Require set for PI_JS_PROXY_EXT_CRATES");
+    };
+    let crate_path = if let Some(crate_path_var) = env::var_os("PI_JS_PROXY_CRATE_PATH") {
+        let crate_path = crate_path_var.to_str().unwrap();
+        PathBuf::from(crate_path)
+    } else {
+        PathBuf::from(DEFAULT_PI_JS_PROXY_CRATE_PATH)
+    };
+    let crate_version = if let Some(crate_version_var) = env::var_os("PI_JS_PROXY_CRATE_VERSION") {
+        crate_version_var.to_str().unwrap().to_string()
+    } else {
+        DEFAULT_PI_JS_PROXY_CRATE_VERSION.to_string()
+    };
+    let crate_edition = if let Some(crate_edition_var) = env::var_os("PI_JS_PROXY_CRATE_EDITION") {
+        crate_edition_var.to_str().unwrap().to_string()
+    } else {
+        DEFAULT_PI_JS_PROXY_CRATE_EDITION.to_string()
+    };
+    let ts_path = if let Some(ts_path_var) = env::var_os("PI_JS_PROXY_TS_PATH") {
+        let ts_path = ts_path_var.to_str().unwrap();
+        PathBuf::from(ts_path)
+    } else {
+        panic!("Require set for PI_JS_PROXY_TS_PATH");
+    };
+
+    let is_finish = Arc::new(AtomicBool::new(false));
+    let is_finish_copy = is_finish.clone();
+    spawn(async move {
+        match parse_crates(ext_crates).await {
+            Err(e) => panic!("Parse ext crates failed, reason: {:#?}", e),
+            Ok(crates) => {
+                if let Err(e) = generate_proxy_crate(
+                    crate_path,
+                    ts_path,
+                    crate_version.as_str(),
+                    crate_edition.as_str(),
+                    crates,
+                )
+                .await
+                {
+                    panic!("Generate proxy crate failed, reason: {:#?}", e);
+                } else {
+                    is_finish_copy.store(true, Ordering::SeqCst);
+                }
+            }
+        }
+    });
+
+    while !is_finish.load(Ordering::Relaxed) {
+        thread::sleep(Duration::from_millis(500));
     }
 }

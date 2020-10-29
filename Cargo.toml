@@ -4,6 +4,9 @@ version = "0.2.0"
 authors = ["vmos <vmos@fairblock.io>"]
 edition = "2018"
 
+[build-dependencies]
+js_proxy_gen = { path = "../pi_lib/js_proxy_gen" }
+
 [dependencies]
 lazy_static = "1.4"
 log = "0.4"
