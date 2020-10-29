@@ -5,7 +5,6 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -13,6 +12,7 @@ use std::sync::{
 };
 use std::thread;
 use std::time::Duration;
+use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
 use env_logger;
@@ -35,6 +35,13 @@ use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
+use pi_serv_builtin::set_pi_serv_builtin_file_runtime;
+use pi_v8_ext::register_ext_functions;
+
+mod init;
+
+use init::init_js;
+
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
     static ref MAIN_RUN_STATUS: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -53,49 +60,6 @@ lazy_static! {
         let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical(), 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
-}
-
-// 设置pi_pt需要用到的环境变量
-fn set_piserv_env_var(matches: &ArgMatches) {
-    let init_exec_path = matches.value_of("init-file").unwrap();
-    let projs = match matches.values_of("projects") {
-        Some(p) => p
-            .map(|s| s.to_string().replace("\\", "/"))
-            .collect::<Vec<String>>(),
-        None => vec![],
-    };
-    let current_dir = env::current_dir().unwrap();
-    let current_dir_parent = current_dir.parent().unwrap().to_str().unwrap();
-
-    let path = Path::new(init_exec_path)
-        .iter()
-        .filter_map(|x| if x == "." || x == ".." { None } else { Some(x) })
-        .map(|x| x.to_str().unwrap())
-        .collect::<Vec<&str>>();
-
-    let root: PathBuf = [vec![current_dir_parent], path].concat().iter().collect();
-    let project_root = root
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .replace("\\", "/");
-
-    env::set_var("PROJECTS", &projs.as_slice().join(" "));
-
-    let cur_dir = env::current_dir();
-
-    println!("current dir ==== {:?}", cur_dir);
-    println!("projects === {:?}", projs);
-
-    // 如果没有出现 -p 参数
-    if matches.occurrences_of("projects") == 0 {
-        env::set_var("PROJECT_ROOT", cur_dir.unwrap().to_str().unwrap());
-    } else {
-        env::set_var("PROJECT_ROOT", &project_root);
-    }
 }
 
 /*
@@ -159,9 +123,6 @@ fn main() {
                 .takes_value(true),
         )
         .get_matches();
-
-    // 设置环境变量参数
-    set_piserv_env_var(&matches);
 
     //初始化V8环境，并启动初始虚拟机
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
@@ -337,7 +298,15 @@ async fn async_main(
     max_heap_size: usize,
     debug_port: Option<u16>,
 ) {
+    // 加载native funtion
+    register_ext_functions();
+
+    // 注册文件异步运行时
+    set_pi_serv_builtin_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
+
     let snapshot_context = init_snapshot(&init_vm).await;
+
+    init_js(init_vm.clone(), snapshot_context, matches.clone()).await;
 
     //TODO 加载项目的入口模块文件, 并加载其静态依赖树中的所有js模块文件
 
