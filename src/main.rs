@@ -35,7 +35,7 @@ use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
-use pi_serv_builtin::set_pi_serv_builtin_file_runtime;
+use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_ext::register_ext_functions;
 
 mod init;
@@ -302,7 +302,7 @@ async fn async_main(
     register_ext_functions();
 
     // 注册文件异步运行时
-    set_pi_serv_builtin_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
+    set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
