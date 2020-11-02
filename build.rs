@@ -65,12 +65,15 @@ fn main() {
             //创建目录成功
             let lib_path = target_dir.join(lib_name);
 
-            if !lib_path.exists() {
-                //指定路径的库文件不存在，则复制
-                if let Err(e) = copy(&origin_dir, target_dir.join(lib_name)) {
-                    eprintln!("==> Build debug failed, origin path: {:?}, target path: {:?}, reason: {:?}", &origin_dir, target_dir, e);
-                }
+            // if !lib_path.exists() {
+            //指定路径的库文件不存在，则复制
+            if let Err(e) = copy(&origin_dir, target_dir.join(lib_name)) {
+                eprintln!(
+                    "==> Build debug failed, origin path: {:?}, target path: {:?}, reason: {:?}",
+                    &origin_dir, target_dir, e
+                );
             }
+            // }
         }
     } else {
         //release版本
@@ -105,12 +108,15 @@ fn main() {
             //创建目录成功
             let lib_path = target_dir.join(lib_name);
 
-            if !lib_path.exists() {
-                //指定路径的库文件不存在，则复制
-                if let Err(e) = copy(&origin_dir, target_dir.join(lib_name)) {
-                    eprintln!("==> Build debug failed, origin path: {:?}, target path: {:?}, reason: {:?}", &origin_dir, target_dir, e);
-                }
+            // if !lib_path.exists() {
+            //指定路径的库文件不存在，则复制
+            if let Err(e) = copy(&origin_dir, target_dir.join(lib_name)) {
+                eprintln!(
+                    "==> Build debug failed, origin path: {:?}, target path: {:?}, reason: {:?}",
+                    &origin_dir, target_dir, e
+                );
             }
+            // }
         }
     }
 
