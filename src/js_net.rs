@@ -63,18 +63,37 @@ use http::upload::UploadFile;
 use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
 use pi_serv_lib::js_net::MqttConnection;
+use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
 
 lazy_static! {
-    static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // https
     static ref SECURE_SERVICES: Arc<RwLock<Vec<SecureServices>>> = Arc::new(RwLock::new(vec![]));
+    // http
     static ref INSECURE_SERVICES: Arc<RwLock<Vec<InsecureServices>>> = Arc::new(RwLock::new(vec![]));
     // 每个端口的证书配置 (port, (cert_path, priv_key_path))
     static ref CERTIFICATES: Arc<RwLock<FnvHashMap<u16, (String, String)>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // https配置
     static ref SECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // http配置
     static ref INSECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
-    static ref BROKER_TOPICS: Arc<RwLock<FnvHashMap<String, FnvHashSet<String>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // static ref BROKER_TOPICS: Arc<RwLock<FnvHashMap<String, FnvHashSet<String>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // mqtt名称绑定listenerPID
     static ref BUILD_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, Pid>>> = Arc::new(RwLock::new(FnvHashMap::default()));
 }
+
+// 注册pi_ser方法
+pub fn reg_pi_serv_handle() {
+    let pi_serv_handle = PiServNetHandle {
+        bind_mqtt_tcp_port: bind_mqtt_tcp_port,
+        start_network_services: start_network_services,
+        parse_http_config: parse_http_config,
+        config_certificate: config_certificate,
+    };
+    // 注入pi_ser_net方法到pi_serv_lib
+    set_pi_serv_handle(pi_serv_handle);
+}
+
 
 struct InsecureServices(
     (

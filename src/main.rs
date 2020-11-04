@@ -38,13 +38,13 @@ use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::{set_pi_ser_handle, set_pi_serv_lib_file_runtime, PiServNetHandle};
+use pi_serv_lib::set_pi_serv_lib_file_runtime;
 
 mod init;
 mod js_net;
 
 use init::init_js;
-use js_net::{bind_mqtt_tcp_port, config_certificate, parse_http_config, start_network_services};
+use js_net::reg_pi_serv_handle;
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
@@ -307,14 +307,8 @@ async fn async_main(
 
     // 注册文件异步运行时
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
-    let pi_serv_handle = PiServNetHandle {
-        bind_mqtt_tcp_port: bind_mqtt_tcp_port,
-        start_network_services: start_network_services,
-        parse_http_config: parse_http_config,
-        config_certificate: config_certificate,
-    };
-    // 注入pi_ser_net方法到pi_serv_lib
-    set_pi_ser_handle(pi_serv_handle);
+    // 注册pi_serv方法
+    reg_pi_serv_handle();
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
