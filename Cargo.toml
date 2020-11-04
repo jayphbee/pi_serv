@@ -24,3 +24,33 @@ tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 pi_serv_ext = { path = "../pi_serv_ext"}
 pi_serv_lib = { path = "../pi_serv_lib" }
+
+rusty_v8 = { path = "../rusty_v8" }
+libc = "*"
+wild = "2.0.2"
+fnv = "*"
+magnetic = "2.0.0"
+toml = "0.4.6"
+json = "0.11.13" 
+rand = "0.5.2"
+mqtt3 = { git = "https://github.com/tekjar/mqtt3" }
+hash_value = { path = "../pi_math/hash_value" }
+pi_db = { path = "../pi_db" }
+net = { path = "../pi_net/net" }
+mqtt_tmp = { path = "../pi_net/mqtt_tmp" }
+rpc_tmp = { path = "../pi_net/rpc_tmp" }
+http = { path = "../pi_net/http"}
+httpc = { path = "../pi_net/httpc" }
+https = { path = "../pi_net/https" }
+https_external = { package = "http", version = "0.2" }
+mqtt = { path = "../pi_net/mqtt" }
+mqtt_proxy = { path = "../pi_net/mqtt_proxy"}
+atom = { path = "../pi_lib/atom" }
+worker = { path = "../pi_lib/worker" }
+handler = { path = "../pi_lib/handler" }
+file = { path = "../pi_lib/file" }
+gray = {path = "../pi_lib/gray" }
+guid = {path = "../pi_lib/guid" }
+guid64 = {path = "../pi_lib/guid64" }
+util = {path = "../pi_lib/util" }
+timer = {path = "../pi_lib/timer" }
