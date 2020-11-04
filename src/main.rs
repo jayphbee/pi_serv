@@ -302,7 +302,7 @@ async fn async_main(
     register_ext_functions();
 
     // 注册文件异步运行时
-    set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
+    set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
@@ -338,7 +338,7 @@ async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
             "Init_Vm_Init_module.js",
             r#"
                     onerror = function(e) {
-                        console.log("catch global error, e:", e.stack);
+                        print("catch global error, e:", e.stack);
                     };
                 "#,
         )
