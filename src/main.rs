@@ -1,5 +1,5 @@
 #![allow(unused_imports)]
- 
+
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -306,7 +306,7 @@ async fn async_main(
     register_ext_functions();
 
     // 注册文件异步运行时
-    set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone()).await;
+    set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
     let pi_serv_handle = PiServNetHandle {
         bind_mqtt_tcp_port: bind_mqtt_tcp_port,
         start_network_services: start_network_services,
@@ -314,7 +314,7 @@ async fn async_main(
         config_certificate: config_certificate,
     };
     // 注入pi_ser_net方法到pi_serv_lib
-    set_pi_ser_handle(pi_serv_handle).await;
+    set_pi_ser_handle(pi_serv_handle);
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
@@ -350,7 +350,7 @@ async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
             "Init_Vm_Init_module.js",
             r#"
                     onerror = function(e) {
-                        console.log("catch global error, e:", e.stack);
+                        print("catch global error, e:", e.stack);
                     };
                 "#,
         )
