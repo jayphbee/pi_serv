@@ -43,6 +43,7 @@ use vm_builtin::process::{process_close, process_send, process_spawn, Pid, Proce
 use vm_builtin::ContextHandle;
 use vm_core::vm::{send_to_process, Vm};
 
+use crate::create_init_vm;
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -72,7 +73,7 @@ lazy_static! {
     static ref SECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     static ref INSECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     static ref BROKER_TOPICS: Arc<RwLock<FnvHashMap<String, FnvHashSet<String>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
-    static ref BUILD_LISTENER_TAB: Arc<RwLock<FnvHashMap<u16, Pid>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    static ref BUILD_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, Pid>>> = Arc::new(RwLock::new(FnvHashMap::default()));
 }
 
 struct InsecureServices(
@@ -108,6 +109,10 @@ unsafe impl Sync for InsecureServices {}
 unsafe impl Send for SecureServices {}
 unsafe impl Sync for SecureServices {}
 
+fn get_pid(broker_name: &String) -> Pid {
+    BUILD_LISTENER_TAB.read().get(broker_name).cloned().unwrap()
+}
+
 // Mqtt连接和关闭连接处理
 #[derive(Clone)]
 struct MqttConnectHandler {}
@@ -138,8 +143,6 @@ impl Handler for MqttConnectHandler {
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
         let connect_id = connect.get_id();
         let port = connect.get_local_port().unwrap();
-        // 获取listenerPID TODO 异常处理
-        let pid = BUILD_LISTENER_TAB.read().get(&port).cloned().unwrap();
         match args {
             Args::OneArgs(MqttEvent::Connect(
                 socket_id,
@@ -151,6 +154,7 @@ impl Handler for MqttConnectHandler {
                 pwd,
                 result,
             )) => {
+                let pid = get_pid(&broker_name);
                 //处理Mqtt连接
                 let mqtt_connection = MqttConnection::new(
                     connect,
@@ -166,16 +170,19 @@ impl Handler for MqttConnectHandler {
                 let json_object = object! {
                     "connection" => mqtt_connection_ptr,
                     "mqtt_event" => "connect",
-                    "broker_name" => broker_name
+                    "broker_name" => broker_name,
+                    "socket_id" => socket_id,
                 };
                 let data_str = json_object.dump();
                 // listenerPID发送消息
                 send_to_process(None, pid, ProcessMsg::String(data_str));
             }
             Args::OneArgs(MqttEvent::Disconnect(socket_id, broker_name, client_id, reason)) => {
+                let pid = get_pid(&broker_name);
                 //处理Mqtt连接关闭
                 let json_object = object! {
                     "mqtt_event" => "disconnect",
+                    "socket_id" => socket_id,
                 };
                 let data_str = json_object.dump();
                 // listenerPID发送消息
@@ -213,10 +220,10 @@ impl Handler for MqttRequestHandler {
         _topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
-        // 从会话中获取会话PID TODO 异常处理
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
         let session = connect.get_session().unwrap();
         let context = session.as_ref().get_context();
+        // 获取会话中的pid  TODO当前的vm不存在，应该从灰度中获取vm实例，等接口完成后再修改
         let (pid, vm) = context.get::<(Pid, Vm)>().unwrap().as_ref().clone();
         let vm_copy = vm.clone();
         let context_v8 = ContextHandle(pid.1);
@@ -304,11 +311,40 @@ impl Handler for MqttRequestHandler {
     }
 }
 
+// 创建listenerPID
+fn create_listener_pid(port: u16, broker_name: &String) {
+    // 判断pid是否存在
+    // BUILD_LISTENER_TAB.read().get(broker_name)
+    if let None = BUILD_LISTENER_TAB.read().get(broker_name) {
+        // 获取基础灰度对应的vm列表 TODO
+        // 更加port取余分配vm TODO
+        let vm = create_init_vm(11, 111, None);
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy
+                .execute(
+                    context,
+                    "start_listener_pid.js",
+                    r#"
+            (<any>self)._$listener_set_receive();"#,
+                )
+                .await
+            {
+                panic!(e);
+            }
+        });
+        BUILD_LISTENER_TAB
+            .write()
+            .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
+    }
+}
+
 // 绑定mqtt监听器
 pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String, broker_name: String) {
-    println!("!!!!!!!!!!!bind_mqtt_tcp_port:{:?}", port);
-    // TODO 创建listenerPID
-
+    // 创建listenerPID
+    create_listener_pid(port, &broker_name);
     let event_handler = Arc::new(MqttConnectHandler::new());
     let rpc_handler = Arc::new(MqttRequestHandler::new());
     let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));
@@ -1113,12 +1149,20 @@ pub fn parse_http_config(jstr: String) {
                     Some(ip) => {
                         // 如果是 https 配置, 不要用 ip 替换
                         if http_port {
-                            config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
+                            config["virtualHost"]
+                                .members()
+                                .map(|s| s.to_string())
+                                .collect::<Vec<String>>()
                         } else {
-                            ip.split(";").map(|s| s.to_string()).collect::<Vec<String>>()
+                            ip.split(";")
+                                .map(|s| s.to_string())
+                                .collect::<Vec<String>>()
                         }
                     }
-                    None => config["virtualHost"].members().map(|s|s.to_string()).collect::<Vec<String>>()
+                    None => config["virtualHost"]
+                        .members()
+                        .map(|s| s.to_string())
+                        .collect::<Vec<String>>(),
                 };
 
                 let mut static_cache_collect_time: u64 = 0;
@@ -1129,10 +1173,14 @@ pub fn parse_http_config(jstr: String) {
                         "maxSize" => static_cache_max_size = val.as_usize().unwrap(),
                         "maxLen" => static_cache_max_len = val.as_usize().unwrap(),
                         "collectTime" => static_cache_collect_time = val.as_u64().unwrap(),
-                        _ => warn!("unknown field")
+                        _ => warn!("unknown field"),
                     }
                 }
-                http_config.config_static_cache(static_cache_max_size, static_cache_max_len, static_cache_collect_time);
+                http_config.config_static_cache(
+                    static_cache_max_size,
+                    static_cache_max_len,
+                    static_cache_collect_time,
+                );
 
                 http_config.config_cors(config["CORS"].as_bool().unwrap());
 
@@ -1140,7 +1188,10 @@ pub fn parse_http_config(jstr: String) {
                     let scheme = cors_allow["scheme"].as_str().unwrap().to_string();
                     let host = cors_allow["host"].as_str().unwrap().to_string();
                     let port = cors_allow["port"].as_u16().unwrap();
-                    let methods = cors_allow["methods"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                    let methods = cors_allow["methods"]
+                        .members()
+                        .map(|s| s.to_string())
+                        .collect::<Vec<String>>();
                     let max_age = cors_allow["maxAge"].as_usize();
 
                     // 如果配置了环境变量PTCONFIG_IP，则需要新增跨域规则
@@ -1148,7 +1199,13 @@ pub fn parse_http_config(jstr: String) {
                         // 非https跨域配置
                         if !http_port {
                             for ip in ips.split(";") {
-                                let c = CorsAllow::new(scheme.clone(), ip.to_string(), port, methods.clone(), max_age);
+                                let c = CorsAllow::new(
+                                    scheme.clone(),
+                                    ip.to_string(),
+                                    port,
+                                    methods.clone(),
+                                    max_age,
+                                );
                                 http_config.add_cors_allow(c);
                             }
                         }
@@ -1156,10 +1213,11 @@ pub fn parse_http_config(jstr: String) {
                     let c = CorsAllow::new(scheme, host, port, methods, max_age);
                     http_config.add_cors_allow(c);
                 }
-                
+
                 let port = config["port"].as_u16().unwrap();
                 http_config.bind_http_port(port);
-                http_config.config_set_keep_alive_timeout(config["keepAliveTimeout"].as_usize().unwrap());
+                http_config
+                    .config_set_keep_alive_timeout(config["keepAliveTimeout"].as_usize().unwrap());
 
                 let mut parser_min_plain_text_size: usize = 0;
                 let mut parse_compress_level: Option<u32> = None;
@@ -1167,7 +1225,7 @@ pub fn parse_http_config(jstr: String) {
                     match key {
                         "minPlainTextSize" => parser_min_plain_text_size = val.as_usize().unwrap(),
                         "compressLevel" => parse_compress_level = val.as_u32(),
-                        _ => warn!("unknown field")
+                        _ => warn!("unknown field"),
                     }
                 }
                 http_config.config_parser(parser_min_plain_text_size, parse_compress_level);
@@ -1176,7 +1234,7 @@ pub fn parse_http_config(jstr: String) {
                 for (key, val) in config["mutilParts"].entries() {
                     match key {
                         "blockSize" => multi_parts_block_size = val.as_usize().unwrap(),
-                        _ => warn!("unknown field")
+                        _ => warn!("unknown field"),
                     }
                 }
                 http_config.config_multi_parts(multi_parts_block_size);
@@ -1189,10 +1247,14 @@ pub fn parse_http_config(jstr: String) {
                         "location" => file_load_location = val.as_str().unwrap().to_string(),
                         "needCache" => file_load_need_cache = val.as_bool().unwrap(),
                         "maxAge" => file_load_max_age = val.as_usize().unwrap(),
-                        _ => warn!("unknown field {:?}", key)
+                        _ => warn!("unknown field {:?}", key),
                     }
                 }
-                http_config.config_file_load(file_load_location, file_load_need_cache, file_load_max_age);
+                http_config.config_file_load(
+                    file_load_location,
+                    file_load_need_cache,
+                    file_load_max_age,
+                );
 
                 let mut files_load_location: String = "".to_string();
                 let mut files_load_need_cache: bool = false;
@@ -1202,10 +1264,14 @@ pub fn parse_http_config(jstr: String) {
                         "location" => files_load_location = val.as_str().unwrap().to_string(),
                         "needCache" => files_load_need_cache = val.as_bool().unwrap(),
                         "maxAge" => files_load_max_age = val.as_usize().unwrap(),
-                        _ => warn!("unknown field {:?}", key)
+                        _ => warn!("unknown field {:?}", key),
                     }
                 }
-                http_config.config_files_load(files_load_location, files_load_need_cache, files_load_max_age);
+                http_config.config_files_load(
+                    files_load_location,
+                    files_load_need_cache,
+                    files_load_max_age,
+                );
 
                 let mut batch_load_location: String = "".to_string();
                 let mut batch_load_need_cache: bool = false;
@@ -1215,41 +1281,67 @@ pub fn parse_http_config(jstr: String) {
                         "location" => batch_load_location = val.as_str().unwrap().to_string(),
                         "needCache" => batch_load_need_cache = val.as_bool().unwrap(),
                         "maxAge" => batch_load_max_age = val.as_usize().unwrap(),
-                        _ => warn!("unknown field {:?}", key)
+                        _ => warn!("unknown field {:?}", key),
                     }
                 }
-                http_config.config_batch_load(batch_load_location, batch_load_need_cache, batch_load_max_age);
+                http_config.config_batch_load(
+                    batch_load_location,
+                    batch_load_need_cache,
+                    batch_load_max_age,
+                );
 
                 for (key, val) in config["uploadFile"].entries() {
                     match key {
-                        "location" => http_config.config_upload_file(val.as_str().unwrap().to_string()),
-                        _ => warn!("unknown field {:?}", key)
+                        "location" => {
+                            http_config.config_upload_file(val.as_str().unwrap().to_string())
+                        }
+                        _ => warn!("unknown field {:?}", key),
                     }
                 }
 
                 for route in config["routeTable"].members() {
                     let endpoint = route["endpoint"].as_str().unwrap().to_string();
-                    let methods = route["methods"].members().map(|s|s.to_string()).collect::<Vec<String>>();
+                    let methods = route["methods"]
+                        .members()
+                        .map(|s| s.to_string())
+                        .collect::<Vec<String>>();
                     let handler_name = route["handlerName"].as_str().unwrap().to_string();
-                    http_config.add_route_for_hosts(virtual_host.clone(), endpoint, methods, handler_name);
+                    http_config.add_route_for_hosts(
+                        virtual_host.clone(),
+                        endpoint,
+                        methods,
+                        handler_name,
+                    );
                 }
                 debug!("parsed http config ----- {:?}", http_config);
                 if http_port {
-                    SECURE_HTTP_CONFIGS.write().entry(port).and_modify(|configs| configs.push(http_config.clone())).or_insert(vec![http_config]);
+                    SECURE_HTTP_CONFIGS
+                        .write()
+                        .entry(port)
+                        .and_modify(|configs| configs.push(http_config.clone()))
+                        .or_insert(vec![http_config]);
                 } else {
-                    INSECURE_HTTP_CONFIGS.write().entry(port).and_modify(|configs| configs.push(http_config.clone())).or_insert(vec![http_config]);
+                    INSECURE_HTTP_CONFIGS
+                        .write()
+                        .entry(port)
+                        .and_modify(|configs| configs.push(http_config.clone()))
+                        .or_insert(vec![http_config]);
                 }
-
             }
         }
 
         Err(e) => {
-            panic!("JSON parse error, please make sure it is a json string: {:?}, error: {:?}", jstr, e);
+            panic!(
+                "JSON parse error, please make sure it is a json string: {:?}, error: {:?}",
+                jstr, e
+            );
         }
     }
 }
 
 // 配置证书
 pub fn config_certificate(port: u16, cert_path: String, priv_key_path: String) {
-    CERTIFICATES.write().insert(port, (cert_path, priv_key_path));
+    CERTIFICATES
+        .write()
+        .insert(port, (cert_path, priv_key_path));
 }
