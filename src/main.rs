@@ -4,6 +4,8 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate json;
 
 use std::path::{Path, PathBuf};
 use std::sync::{
@@ -35,12 +37,14 @@ use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
-use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_ext::register_ext_functions;
+use pi_serv_lib::set_pi_serv_lib_file_runtime;
 
 mod init;
+mod js_net;
 
 use init::init_js;
+use js_net::reg_pi_serv_handle;
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
@@ -303,6 +307,8 @@ async fn async_main(
 
     // 注册文件异步运行时
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
+    // 注册pi_serv方法
+    reg_pi_serv_handle();
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
