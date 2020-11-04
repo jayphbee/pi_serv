@@ -3,6 +3,7 @@ use std::fs::{copy, create_dir_all};
 use std::path::PathBuf;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
+    mpsc::{channel, Receiver, Sender},
     Arc,
 };
 use std::thread;
@@ -154,8 +155,7 @@ fn main() {
         panic!("Require set for PI_JS_PROXY_TS_PATH");
     };
 
-    let is_finish = Arc::new(AtomicBool::new(false));
-    let is_finish_copy = is_finish.clone();
+    let (sender, receiver) = channel();
     spawn(async move {
         match parse_crates(ext_crates).await {
             Err(e) => panic!("Parse ext crates failed, reason: {:#?}", e),
@@ -171,13 +171,13 @@ fn main() {
                 {
                     panic!("Generate proxy crate failed, reason: {:#?}", e);
                 } else {
-                    is_finish_copy.store(true, Ordering::SeqCst);
+                    sender.send(true);
                 }
             }
         }
     });
 
-    while !is_finish.load(Ordering::Relaxed) {
-        thread::sleep(Duration::from_millis(500));
+    if let Err(e) = receiver.recv() {
+        panic!("Generate proxy crate failed, reaosn: {:?}", e);
     }
 }
