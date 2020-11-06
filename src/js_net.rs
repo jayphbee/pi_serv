@@ -41,7 +41,7 @@ use rusty_v8 as v8;
 use vm_builtin::buffer::NativeArrayBuffer;
 use vm_builtin::process::{process_close, process_send, process_spawn, Pid, ProcessMsg};
 use vm_builtin::ContextHandle;
-use vm_core::vm::{send_to_process, Vm};
+use vm_core::vm::{send_to_process, JSValue, Vm};
 
 use crate::create_init_vm;
 use hash::XHashMap;
@@ -62,11 +62,12 @@ use http::static_cache::StaticCache;
 use http::upload::UploadFile;
 use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
-use pi_serv_lib::js_net::MqttConnection;
+use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
 
 lazy_static! {
-    // static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // http Rpc
+    static ref HTTP_ENDPOINT: Arc<RwLock<FnvHashMap<String, String>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     // https
     static ref SECURE_SERVICES: Arc<RwLock<Vec<SecureServices>>> = Arc::new(RwLock::new(vec![]));
     // http
@@ -77,9 +78,12 @@ lazy_static! {
     static ref SECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     // http配置
     static ref INSECURE_HTTP_CONFIGS: Arc<RwLock<FnvHashMap<u16, Vec<HttpConfig>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
-    // static ref BROKER_TOPICS: Arc<RwLock<FnvHashMap<String, FnvHashSet<String>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // 记录mqtt mroker中包含的topic
+    static ref BROKER_TOPICS: Arc<RwLock<FnvHashMap<String, FnvHashSet<String>>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     // mqtt名称绑定listenerPID
     static ref BUILD_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, Pid>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // http端口绑定listenerPID
+    static ref BUILD_HTTP_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, (Pid, Vm)>>> = Arc::new(RwLock::new(FnvHashMap::default()));
 }
 
 // 注册pi_ser方法
@@ -89,11 +93,13 @@ pub fn reg_pi_serv_handle() {
         start_network_services: start_network_services,
         parse_http_config: parse_http_config,
         config_certificate: config_certificate,
+        broker_has_topic: broker_has_topic,
+        register_http_endpoint: register_http_endpoint,
+        get_http_endpoint: get_http_endpoint,
     };
     // 注入pi_ser_net方法到pi_serv_lib
     set_pi_serv_handle(pi_serv_handle);
 }
-
 
 struct InsecureServices(
     (
@@ -130,6 +136,11 @@ unsafe impl Sync for SecureServices {}
 
 fn get_pid(broker_name: &String) -> Pid {
     BUILD_LISTENER_TAB.read().get(broker_name).cloned().unwrap()
+}
+
+// 获取http对应的pid
+fn get_http_pid(host: &String) -> (Pid, Vm) {
+    BUILD_HTTP_LISTENER_TAB.read().get(host).cloned().unwrap()
 }
 
 // Mqtt连接和关闭连接处理
@@ -330,6 +341,24 @@ impl Handler for MqttRequestHandler {
     }
 }
 
+// 判断broker中是否包含rpc topic
+pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
+    if let Some(set) = BROKER_TOPICS.read().get(&broker_name) {
+        if let Some(_) = set.get(&topic) {
+            return true;
+        }
+    }
+
+    // 是否在全局broker name
+    if let Some(set) = BROKER_TOPICS.read().get("*") {
+        if let Some(_) = set.get(&topic) {
+            return true;
+        }
+    }
+
+    false
+}
+
 // 创建listenerPID
 fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
@@ -357,6 +386,27 @@ fn create_listener_pid(port: u16, broker_name: &String) {
         BUILD_LISTENER_TAB
             .write()
             .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
+    }
+}
+
+// 创建httpPID（每host一个）
+fn create_http_pid(host: String) {
+    // 判断pid是否存在
+    if let None = BUILD_HTTP_LISTENER_TAB.read().get(&host) {
+        // 获取基础灰度对应的vm列表 TODO
+        // 更加port取余分配vm TODO
+        let vm = create_init_vm(11, 111, None);
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
+                panic!(e);
+            }
+        });
+        BUILD_HTTP_LISTENER_TAB
+            .write()
+            .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
     }
 }
 
@@ -388,6 +438,12 @@ pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String, broker_nam
     register_service(&broker_name, service);
 }
 
+// httpMsg包装
+#[derive(Clone)]
+struct HttpMsg(pub Arc<RefCell<XHashMap<String, SGenType>>>);
+
+unsafe impl Send for HttpMsg {}
+
 #[derive(Clone)]
 pub struct SecureHttpRpcRequestHandler {}
 
@@ -418,6 +474,44 @@ impl Handler for InsecureHttpRpcRequstHandler {
         topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
+        match args {
+            Args::FourArgs(addr, headers, msg, handler) => {
+                let (pid, vm) = get_http_pid(&addr.to_string());
+                let vm_copy = vm.clone();
+                // v8上下文环境
+                let context_v8 = ContextHandle(pid.1);
+                //  http连接
+                let mut http_connect = HttpConnect::new(addr);
+                http_connect.set_insecure_resp_handle(handler);
+                let con_ptr = Box::into_raw(Box::new(http_connect)) as usize;
+                // http请求头
+                let http_header = HttpHeaders::new(headers);
+                let handlers_ptr = Box::into_raw(Box::new(http_header)) as usize;
+                let msg = HttpMsg(msg);
+                let topic = (*topic).clone();
+                vm.spawn_task(async move {
+                    let headers = vm_copy
+                        .new_js_number(context_v8, handlers_ptr as f64)
+                        .await
+                        .unwrap();
+                    let http_con = vm_copy
+                        .new_js_number(context_v8, con_ptr as f64)
+                        .await
+                        .unwrap();
+                    let topic = vm_copy
+                        .new_js_string(context_v8, Some(topic))
+                        .await
+                        .unwrap();
+                    let data = set_data(&vm_copy, &context_v8, msg).await;
+                    vm_copy.callback(
+                        context_v8,
+                        "_$http_rpc",
+                        vec![http_con, headers, topic, data],
+                    );
+                });
+            }
+            _ => panic!("invalid HttpRpcRequestHandler handler args"),
+        }
     }
 }
 
@@ -445,7 +539,88 @@ impl Handler for SecureHttpRpcRequestHandler {
         topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
+        match args {
+            Args::FourArgs(addr, headers, msg, handler) => {
+                let (pid, vm) = get_http_pid(&addr.to_string());
+                let vm_copy = vm.clone();
+                // v8上下文环境
+                let context_v8 = ContextHandle(pid.1);
+                //  http连接
+                let mut http_connect = HttpConnect::new(addr);
+                http_connect.set_secure_resp_handle(handler);
+                let con_ptr = Box::into_raw(Box::new(http_connect)) as usize;
+                // http请求头
+                let http_header = HttpHeaders::new(headers);
+                let handlers_ptr = Box::into_raw(Box::new(http_header)) as usize;
+                let msg = HttpMsg(msg);
+                let topic = (*topic).clone();
+                vm.spawn_task(async move {
+                    let headers = vm_copy
+                        .new_js_number(context_v8, handlers_ptr as f64)
+                        .await
+                        .unwrap();
+                    let http_con = vm_copy
+                        .new_js_number(context_v8, con_ptr as f64)
+                        .await
+                        .unwrap();
+                    let topic = vm_copy
+                        .new_js_string(context_v8, Some(topic))
+                        .await
+                        .unwrap();
+                    let data = set_data(&vm_copy, &context_v8, msg).await;
+                    vm_copy.callback(
+                        context_v8,
+                        "_$http_rpc",
+                        vec![http_con, headers, topic, data],
+                    );
+                });
+            }
+            _ => panic!("invalid HttpRpcRequestHandler handler args"),
+        }
     }
+}
+
+// 设置http请求参数
+async fn set_data(vm: &Vm, context: &ContextHandle, msg: HttpMsg) -> JSValue {
+    let vm = vm.clone();
+    let context = context.clone();
+    let data = vm.new_js_object(context).await.unwrap();
+    let values: Vec<(String, SGenType)> = msg
+        .0
+        .borrow()
+        .iter()
+        .map(|(key, val)| (key.clone(), val.clone()))
+        .collect();
+    for (key, val) in values {
+        match val {
+            SGenType::Str(s) => {
+                let str = vm.new_js_string(context, Some(s)).await.unwrap();
+                data.set(context, &key, str);
+            }
+            SGenType::Bin(bin) => {
+                let buf = NativeArrayBuffer::from(bin.into_boxed_slice());
+                let bin = vm
+                    .native_buffer_to_js_array_buffer(context, &buf)
+                    .await
+                    .unwrap();
+                data.set(context, &key, bin);
+            }
+            _ => {
+                unimplemented!();
+            }
+        }
+    }
+    data
+}
+
+// 注册http rpc
+pub fn register_http_endpoint(key: String, val: String) {
+    HTTP_ENDPOINT.write().insert(key, val);
+}
+
+// 获取http Rpc
+pub fn get_http_endpoint(key: &str) -> Option<String> {
+    HTTP_ENDPOINT.read().get(key).cloned()
 }
 
 impl SecureHttpRpcRequestHandler {
