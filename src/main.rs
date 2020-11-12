@@ -130,15 +130,17 @@ fn main() {
 
     //初始化V8环境，并启动初始虚拟机
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
-    let init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
+    let mut init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
+    let init_vm_runner = init_vm.take_runner().unwrap();
 
     //主线程循环
     let matches_copy = matches.clone();
-    let init_vm_copy = init_vm.clone();
     if let Err(e) = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
+        let init_vm = init_vm.init().unwrap();
+
         async_main(
             matches_copy,
-            init_vm_copy,
+            init_vm,
             init_heap_size,
             max_heap_size,
             debug_port,
@@ -147,6 +149,7 @@ fn main() {
     }) {
         panic!("Spawn async main task failed, reason: {:?}", e);
     }
+
     while MAIN_RUN_STATUS.load(Ordering::Relaxed) {
         //推动主线程异步运行时
         if let Err(e) = MAIN_ASYNC_RUNNER.run() {
@@ -154,9 +157,9 @@ fn main() {
         }
 
         //推动初始虚拟机
-        let run_time = init_vm.run();
+        let run_time = init_vm_runner.run();
 
-        if MAIN_ASYNC_RUNTIME.len() == 0 && init_vm.queue_len() == 0 {
+        if MAIN_ASYNC_RUNTIME.len() == 0 && init_vm_runner.queue_len() == 0 {
             //当前没有主线程任务，则休眠主线程
             let (is_sleep, lock, condvar) = &**MAIN_CONDVAR;
             let mut locked = lock.lock();
@@ -280,7 +283,11 @@ fn init_v8_env(matches: &ArgMatches) -> (usize, usize, Option<u16>) {
 }
 
 //创建初始虚拟机
-fn create_init_vm(init_heap_size: usize, max_heap_size: usize, debug_port: Option<u16>) -> vm::Vm {
+fn create_init_vm(
+    init_heap_size: usize,
+    max_heap_size: usize,
+    debug_port: Option<u16>,
+) -> vm::UninitedVm {
     let mut builder = vm::VmBuilder::new().snapshot_template();
     builder = builder.heap_limit(init_heap_size, max_heap_size);
 
@@ -398,15 +405,15 @@ fn init_work_vm(
             //允许调试
             builder = builder.enable_inspect();
         }
-        let work_vm = builder.build();
-        let work_vm_copy = work_vm.clone();
+        let mut work_vm = builder.build();
+        let work_vm_runner = work_vm.take_runner().unwrap();
 
         //启动工作线程，并运行工作虚拟机
         let worker_name = "PI-SERV-WORKER".to_string() + index.to_string().as_str();
         info!(
             "Worker ready, thread: {}, worker: {}",
             worker_name,
-            "Vm-".to_string() + work_vm.get_vid().to_string().as_str()
+            "Vm-".to_string() + work_vm_runner.get_vid().to_string().as_str()
         );
 
         let worker_handle = worker::spawn_worker_thread(
@@ -416,12 +423,13 @@ fn init_work_vm(
             1000,
             Some(10),
             move || {
-                let run_time = work_vm.run();
-                (work_vm.queue_len() == 0, run_time)
+                let run_time = work_vm_runner.run();
+                (work_vm_runner.queue_len() == 0, run_time)
             },
         );
 
-        vec.push((worker_handle, work_vm_copy));
+        let work_vm = work_vm.init().unwrap();
+        vec.push((worker_handle, work_vm));
     }
 
     vec

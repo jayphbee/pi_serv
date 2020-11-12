@@ -44,6 +44,7 @@ use vm_builtin::ContextHandle;
 use vm_core::vm::{send_to_process, JSValue, Vm};
 
 use crate::create_init_vm;
+use crate::FILES_ASYNC_RUNTIME;
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -64,7 +65,6 @@ use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
-use crate::FILES_ASYNC_RUNTIME;
 
 lazy_static! {
     // http Rpc
@@ -367,7 +367,8 @@ fn create_listener_pid(port: u16, broker_name: &String) {
     if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
         // 获取基础灰度对应的vm列表 TODO
         // 更加port取余分配vm TODO
-        let vm = create_init_vm(11, 111, None);
+        let mut vm = create_init_vm(11, 111, None);
+        let vm = vm.init().unwrap();
         let vm_copy = vm.clone();
         let cid = vm.alloc_context_id();
         vm.spawn_task(async move {
@@ -396,7 +397,8 @@ fn create_http_pid(host: String) {
     if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
         // 获取基础灰度对应的vm列表 TODO
         // 更加port取余分配vm TODO
-        let vm = create_init_vm(11, 111, None);
+        let mut vm = create_init_vm(11, 111, None);
+        let vm = vm.init().unwrap();
         let vm_copy = vm.clone();
         let cid = vm.alloc_context_id();
         vm.spawn_task(async move {
@@ -1179,7 +1181,10 @@ fn build_service<S: SocketTrait + StreamTrait>(
             ));
         }
 
-        let upload = Arc::new(UploadFile::new(FILES_ASYNC_RUNTIME.clone(),http_config.upload_file_location.clone()));
+        let upload = Arc::new(UploadFile::new(
+            FILES_ASYNC_RUNTIME.clone(),
+            http_config.upload_file_location.clone(),
+        ));
 
         //构建处理CORS的Options方法的请求的中间件链
         let mut chain = MiddlewareChain::new();
