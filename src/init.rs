@@ -5,8 +5,8 @@ use vm_builtin::ContextHandle;
 use vm_core::vm;
 
 use std::env;
-use std::path::{Path, PathBuf};
 use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
 
 pub async fn init_js(init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches<'static>) {
     let init_exec_path = matches.value_of("init-file").unwrap().to_string();
@@ -39,7 +39,10 @@ pub async fn init_js(init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches
 
     let cur_dir = env::current_dir();
 
-    info!("current dir: {:?}, projects: {:?}, init-file path: {:?}", cur_dir, projs, init_exec_path);
+    info!(
+        "current dir: {:?}, projects: {:?}, init-file path: {:?}",
+        cur_dir, projs, init_exec_path
+    );
 
     // 如果没有出现 -p 参数
     if matches.occurrences_of("projects") == 0 {
