@@ -360,57 +360,57 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
     false
 }
 
-// 创建listenerPID
+// TODO: 创建listenerPID
 fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
     // BUILD_LISTENER_TAB.read().get(broker_name)
-    if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
-        // 获取基础灰度对应的vm列表 TODO
-        // 更加port取余分配vm TODO
-        let mut vm = create_init_vm(11, 111, None);
-        let vm = vm.init().unwrap();
-        let vm_copy = vm.clone();
-        let cid = vm.alloc_context_id();
-        vm.spawn_task(async move {
-            let context = vm_copy.new_context(None, cid, None).await.unwrap();
-            if let Err(e) = vm_copy
-                .execute(
-                    context,
-                    "start_listener_pid.js",
-                    r#"
-            (<any>self)._$listener_set_receive();"#,
-                )
-                .await
-            {
-                panic!(e);
-            }
-        });
-        BUILD_LISTENER_TAB
-            .write()
-            .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
-    }
+    // if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
+    //     // 获取基础灰度对应的vm列表 TODO
+    //     // 更加port取余分配vm TODO
+    //     let mut vm = create_init_vm(11, 111, None);
+    //     let vm = vm.init().unwrap();
+    //     let vm_copy = vm.clone();
+    //     let cid = vm.alloc_context_id();
+    //     vm.spawn_task(async move {
+    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
+    //         if let Err(e) = vm_copy
+    //             .execute(
+    //                 context,
+    //                 "start_listener_pid.js",
+    //                 r#"
+    //         (<any>self)._$listener_set_receive();"#,
+    //             )
+    //             .await
+    //         {
+    //             panic!(e);
+    //         }
+    //     });
+    //     BUILD_LISTENER_TAB
+    //         .write()
+    //         .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
+    // }
 }
 
-// 创建httpPID（每host一个）
+// TODO: 创建httpPID（每host一个）
 fn create_http_pid(host: String) {
     // 判断pid是否存在
-    if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
-        // 获取基础灰度对应的vm列表 TODO
-        // 更加port取余分配vm TODO
-        let mut vm = create_init_vm(11, 111, None);
-        let vm = vm.init().unwrap();
-        let vm_copy = vm.clone();
-        let cid = vm.alloc_context_id();
-        vm.spawn_task(async move {
-            let context = vm_copy.new_context(None, cid, None).await.unwrap();
-            if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
-                panic!(e);
-            }
-        });
-        BUILD_HTTP_LISTENER_TAB
-            .write()
-            .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
-    }
+    // if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
+    //     // 获取基础灰度对应的vm列表 TODO
+    //     // 更加port取余分配vm TODO
+    //     let mut vm = create_init_vm(11, 111, None);
+    //     let vm = vm.init().unwrap();
+    //     let vm_copy = vm.clone();
+    //     let cid = vm.alloc_context_id();
+    //     vm.spawn_task(async move {
+    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
+    //         if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
+    //             panic!(e);
+    //         }
+    //     });
+    //     BUILD_HTTP_LISTENER_TAB
+    //         .write()
+    //         .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
+    // }
 }
 
 // 绑定mqtt监听器
