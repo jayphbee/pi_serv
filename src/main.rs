@@ -13,7 +13,7 @@ use std::sync::{
     Arc,
 };
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
@@ -133,13 +133,25 @@ fn main() {
     let mut init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
     let init_vm_runner = init_vm.take_runner().unwrap();
 
-    //主线程循环
+    //启动初始虚拟机线程，并运行初始虚拟机
+    let init_vm_handle = worker::spawn_worker_thread(
+        "Init-Vm",
+        2 * 1024 * 1024,
+        Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
+        1000,
+        Some(10),
+        move || {
+            let run_time = init_vm_runner.run();
+            (init_vm_runner.queue_len() == 0, run_time)
+        },
+    );
+
+    let init_vm = init_vm.init().unwrap();
     let matches_copy = matches.clone();
     if let Err(e) = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
-        let init_vm = init_vm.init().unwrap();
-
         async_main(
             matches_copy,
+            init_vm_handle,
             init_vm,
             init_heap_size,
             max_heap_size,
@@ -150,16 +162,16 @@ fn main() {
         panic!("Spawn async main task failed, reason: {:?}", e);
     }
 
+    //主线程循环
     while MAIN_RUN_STATUS.load(Ordering::Relaxed) {
         //推动主线程异步运行时
+        let start_time = Instant::now();
         if let Err(e) = MAIN_ASYNC_RUNNER.run() {
             panic!("Main loop failed, reason: {:?}", e);
         }
+        let run_time = Instant::now() - start_time;
 
-        //推动初始虚拟机
-        let run_time = init_vm_runner.run();
-
-        if MAIN_ASYNC_RUNTIME.len() == 0 && init_vm_runner.queue_len() == 0 {
+        if MAIN_ASYNC_RUNTIME.len() == 0 {
             //当前没有主线程任务，则休眠主线程
             let (is_sleep, lock, condvar) = &**MAIN_CONDVAR;
             let mut locked = lock.lock();
@@ -304,6 +316,7 @@ fn create_init_vm(
 */
 async fn async_main(
     matches: ArgMatches<'static>,
+    init_vm_handle: Arc<AtomicBool>,
     init_vm: vm::Vm,
     init_heap_size: usize,
     max_heap_size: usize,
