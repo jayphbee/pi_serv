@@ -13,7 +13,7 @@ use std::sync::{
     Arc,
 };
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
@@ -134,13 +134,25 @@ fn main() {
     let mut init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
     let init_vm_runner = init_vm.take_runner().unwrap();
 
-    //主线程循环
+    //启动初始虚拟机线程，并运行初始虚拟机
+    let init_vm_handle = worker::spawn_worker_thread(
+        "Init-Vm",
+        2 * 1024 * 1024,
+        Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
+        1000,
+        Some(10),
+        move || {
+            let run_time = init_vm_runner.run();
+            (init_vm_runner.queue_len() == 0, run_time)
+        },
+    );
+
+    let init_vm = init_vm.init().unwrap();
     let matches_copy = matches.clone();
     if let Err(e) = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
-        let init_vm = init_vm.init().unwrap();
-
         async_main(
             matches_copy,
+            init_vm_handle,
             init_vm,
             init_heap_size,
             max_heap_size,
@@ -151,41 +163,20 @@ fn main() {
         panic!("Spawn async main task failed, reason: {:?}", e);
     }
 
+    //主线程循环
     while MAIN_RUN_STATUS.load(Ordering::Relaxed) {
         //推动主线程异步运行时
+        let start_time = Instant::now();
         if let Err(e) = MAIN_ASYNC_RUNNER.run() {
             panic!("Main loop failed, reason: {:?}", e);
         }
+        let run_time = Instant::now() - start_time;
 
-        //推动初始虚拟机
-        let run_time = init_vm_runner.run();
-
-        if MAIN_ASYNC_RUNTIME.len() == 0 && init_vm_runner.queue_len() == 0 {
-            //当前没有主线程任务，则休眠主线程
-            let (is_sleep, lock, condvar) = &**MAIN_CONDVAR;
-            let mut locked = lock.lock();
-            if !is_sleep.load(Ordering::Relaxed) {
-                //如果当前未休眠，则休眠
-                is_sleep.store(true, Ordering::SeqCst);
-                if condvar
-                    .wait_for(
-                        &mut locked,
-                        Duration::from_millis(*MAIN_CONDITION_SLEEP_TIMEOUT),
-                    )
-                    .timed_out()
-                {
-                    //条件超时唤醒，则设置状态为未休眠
-                    is_sleep.store(false, Ordering::SeqCst);
-                }
-            }
-        } else {
-            //当前主线程有任务
-            if let Some(remaining_interval) =
-                Duration::from_millis(*MAIN_UNCONDITION_SLEEP_TIMEOUT).checked_sub(run_time)
-            {
-                //本次运行少于循环间隔，则休眠剩余的循环间隔，并继续执行任务
-                thread::sleep(remaining_interval);
-            }
+        if let Some(remaining_interval) =
+            Duration::from_millis(*MAIN_UNCONDITION_SLEEP_TIMEOUT).checked_sub(run_time)
+        {
+            //本次运行少于循环间隔，则休眠剩余的循环间隔，并继续执行任务
+            thread::sleep(remaining_interval);
         }
     }
 }
@@ -305,6 +296,7 @@ fn create_init_vm(
 */
 async fn async_main(
     matches: ArgMatches<'static>,
+    init_vm_handle: Arc<AtomicBool>,
     init_vm: vm::Vm,
     init_heap_size: usize,
     max_heap_size: usize,
@@ -354,7 +346,11 @@ async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
             "Init_Vm_Init_module.js",
             r#"
                     onerror = function(e) {
-                        print("catch global error, e:", e.stack);
+                        if(e.stack) {
+                            print("catch global error, e:", e.stack);
+                        } else {
+                            print("catch global error, e:", e.message);     
+                        }
                     };
                 "#,
         )
