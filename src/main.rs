@@ -351,7 +351,11 @@ async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
             "Init_Vm_Init_module.js",
             r#"
                     onerror = function(e) {
-                        print("catch global error, e:", e.stack);
+                        if(e.stack) {
+                            print("catch global error, e:", e.stack);
+                        } else {
+                            print("catch global error, e:", e.message);     
+                        }
                     };
                 "#,
         )
