@@ -64,6 +64,7 @@ use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
+use crate::FILES_ASYNC_RUNTIME;
 
 lazy_static! {
     // http Rpc
@@ -1116,6 +1117,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.static_cache_collect_time,
             );
             file_load = Arc::new(FileLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.file_load_location.clone(),
                 Some(cache.clone()),
                 http_config.file_load_need_cache,
@@ -1125,6 +1127,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.file_load_max_age,
             ));
             files_load = Arc::new(FilesLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.files_load_location.clone(),
                 Some(cache.clone()),
                 http_config.files_load_need_cache,
@@ -1134,6 +1137,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.files_load_max_age,
             ));
             batch_load = Arc::new(BatchLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.batch_load_location.clone(),
                 Some(cache.clone()),
                 http_config.batch_load_need_cache,
@@ -1144,6 +1148,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
             ));
         } else {
             file_load = Arc::new(FileLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.file_load_location.clone(),
                 None,
                 http_config.file_load_need_cache,
@@ -1153,6 +1158,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.file_load_max_age,
             ));
             files_load = Arc::new(FilesLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.files_load_location.clone(),
                 None,
                 http_config.files_load_need_cache,
@@ -1162,6 +1168,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.files_load_max_age,
             ));
             batch_load = Arc::new(BatchLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.batch_load_location.clone(),
                 None,
                 http_config.batch_load_need_cache,
@@ -1172,7 +1179,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
             ));
         }
 
-        let upload = Arc::new(UploadFile::new(http_config.upload_file_location.clone()));
+        let upload = Arc::new(UploadFile::new(FILES_ASYNC_RUNTIME.clone(),http_config.upload_file_location.clone()));
 
         //构建处理CORS的Options方法的请求的中间件链
         let mut chain = MiddlewareChain::new();
