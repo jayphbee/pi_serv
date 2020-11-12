@@ -64,6 +64,7 @@ use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
+use crate::FILES_ASYNC_RUNTIME;
 
 lazy_static! {
     // http Rpc
@@ -363,7 +364,7 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
 fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
     // BUILD_LISTENER_TAB.read().get(broker_name)
-    if let None = BUILD_LISTENER_TAB.read().get(broker_name) {
+    if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
         // 获取基础灰度对应的vm列表 TODO
         // 更加port取余分配vm TODO
         let vm = create_init_vm(11, 111, None);
@@ -392,7 +393,7 @@ fn create_listener_pid(port: u16, broker_name: &String) {
 // 创建httpPID（每host一个）
 fn create_http_pid(host: String) {
     // 判断pid是否存在
-    if let None = BUILD_HTTP_LISTENER_TAB.read().get(&host) {
+    if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
         // 获取基础灰度对应的vm列表 TODO
         // 更加port取余分配vm TODO
         let vm = create_init_vm(11, 111, None);
@@ -1116,6 +1117,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.static_cache_collect_time,
             );
             file_load = Arc::new(FileLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.file_load_location.clone(),
                 Some(cache.clone()),
                 http_config.file_load_need_cache,
@@ -1125,6 +1127,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.file_load_max_age,
             ));
             files_load = Arc::new(FilesLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.files_load_location.clone(),
                 Some(cache.clone()),
                 http_config.files_load_need_cache,
@@ -1134,6 +1137,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.files_load_max_age,
             ));
             batch_load = Arc::new(BatchLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.batch_load_location.clone(),
                 Some(cache.clone()),
                 http_config.batch_load_need_cache,
@@ -1144,6 +1148,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
             ));
         } else {
             file_load = Arc::new(FileLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.file_load_location.clone(),
                 None,
                 http_config.file_load_need_cache,
@@ -1153,6 +1158,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.file_load_max_age,
             ));
             files_load = Arc::new(FilesLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.files_load_location.clone(),
                 None,
                 http_config.files_load_need_cache,
@@ -1162,6 +1168,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.files_load_max_age,
             ));
             batch_load = Arc::new(BatchLoad::new(
+                FILES_ASYNC_RUNTIME.clone(),
                 http_config.batch_load_location.clone(),
                 None,
                 http_config.batch_load_need_cache,
@@ -1172,7 +1179,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
             ));
         }
 
-        let upload = Arc::new(UploadFile::new(http_config.upload_file_location.clone()));
+        let upload = Arc::new(UploadFile::new(FILES_ASYNC_RUNTIME.clone(),http_config.upload_file_location.clone()));
 
         //构建处理CORS的Options方法的请求的中间件链
         let mut chain = MiddlewareChain::new();
