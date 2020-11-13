@@ -38,6 +38,8 @@ use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
 use pi_serv_ext::register_ext_functions;
+use pi_serv_lib::js_db::global_db_mgr;
+use pi_serv_lib::js_gray::GRAY_MGR;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
 
 mod init;
@@ -324,6 +326,21 @@ async fn async_main(
         max_heap_size,
         debug_port,
     );
+
+    let mut vms = vec![];
+    for (_, worker) in &workers {
+        vms.push(worker.clone());
+    }
+
+    // 创建0号灰度
+    if GRAY_MGR
+        .write()
+        .add_new_gray(0, vms, global_db_mgr())
+        .is_err()
+    {
+        panic!("create init gray failed");
+    }
+
     workers[0]
         .1
         .new_context(None, workers[0].1.alloc_context_id(), None)
