@@ -1,13 +1,7 @@
 use std::env;
 use std::fs::{copy, create_dir_all};
 use std::path::PathBuf;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    mpsc::{channel, Receiver, Sender},
-    Arc,
-};
-use std::thread;
-use std::time::Duration;
+use std::sync::mpsc::channel;
 
 use js_proxy_gen::{generate_proxy_crate, parse_crates, spawn};
 
