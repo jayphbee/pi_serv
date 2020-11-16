@@ -63,6 +63,7 @@ use http::static_cache::StaticCache;
 use http::upload::UploadFile;
 use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
+use pi_serv_lib::js_gray::GRAY_MGR;
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
 
@@ -363,60 +364,59 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
 // TODO: 创建listenerPID
 fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
-    // BUILD_LISTENER_TAB.read().get(broker_name)
-    // if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
-    //     // 获取基础灰度对应的vm列表 TODO
-    //     // 更加port取余分配vm TODO
-    //     let mut vm = create_init_vm(11, 111, None);
-    //     let vm = vm.init().unwrap();
-    //     let vm_copy = vm.clone();
-    //     let cid = vm.alloc_context_id();
-    //     vm.spawn_task(async move {
-    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
-    //         if let Err(e) = vm_copy
-    //             .execute(
-    //                 context,
-    //                 "start_listener_pid.js",
-    //                 r#"
-    //         (<any>self)._$listener_set_receive();"#,
-    //             )
-    //             .await
-    //         {
-    //             panic!(e);
-    //         }
-    //     });
-    //     BUILD_LISTENER_TAB
-    //         .write()
-    //         .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
-    // }
+    if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
+        // 获取基础灰度对应的vm列表
+        let vids = GRAY_MGR.read().gray_vids(0).unwrap();
+        // 更加port取余分配vm
+        let id = (port as usize) % vids.len();
+        let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy
+                .execute(
+                    context,
+                    "start_listener_pid.js",
+                    r#"
+            (<any>self)._$listener_set_receive();"#,
+                )
+                .await
+            {
+                panic!(e);
+            }
+        });
+        BUILD_LISTENER_TAB
+            .write()
+            .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
+    }
 }
 
-// TODO: 创建httpPID（每host一个）
-fn create_http_pid(host: String) {
+// 创建httpPID（每host一个）
+fn create_http_pid(host: String, port: u16) {
     // 判断pid是否存在
-    // if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
-    //     // 获取基础灰度对应的vm列表 TODO
-    //     // 更加port取余分配vm TODO
-    //     let mut vm = create_init_vm(11, 111, None);
-    //     let vm = vm.init().unwrap();
-    //     let vm_copy = vm.clone();
-    //     let cid = vm.alloc_context_id();
-    //     vm.spawn_task(async move {
-    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
-    //         if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
-    //             panic!(e);
-    //         }
-    //     });
-    //     BUILD_HTTP_LISTENER_TAB
-    //         .write()
-    //         .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
-    // }
+    if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
+        // 获取基础灰度对应的vm列表
+        let vids = GRAY_MGR.read().gray_vids(0).unwrap();
+        // 更加port取余分配vm
+        let id = (port as usize) % vids.len();
+        let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
+                panic!(e);
+            }
+        });
+        BUILD_HTTP_LISTENER_TAB
+            .write()
+            .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
+    }
 }
 
 // 绑定mqtt监听器
 pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String, broker_name: String) {
-    // 创建listenerPID
-    create_listener_pid(port, &broker_name);
     let event_handler = Arc::new(MqttConnectHandler::new());
     let rpc_handler = Arc::new(MqttRequestHandler::new());
     let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));
