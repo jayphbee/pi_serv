@@ -45,6 +45,7 @@ use vm_core::vm::{send_to_process, JSValue, Vm};
 
 use crate::create_init_vm;
 use crate::FILES_ASYNC_RUNTIME;
+use crate::MQTT_PORTS;
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -362,7 +363,7 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
 }
 
 // TODO: 创建listenerPID
-fn create_listener_pid(port: u16, broker_name: &String) {
+pub fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
     if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
         // 获取基础灰度对应的vm列表
@@ -393,7 +394,7 @@ fn create_listener_pid(port: u16, broker_name: &String) {
 }
 
 // 创建httpPID（每host一个）
-fn create_http_pid(host: String, port: u16) {
+pub fn create_http_pid(host: String, port: u16) {
     // 判断pid是否存在
     if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
         // 获取基础灰度对应的vm列表
@@ -417,6 +418,7 @@ fn create_http_pid(host: String, port: u16) {
 
 // 绑定mqtt监听器
 pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String, broker_name: String) {
+    MQTT_PORTS.lock().push((port, broker_name.clone()));
     let event_handler = Arc::new(MqttConnectHandler::new());
     let rpc_handler = Arc::new(MqttRequestHandler::new());
     let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));

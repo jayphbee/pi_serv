@@ -46,6 +46,7 @@ use pi_serv_lib::set_pi_serv_lib_file_runtime;
 mod init;
 mod js_net;
 
+use crate::js_net::create_listener_pid;
 use init::init_js;
 use js_net::reg_pi_serv_handle;
 
@@ -67,6 +68,7 @@ lazy_static! {
         let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical(), 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
+    static ref MQTT_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
 }
 
 /*
@@ -342,6 +344,11 @@ async fn async_main(
         .is_err()
     {
         panic!("create init gray failed");
+    }
+
+    // 所有虚拟机启动完成之后创建listener pid
+    for (port, broker_name) in MQTT_PORTS.lock().iter() {
+        create_listener_pid(port.clone(), broker_name);
     }
 
     workers[0]
