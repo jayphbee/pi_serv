@@ -39,9 +39,8 @@ use ws::server::WebsocketListenerFactory;
 
 use pi_serv_builtin::set_pi_serv_main_async_runtime;
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::js_db::global_db_mgr;
-use pi_serv_lib::js_gray::GRAY_MGR;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
+use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
 
 mod init;
 mod js_net;
@@ -68,6 +67,7 @@ lazy_static! {
         let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical(), 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
+    //Mqtt端口代理映射表
     static ref MQTT_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
 }
 
@@ -332,24 +332,11 @@ async fn async_main(
         debug_port,
     );
 
-    let mut vms = vec![];
-    for (_, worker) in &workers {
-        vms.push(worker.clone());
-    }
+    let vms: Vec<vm::Vm> = workers.iter().map(|(_, vm)| vm.clone()).collect();
+    init_default_gray(vms);
 
-    // 创建0号灰度
-    if GRAY_MGR
-        .write()
-        .add_new_gray(0, vms, global_db_mgr())
-        .is_err()
-    {
-        panic!("create init gray failed");
-    }
-
-    // 所有虚拟机启动完成之后创建listener pid
-    for (port, broker_name) in MQTT_PORTS.lock().iter() {
-        create_listener_pid(port.clone(), broker_name);
-    }
+    //所有虚拟机启动完成之后创建listener pid
+    init_listener_pid();
 
     workers[0]
         .1
@@ -444,7 +431,7 @@ fn init_work_vm(
             2 * 1024 * 1024,
             Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
             1000,
-            Some(10),
+            None,
             move || {
                 let run_time = work_vm_runner.run();
                 (work_vm_runner.queue_len() == 0, run_time)
@@ -456,4 +443,18 @@ fn init_work_vm(
     }
 
     vec
+}
+
+//初始化默认灰度
+fn init_default_gray(workers: Vec<vm::Vm>) {
+    if let Err(e) = GRAY_MGR.write().add_new_gray(0, workers, global_db_mgr()) {
+        panic!("Create default gray failed, reason: {:?}", e);
+    }
+}
+
+//初始化端口的监听Pid
+fn init_listener_pid() {
+    for (port, broker_name) in MQTT_PORTS.lock().iter() {
+        create_listener_pid(port.clone(), broker_name);
+    }
 }
