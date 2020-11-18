@@ -7,6 +7,9 @@ edition = "2018"
 [build-dependencies]
 js_proxy_gen = { path = "../pi_lib/js_proxy_gen" }
 
+[profile.release]
+lto = true
+
 [dependencies]
 lazy_static = "1.4"
 log = "0.4"
