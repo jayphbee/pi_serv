@@ -46,7 +46,6 @@ use vm_core::vm::{send_to_process, JSValue, Vm};
 use crate::create_init_vm;
 use crate::FILES_ASYNC_RUNTIME;
 use crate::MQTT_PORTS;
-
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -65,6 +64,7 @@ use http::static_cache::StaticCache;
 use http::upload::UploadFile;
 use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
+use pi_serv_lib::js_gray::GRAY_MGR;
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};
 
@@ -174,8 +174,8 @@ impl Handler for MqttConnectHandler {
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
-        let connect_id = connect.get_id();
-        let port = connect.get_local_port().unwrap();
+        // let connect_id = connect.get_id();
+        // let port = connect.get_local_port().unwrap();
         match args {
             Args::OneArgs(MqttEvent::Connect(
                 socket_id,
@@ -200,26 +200,22 @@ impl Handler for MqttConnectHandler {
                     pwd,
                 );
                 let mqtt_connection_ptr = Box::into_raw(Box::new(mqtt_connection)) as usize;
-                let json_object = object! {
-                    "connection" => mqtt_connection_ptr,
-                    "mqtt_event" => "connect",
-                    "broker_name" => broker_name,
-                    "socket_id" => socket_id,
-                };
-                let data_str = json_object.dump();
+                let mut msgs = Vec::with_capacity(4);
+                msgs.push(ProcessMsg::String("connect".to_string()));
+                msgs.push(ProcessMsg::Number(socket_id as f64));
+                msgs.push(ProcessMsg::Number(mqtt_connection_ptr as f64));
+                msgs.push(ProcessMsg::String(broker_name));
                 // listenerPID发送消息
-                send_to_process(None, pid, ProcessMsg::String(data_str));
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             Args::OneArgs(MqttEvent::Disconnect(socket_id, broker_name, client_id, reason)) => {
                 let pid = get_pid(&broker_name);
                 //处理Mqtt连接关闭
-                let json_object = object! {
-                    "mqtt_event" => "disconnect",
-                    "socket_id" => socket_id,
-                };
-                let data_str = json_object.dump();
+                let mut msgs = Vec::with_capacity(2);
+                msgs.push(ProcessMsg::String("disconnect".to_string()));
+                msgs.push(ProcessMsg::Number(socket_id as f64));
                 // listenerPID发送消息
-                send_to_process(None, pid, ProcessMsg::String(data_str));
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             _ => panic!("invalid MqttConnectHandler handler args"),
         }
@@ -256,10 +252,9 @@ impl Handler for MqttRequestHandler {
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
         let session = connect.get_session().unwrap();
         let context = session.as_ref().get_context();
-        // 获取会话中的pid  TODO当前的vm不存在，应该从灰度中获取vm实例，等接口完成后再修改
-        let (pid, vm) = context.get::<(Pid, Vm)>().unwrap().as_ref().clone();
-        let vm_copy = vm.clone();
-        let context_v8 = ContextHandle(pid.1);
+        // 获取会话中的pid
+        let pid = context.get::<Pid>().unwrap().as_ref().clone();
+        println!("!!!!!!!!!!!!!!!!!js_net pid:{:?}", pid);
         match args {
             Args::OneArgs(MqttEvent::Sub(
                 _socket_id,
@@ -269,43 +264,29 @@ impl Handler for MqttRequestHandler {
                 _result,
             )) => {
                 //处理Mqtt订阅主题
-                let mut topics2 = vec![];
+                let mut msgs = Vec::new();
+                let mut topics_msg = Vec::new();
+
                 for (sub_topic, _) in topics {
-                    topics2.push(sub_topic);
+                    topics_msg.push(ProcessMsg::String(sub_topic));
                 }
-                // let json_object = object! {
-                //     "mqtt_event" => "sub",
-                //     "topics" => topics2
-                // };
-                // let data_str = json_object.dump();
-                // // listenerPID发送消息
-                // send_to_process(None, pid, ProcessMsg::String(data_str));
-                let topics_str = json::stringify(topics2);
-                vm.spawn_task(async move {
-                    let topics = vm_copy
-                        .new_js_string(context_v8, Some(topics_str))
-                        .await
-                        .unwrap();
-                    vm_copy.callback(context_v8, "_$mqttSub", vec![topics]);
-                });
+                msgs.push(ProcessMsg::String("sub".to_string()));
+                msgs.push(ProcessMsg::Array(topics_msg));
+
+                // PID发送消息
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             Args::OneArgs(MqttEvent::Unsub(socket_id, broker_name, client_id, topics)) => {
                 //处理Mqtt退订主题
-                // let json_object = object! {
-                //     "mqtt_event" => "unsub",
-                //     "topics" => topics
-                // };
-                // let data_str = json_object.dump();
-                // // listenerPID发送消息
-                // send_to_process(None, pid, ProcessMsg::String(data_str));
-                let topics_str = json::stringify(topics);
-                vm.spawn_task(async move {
-                    let topics = vm_copy
-                        .new_js_string(context_v8, Some(topics_str))
-                        .await
-                        .unwrap();
-                    vm_copy.callback(context_v8, "_$mqttUnSub", vec![topics]);
-                });
+                let mut msgs = Vec::new();
+                let mut topics_msg = Vec::new();
+                for sub_topic in topics {
+                    topics_msg.push(ProcessMsg::String(sub_topic));
+                }
+                msgs.push(ProcessMsg::String("unsub".to_string()));
+                msgs.push(ProcessMsg::Array(topics_msg));
+                // PID发送消息
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             Args::OneArgs(MqttEvent::Publish(
                 socket_id,
@@ -316,28 +297,15 @@ impl Handler for MqttRequestHandler {
                 payload,
             )) => {
                 //处理Mqtt发布主题
-                // let json_object = object! {
-                //     "mqtt_event" => "publish",
-                //     "topic" => topic,
-                //     "payload" => payload.as_ref().to_vec()
-                // };
-                // let data_str = json_object.dump();
-                // // listenerPID发送消息
-                // send_to_process(None, pid, ProcessMsg::String(data_str));
                 let payload_copy = payload.to_vec();
-                // 虚拟机线程执行异步任务
-                vm.spawn_task(async move {
-                    let buf = NativeArrayBuffer::from(payload_copy.into_boxed_slice());
-                    let payload = vm_copy
-                        .native_buffer_to_js_array_buffer(context_v8, &buf)
-                        .await
-                        .unwrap();
-                    let topic = vm_copy
-                        .new_js_string(context_v8, Some(topic))
-                        .await
-                        .unwrap();
-                    vm_copy.callback(context_v8, "_$mqttSend", vec![topic, payload]);
-                });
+                let buf = NativeArrayBuffer::with_shared(payload_copy.into_boxed_slice());
+
+                let mut msgs = Vec::new();
+                msgs.push(ProcessMsg::String("publish".to_string()));
+                msgs.push(ProcessMsg::String(topic));
+                msgs.push(ProcessMsg::SharedArrayBuffer(buf));
+                // PID发送消息
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             _ => panic!("invalid MqttRequestHandler handler args"),
         }
@@ -365,54 +333,55 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
 // TODO: 创建listenerPID
 pub fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
-    // BUILD_LISTENER_TAB.read().get(broker_name)
-    // if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
-    //     // 获取基础灰度对应的vm列表 TODO
-    //     // 更加port取余分配vm TODO
-    //     let mut vm = create_init_vm(11, 111, None);
-    //     let vm = vm.init().unwrap();
-    //     let vm_copy = vm.clone();
-    //     let cid = vm.alloc_context_id();
-    //     vm.spawn_task(async move {
-    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
-    //         if let Err(e) = vm_copy
-    //             .execute(
-    //                 context,
-    //                 "start_listener_pid.js",
-    //                 r#"
-    //         (<any>self)._$listener_set_receive();"#,
-    //             )
-    //             .await
-    //         {
-    //             panic!(e);
-    //         }
-    //     });
-    //     BUILD_LISTENER_TAB
-    //         .write()
-    //         .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
-    // }
+    if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
+        // 获取基础灰度对应的vm列表
+        let vids = GRAY_MGR.read().gray_vids(0).unwrap();
+        // 更加port取余分配vm
+        let id = (port as usize) % vids.len();
+        let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        println!("!!!!!!!!!!!!!!create_listener_pid cid:{:?}", cid);
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy
+                .execute(
+                    context,
+                    "start_listener_pid.js",
+                    r#"_$listener_set_receive();"#,
+                )
+                .await
+            {
+                panic!(e);
+            }
+        });
+        BUILD_LISTENER_TAB
+            .write()
+            .insert(broker_name.clone(), Pid(vm.get_vid(), cid));
+    }
 }
 
-// TODO: 创建httpPID（每host一个）
-fn create_http_pid(host: String) {
+// 创建httpPID（每host一个）
+pub fn create_http_pid(host: String, port: u16) {
     // 判断pid是否存在
-    // if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
-    //     // 获取基础灰度对应的vm列表 TODO
-    //     // 更加port取余分配vm TODO
-    //     let mut vm = create_init_vm(11, 111, None);
-    //     let vm = vm.init().unwrap();
-    //     let vm_copy = vm.clone();
-    //     let cid = vm.alloc_context_id();
-    //     vm.spawn_task(async move {
-    //         let context = vm_copy.new_context(None, cid, None).await.unwrap();
-    //         if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
-    //             panic!(e);
-    //         }
-    //     });
-    //     BUILD_HTTP_LISTENER_TAB
-    //         .write()
-    //         .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
-    // }
+    if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
+        // 获取基础灰度对应的vm列表
+        let vids = GRAY_MGR.read().gray_vids(0).unwrap();
+        // 更加port取余分配vm
+        let id = (port as usize) % vids.len();
+        let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
+        let vm_copy = vm.clone();
+        let cid = vm.alloc_context_id();
+        vm.spawn_task(async move {
+            let context = vm_copy.new_context(None, cid, None).await.unwrap();
+            if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
+                panic!(e);
+            }
+        });
+        BUILD_HTTP_LISTENER_TAB
+            .write()
+            .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
+    }
 }
 
 // 绑定mqtt监听器

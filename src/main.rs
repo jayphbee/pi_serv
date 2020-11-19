@@ -37,6 +37,7 @@ use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_core::{debug, init_v8, vm, worker};
 use ws::server::WebsocketListenerFactory;
 
+use pi_serv_builtin::set_pi_serv_main_async_runtime;
 use pi_serv_ext::register_ext_functions;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
@@ -312,6 +313,8 @@ async fn async_main(
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
     // 注册pi_serv方法
     reg_pi_serv_handle();
+    // 注册pi_serv_builtin运行时
+    set_pi_serv_main_async_runtime(MAIN_ASYNC_RUNTIME.clone());
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
