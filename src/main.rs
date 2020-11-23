@@ -47,7 +47,7 @@ mod js_net;
 
 use crate::js_net::create_listener_pid;
 use init::init_js;
-use js_net::reg_pi_serv_handle;
+use js_net::{create_http_pid, reg_pi_serv_handle};
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
@@ -69,6 +69,8 @@ lazy_static! {
     };
     //Mqtt端口代理映射表
     static ref MQTT_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
+    //Http端口代理映射表
+    static ref HTTP_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
 }
 
 /*
@@ -142,7 +144,7 @@ fn main() {
     let init_vm_handle = worker::spawn_worker_thread(
         "Init-Vm",
         2 * 1024 * 1024,
-        MAIN_CONDVAR.clone(),
+        Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
         1000,
         Some(10),
         move || {
@@ -337,7 +339,7 @@ async fn async_main(
 
     //所有虚拟机启动完成之后创建listener pid
     init_listener_pid();
-
+    init_http_listener_pid();
     workers[0]
         .1
         .new_context(None, workers[0].1.alloc_context_id(), None)
@@ -415,10 +417,7 @@ fn init_work_vm(
             //允许调试
             builder = builder.enable_inspect();
         }
-        let worker_condvar = Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new()));
-        let mut work_vm = builder
-            .bind_condvar_waker(worker_condvar.clone())
-            .build();
+        let mut work_vm = builder.build();
         let work_vm_runner = work_vm.take_runner().unwrap();
 
         //启动工作线程，并运行工作虚拟机
@@ -432,7 +431,7 @@ fn init_work_vm(
         let worker_handle = worker::spawn_worker_thread(
             worker_name.as_str(),
             2 * 1024 * 1024,
-            worker_condvar,
+            Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
             1000,
             None,
             move || {
@@ -459,5 +458,12 @@ fn init_default_gray(workers: Vec<vm::Vm>) {
 fn init_listener_pid() {
     for (port, broker_name) in MQTT_PORTS.lock().iter() {
         create_listener_pid(port.clone(), broker_name);
+    }
+}
+
+//初始化HTTP端口的监听Pid
+fn init_http_listener_pid() {
+    for (port, host) in HTTP_PORTS.lock().iter() {
+        create_http_pid(host, port.clone());
     }
 }

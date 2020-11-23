@@ -46,6 +46,7 @@ use vm_core::vm::{send_to_process, JSValue, Vm};
 use crate::create_init_vm;
 use crate::FILES_ASYNC_RUNTIME;
 use crate::MQTT_PORTS;
+use crate::HTTP_PORTS;
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -97,6 +98,7 @@ pub fn reg_pi_serv_handle() {
         parse_http_config: parse_http_config,
         config_certificate: config_certificate,
         broker_has_topic: broker_has_topic,
+        register_broker_topic: register_broker_topic,
         register_http_endpoint: register_http_endpoint,
         get_http_endpoint: get_http_endpoint,
     };
@@ -143,6 +145,7 @@ fn get_pid(broker_name: &String) -> Pid {
 
 // 获取http对应的pid
 fn get_http_pid(host: &String) -> (Pid, Vm) {
+    debug!("get_http_pid host:{:?}", host);
     BUILD_HTTP_LISTENER_TAB.read().get(host).cloned().unwrap()
 }
 
@@ -170,7 +173,7 @@ impl Handler for MqttConnectHandler {
     fn handle(
         &self,
         env: Arc<dyn GrayVersion>,
-        topic: Atom,
+        _topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
@@ -208,7 +211,7 @@ impl Handler for MqttConnectHandler {
                 // listenerPID发送消息
                 send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
-            Args::OneArgs(MqttEvent::Disconnect(socket_id, broker_name, client_id, reason)) => {
+            Args::OneArgs(MqttEvent::Disconnect(socket_id, broker_name, _client_id, _reason)) => {
                 let pid = get_pid(&broker_name);
                 //处理Mqtt连接关闭
                 let mut msgs = Vec::with_capacity(2);
@@ -254,7 +257,7 @@ impl Handler for MqttRequestHandler {
         let context = session.as_ref().get_context();
         // 获取会话中的pid
         let pid = context.get::<Pid>().unwrap().as_ref().clone();
-        println!("!!!!!!!!!!!!!!!!!js_net pid:{:?}", pid);
+        debug!("!!!!!!!!!!!!!!!!!js_net pid:{:?}", pid);
         match args {
             Args::OneArgs(MqttEvent::Sub(
                 _socket_id,
@@ -276,7 +279,7 @@ impl Handler for MqttRequestHandler {
                 // PID发送消息
                 send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
-            Args::OneArgs(MqttEvent::Unsub(socket_id, broker_name, client_id, topics)) => {
+            Args::OneArgs(MqttEvent::Unsub(_socket_id, _broker_name, _client_id, topics)) => {
                 //处理Mqtt退订主题
                 let mut msgs = Vec::new();
                 let mut topics_msg = Vec::new();
@@ -289,10 +292,10 @@ impl Handler for MqttRequestHandler {
                 send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             Args::OneArgs(MqttEvent::Publish(
-                socket_id,
-                broker_name,
-                client_id,
-                address,
+                _socket_id,
+                _broker_name,
+                _client_id,
+                _address,
                 topic,
                 payload,
             )) => {
@@ -330,6 +333,20 @@ pub fn broker_has_topic(broker_name: String, topic: String) -> bool {
     false
 }
 
+// 注册topic
+pub fn register_broker_topic(broker_name: String, topic: String) -> bool {
+    let mut brokers = BROKER_TOPICS.write();
+
+    if let Some(topics) = brokers.get_mut(&broker_name) {
+        topics.insert(topic);
+    } else {
+        let mut set = FnvHashSet::default();
+        set.insert(topic);
+        brokers.insert(broker_name, set);
+    }
+    true
+}
+
 // TODO: 创建listenerPID
 pub fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
@@ -341,7 +358,7 @@ pub fn create_listener_pid(port: u16, broker_name: &String) {
         let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
         let vm_copy = vm.clone();
         let cid = vm.alloc_context_id();
-        println!("!!!!!!!!!!!!!!create_listener_pid cid:{:?}", cid);
+        debug!("!!!!!!!!!!!!!!create_listener_pid cid:{:?}", cid);
         vm.spawn_task(async move {
             let context = vm_copy.new_context(None, cid, None).await.unwrap();
             if let Err(e) = vm_copy
@@ -362,9 +379,14 @@ pub fn create_listener_pid(port: u16, broker_name: &String) {
 }
 
 // 创建httpPID（每host一个）
-pub fn create_http_pid(host: String, port: u16) {
+pub fn create_http_pid(host: &String, port: u16) {
+    debug!(
+        "!!!!!!!!!!!!!!create_http_pid host:{:?}, port:{:?}",
+        host, port
+    );
     // 判断pid是否存在
-    if BUILD_HTTP_LISTENER_TAB.read().get(&host).is_none() {
+    if BUILD_HTTP_LISTENER_TAB.read().get(host).is_none() {
+        debug!("!!!!!!!!!!!!!!create_http_pid 1111111111");
         // 获取基础灰度对应的vm列表
         let vids = GRAY_MGR.read().gray_vids(0).unwrap();
         // 更加port取余分配vm
@@ -372,12 +394,14 @@ pub fn create_http_pid(host: String, port: u16) {
         let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
         let vm_copy = vm.clone();
         let cid = vm.alloc_context_id();
+        debug!("!!!!!!!!!!!!!!create_http_pid 222222222 vid:{:?}", vm.get_vid());
         vm.spawn_task(async move {
             let context = vm_copy.new_context(None, cid, None).await.unwrap();
             if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
                 panic!(e);
             }
         });
+        debug!("!!!!!!!!!!!!!!create_http_pid 333333333333333");
         BUILD_HTTP_LISTENER_TAB
             .write()
             .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
@@ -443,13 +467,16 @@ impl Handler for InsecureHttpRpcRequstHandler {
     //处理方法
     fn handle(
         &self,
-        env: Arc<dyn GrayVersion>,
+        _env: Arc<dyn GrayVersion>,
         topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
         match args {
             Args::FourArgs(addr, headers, msg, handler) => {
-                let (pid, vm) = get_http_pid(&addr.to_string());
+                for (key, value) in headers.iter() {
+                    debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
+                }
+                let (pid, vm) = get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
                 let vm_copy = vm.clone();
                 // v8上下文环境
                 let context_v8 = ContextHandle(pid.1);
@@ -508,13 +535,16 @@ impl Handler for SecureHttpRpcRequestHandler {
     //处理方法
     fn handle(
         &self,
-        env: Arc<dyn GrayVersion>,
+        _env: Arc<dyn GrayVersion>,
         topic: Atom,
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
         match args {
             Args::FourArgs(addr, headers, msg, handler) => {
-                let (pid, vm) = get_http_pid(&addr.to_string());
+                for (key, value) in headers.iter() {
+                    debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
+                }
+                let (pid, vm) = get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
                 let vm_copy = vm.clone();
                 // v8上下文环境
                 let context_v8 = ContextHandle(pid.1);
@@ -568,7 +598,7 @@ async fn set_data(vm: &Vm, context: &ContextHandle, msg: HttpMsg) -> JSValue {
         match val {
             SGenType::Str(s) => {
                 let str = vm.new_js_string(context, Some(s)).await.unwrap();
-                data.set(context, &key, str);
+                data.set(context, &key, str).await;
             }
             SGenType::Bin(bin) => {
                 let buf = NativeArrayBuffer::from(bin.into_boxed_slice());
@@ -576,7 +606,7 @@ async fn set_data(vm: &Vm, context: &ContextHandle, msg: HttpMsg) -> JSValue {
                     .native_buffer_to_js_array_buffer(context, &buf)
                     .await
                     .unwrap();
-                data.set(context, &key, bin);
+                data.set(context, &key, bin).await;
             }
             _ => {
                 unimplemented!();
@@ -653,7 +683,7 @@ pub fn start_network_services(
         >,
     )> = vec![];
     for SecureServices((port, service)) in SECURE_SERVICES.write().drain(..).into_iter() {
-        println!("start_network_services secure service port = {:?}", port);
+        debug!("start_network_services secure service port = {:?}", port);
         match CERTIFICATES.read().get(&port) {
             Some((cert_path, priv_key_path)) => {
                 let tls_config = TlsConfig::new_server(
@@ -1289,7 +1319,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
 
             // 多个主机共享一个路由表
             for vh in vhs {
-                println!(
+                debug!(
                     "add insecure host = {:?}, port = {:?}",
                     vh, http_config.port
                 );
@@ -1306,6 +1336,7 @@ fn build_service<S: SocketTrait + StreamTrait>(
 
 // 解析http配置
 pub fn parse_http_config(jstr: String) {
+    debug!("!!!!!!!!!!!parse_http_config");
     // 环境变量的ip是以分号分隔的字符串
     let replace_ip = match env::var("PTCONFIG_IP") {
         Ok(ip) => Some(ip),
@@ -1391,6 +1422,12 @@ pub fn parse_http_config(jstr: String) {
                 }
 
                 let port = config["port"].as_u16().unwrap();
+                debug!("!!!!!!!!!!!!!!parse_http_config 1111111111");
+                // 注册http rpc
+                for host in &virtual_host {
+                    HTTP_PORTS.lock().push((port, host.clone()));
+                }
+                debug!("!!!!!!!!!!!!!!parse_http_config 222222222");
                 http_config.bind_http_port(port);
                 http_config
                     .config_set_keep_alive_timeout(config["keepAliveTimeout"].as_usize().unwrap());
