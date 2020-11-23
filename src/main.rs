@@ -144,7 +144,7 @@ fn main() {
     let init_vm_handle = worker::spawn_worker_thread(
         "Init-Vm",
         2 * 1024 * 1024,
-        Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
+        MAIN_CONDVAR.clone(),
         1000,
         Some(10),
         move || {
@@ -410,14 +410,15 @@ fn init_work_vm(
     for index in 0..work_vm_count {
         //使用指定快照，创建工作虚拟机
         let work_vm_snapshot = VmStartupSnapshot::Boxed(snapshot_bytes.to_vec().into_boxed_slice());
+
+        let worker_condvar = Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new()));
         let mut builder = vm::VmBuilder::new().startup_snapshot(work_vm_snapshot);
         builder = builder.heap_limit(init_heap_size, max_heap_size);
-
         if debug_port.is_some() {
             //允许调试
             builder = builder.enable_inspect();
         }
-        let mut work_vm = builder.build();
+        let mut work_vm = builder.bind_condvar_waker(worker_condvar.clone()).build();
         let work_vm_runner = work_vm.take_runner().unwrap();
 
         //启动工作线程，并运行工作虚拟机
@@ -431,7 +432,7 @@ fn init_work_vm(
         let worker_handle = worker::spawn_worker_thread(
             worker_name.as_str(),
             2 * 1024 * 1024,
-            Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new())),
+            worker_condvar,
             1000,
             None,
             move || {
