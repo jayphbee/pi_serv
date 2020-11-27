@@ -88,6 +88,8 @@ lazy_static! {
     static ref BUILD_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, Pid>>> = Arc::new(RwLock::new(FnvHashMap::default()));
     // http端口绑定listenerPID
     static ref BUILD_HTTP_LISTENER_TAB: Arc<RwLock<FnvHashMap<String, (Pid, Vm)>>> = Arc::new(RwLock::new(FnvHashMap::default()));
+    // 记录所有的静态资源缓存
+    pub static ref HTTP_STATIC_CACHES: Arc<RwLock<Vec<Arc<StaticCache>>>> = Arc::new(RwLock::new(vec![]));
 }
 
 // 注册pi_ser方法
@@ -1113,6 +1115,8 @@ fn build_service<S: SocketTrait + StreamTrait>(
                 http_config.static_cache_max_size,
                 http_config.static_cache_max_len,
             ));
+            // 记录静态缓存对象，前端资源热更时删除所有缓存
+            HTTP_STATIC_CACHES.write().push(cache.clone());
             StaticCache::run_collect(
                 cache.clone(),
                 "http cache".to_string(),
