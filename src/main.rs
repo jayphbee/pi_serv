@@ -301,43 +301,6 @@ fn create_init_vm(
     builder.bind_condvar_waker(MAIN_CONDVAR.clone()).build()
 }
 
-// 注册虚拟机关心处理的事件
-fn reigster_vms_events(workers: &[vm::Vm]) {
-    // 设置虚拟机的事件回调
-    for worker in workers {
-        let event_handler = VmEventHandler::new(
-            AsyncRuntime::Local(MAIN_ASYNC_RUNTIME.clone()),
-            move |event, vid| match event {
-                VmEventValue::CreatedContext(context) => {
-                    debug!(
-                        "vm event handler: VmEventValue::CreatedContext, vid = {:?}",
-                        vid
-                    );
-                    VID_CONTEXTS
-                        .lock()
-                        .entry(vid)
-                        .and_modify(|v| {
-                            v.push(context);
-                        })
-                        .or_insert(vec![context]);
-                }
-
-                VmEventValue::RemovedContext(context) => {
-                    debug!("vm event handler: VmEventValue::RemovedContext");
-                    VID_CONTEXTS
-                        .lock()
-                        .entry(vid)
-                        .and_modify(|v| {
-                            v.retain(|ctx| *ctx != context);
-                        });
-                }
-            },
-        );
-        worker.register_event_handler(VmEvent::CreatedContext, event_handler.clone());
-        worker.register_event_handler(VmEvent::RemovedContext, event_handler);
-    }
-}
-
 /*
 * 异步执行入口，退出时不会中止主线程
 */
@@ -378,9 +341,11 @@ async fn async_main(
     let vms: Vec<vm::Vm> = workers.iter().map(|(_, vm)| vm.clone()).collect();
     reigster_vms_events(&vms);
     init_default_gray(vms.clone());
+
     //所有虚拟机启动完成之后创建listener pid
     init_listener_pid();
     init_http_listener_pid();
+
     enable_hotfix();
 }
 
@@ -505,10 +470,45 @@ fn init_http_listener_pid() {
         create_http_pid(host, port.clone());
     }
 }
+
+// 注册虚拟机关心处理的事件
+fn reigster_vms_events(workers: &[vm::Vm]) {
+    // 设置虚拟机的事件回调
+    for worker in workers {
+        let event_handler = VmEventHandler::new(
+            AsyncRuntime::Local(MAIN_ASYNC_RUNTIME.clone()),
+            move |event, vid| match event {
+                VmEventValue::CreatedContext(context) => {
+                    debug!(
+                        "Vm event handler: VmEventValue::CreatedContext, vid = {:?}",
+                        vid
+                    );
+                    VID_CONTEXTS
+                        .lock()
+                        .entry(vid)
+                        .and_modify(|v| {
+                            v.push(context);
+                        })
+                        .or_insert(vec![context]);
+                }
+
+                VmEventValue::RemovedContext(context) => {
+                    debug!("Vm event handler: VmEventValue::RemovedContext");
+                    VID_CONTEXTS.lock().entry(vid).and_modify(|v| {
+                        v.retain(|ctx| *ctx != context);
+                    });
+                }
+            },
+        );
+        worker.register_event_handler(VmEvent::CreatedContext, event_handler.clone());
+        worker.register_event_handler(VmEvent::RemovedContext, event_handler);
+    }
+}
+
 // 通过环境变量控制是否启动热更新
 fn enable_hotfix() {
     if env::var("ENABLE_HOTFIX").is_ok() {
-        info!("start listen hotfix...");
+        info!("Start listen hotfix...");
         hotfix_listen_backend(String::from("../dst_server"));
         hotfix_listen_frontend();
     }
