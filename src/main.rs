@@ -1,4 +1,6 @@
+#![deny(unused_must_use)]
 #![allow(unused_imports)]
+#![allow(unused_variables)]
 
 #[macro_use]
 extern crate log;
@@ -51,8 +53,8 @@ mod js_net;
 use crate::js_net::create_listener_pid;
 use allocator::CounterSystemAllocator;
 use hotfix::{hotfix_listen_backend, hotfix_listen_frontend};
-use init::init_js;
-use js_net::{create_http_pid, reg_pi_serv_handle};
+use init::{init_js, read_init_source};
+use js_net::{create_http_pid, reg_pi_serv_handle, start_network_services};
 
 #[global_allocator]
 static GlobalAllocator: CounterSystemAllocator = CounterSystemAllocator;
@@ -341,10 +343,7 @@ async fn async_main(
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
-    init_js(init_vm.clone(), snapshot_context, matches.clone()).await;
-
-    //TODO 加载项目的入口模块文件, 并加载其静态依赖树中的所有js模块文件
-
+    init_js(debug_port.is_some(), init_vm.clone(), snapshot_context.clone(), matches.clone()).await;
     finish_snapshot(&init_vm, snapshot_context).await;
 
     let workers = init_work_vm(
@@ -356,12 +355,15 @@ async fn async_main(
     );
 
     let vms: Vec<vm::Vm> = workers.iter().map(|(_, vm)| vm.clone()).collect();
-    reigster_vms_events(&vms);
+    reigster_vms_events(&vms, debug_port.is_some());
     init_default_gray(vms.clone());
 
     //所有虚拟机启动完成之后创建listener pid
     init_listener_pid();
     init_http_listener_pid();
+
+    // 最后启动网络服务
+    let _ = start_network_services(16384, 16384, 16384, 100000, 256, 2097152, 10);
 
     enable_hotfix();
 }
@@ -502,7 +504,7 @@ fn init_http_listener_pid() {
 }
 
 // 注册虚拟机关心处理的事件
-fn reigster_vms_events(workers: &[vm::Vm]) {
+fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
     // 设置虚拟机的事件回调
     for worker in workers {
         let event_handler = VmEventHandler::new(
@@ -510,8 +512,8 @@ fn reigster_vms_events(workers: &[vm::Vm]) {
             move |event, vid| match event {
                 VmEventValue::CreatedContext(context) => {
                     debug!(
-                        "Vm event handler: VmEventValue::CreatedContext, vid = {:?}",
-                        vid
+                        "Vm event handler: VmEventValue::CreatedContext, vid = {:?}, cid = {:?}",
+                        vid, context.0
                     );
                     VID_CONTEXTS
                         .lock()
@@ -520,6 +522,17 @@ fn reigster_vms_events(workers: &[vm::Vm]) {
                             v.push(context);
                         })
                         .or_insert(vec![context]);
+
+                    if is_debug_mode {
+                        let vm = GRAY_MGR.read().vm_instance(0, vid).unwrap();
+                        let vm_copy = vm.clone();
+                        vm.spawn_task(async move {
+                            let source = read_init_source("../dst_server/pi_pt/init.js".to_string()).await;
+                            if let Err(e) = vm_copy.execute(context, "init.js", source.as_ref()).await {
+                                panic!(e);
+                            }
+                        });
+                    }
                 }
 
                 VmEventValue::RemovedContext(context) => {
