@@ -25,7 +25,7 @@ use hash::XHashMap;
 use r#async::rt::{
     multi_thread::{MultiTaskPool, MultiTaskRuntime},
     single_thread::{SingleTaskRunner, SingleTaskRuntime},
-    AsyncRuntime,
+    spawn_worker_thread, AsyncRuntime,
 };
 use tcp::{
     buffer_pool::WriteBufferPool,
@@ -35,7 +35,7 @@ use tcp::{
 };
 use vm_builtin::{ContextHandle, VmStartupSnapshot};
 use vm_builtin::{VmEvent, VmEventHandler, VmEventValue};
-use vm_core::{debug, init_v8, vm, worker};
+use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
 use pi_serv_builtin::set_pi_serv_main_async_runtime;
@@ -143,9 +143,10 @@ fn main() {
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
     let mut init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
     let init_vm_runner = init_vm.take_runner().unwrap();
+    let queue_len_getter = init_vm_runner.get_inner_handler();
 
     //启动初始虚拟机线程，并运行初始虚拟机
-    let init_vm_handle = worker::spawn_worker_thread(
+    let init_vm_handle = spawn_worker_thread(
         "Init-Vm",
         2 * 1024 * 1024,
         MAIN_CONDVAR.clone(),
@@ -154,6 +155,13 @@ fn main() {
         move || {
             let run_time = init_vm_runner.run();
             (init_vm_runner.queue_len() == 0, run_time)
+        },
+        move || {
+            if let Some(len) = queue_len_getter.len() {
+                len
+            } else {
+                0
+            }
         },
     );
 
@@ -422,6 +430,7 @@ fn init_work_vm(
         }
         let mut work_vm = builder.bind_condvar_waker(worker_condvar.clone()).build();
         let work_vm_runner = work_vm.take_runner().unwrap();
+        let queue_len_getter = work_vm_runner.get_inner_handler();
 
         //启动工作线程，并运行工作虚拟机
         let worker_name = "PI-SERV-WORKER".to_string() + index.to_string().as_str();
@@ -431,7 +440,7 @@ fn init_work_vm(
             "Vm-".to_string() + work_vm_runner.get_vid().to_string().as_str()
         );
 
-        let worker_handle = worker::spawn_worker_thread(
+        let worker_handle = spawn_worker_thread(
             worker_name.as_str(),
             2 * 1024 * 1024,
             worker_condvar,
@@ -440,6 +449,13 @@ fn init_work_vm(
             move || {
                 let run_time = work_vm_runner.run();
                 (work_vm_runner.queue_len() == 0, run_time)
+            },
+            move || {
+                if let Some(len) = queue_len_getter.len() {
+                    len
+                } else {
+                    0
+                }
             },
         );
 
