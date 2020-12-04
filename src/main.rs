@@ -43,14 +43,19 @@ use pi_serv_ext::register_ext_functions;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
 
+mod allocator;
 mod hotfix;
 mod init;
 mod js_net;
 
 use crate::js_net::create_listener_pid;
+use allocator::CounterSystemAllocator;
 use hotfix::{hotfix_listen_backend, hotfix_listen_frontend};
 use init::init_js;
 use js_net::{create_http_pid, reg_pi_serv_handle};
+
+#[global_allocator]
+static GlobalAllocator: CounterSystemAllocator = CounterSystemAllocator;
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
