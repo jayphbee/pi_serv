@@ -45,8 +45,8 @@ use vm_core::vm::{send_to_process, JSValue, Vm};
 
 use crate::create_init_vm;
 use crate::FILES_ASYNC_RUNTIME;
-use crate::MQTT_PORTS;
 use crate::HTTP_PORTS;
+use crate::MQTT_PORTS;
 use hash::XHashMap;
 use http::batch_load::BatchLoad;
 use http::cors_handler::CORSHandler;
@@ -259,6 +259,20 @@ impl Handler for MqttRequestHandler {
         let context = session.as_ref().get_context();
         // 获取会话中的pid
         let pid = context.get::<Pid>().unwrap().as_ref().clone();
+        // 限流(达到软上限，就限制rpc并发)
+        if let "true" = env::var("current").unwrap().as_str() {
+            {
+                // 获取虚拟机队列长度
+                let vm = GRAY_MGR.read().vm_instance(0, pid.0).unwrap();
+                let vm_queue_len = vm.queue_len();
+                if vm_queue_len > 0 && !connect.is_passive() {
+                    connect.set_passive(true);
+                } else if connect.is_passive() {
+                    connect.set_passive(false);
+                }
+            }
+        }
+
         debug!("!!!!!!!!!!!!!!!!!js_net pid:{:?}", pid);
         match args {
             Args::OneArgs(MqttEvent::Sub(
@@ -349,7 +363,7 @@ pub fn register_broker_topic(broker_name: String, topic: String) -> bool {
     true
 }
 
-// TODO: 创建listenerPID
+// 创建listenerPID
 pub fn create_listener_pid(port: u16, broker_name: &String) {
     // 判断pid是否存在
     if BUILD_LISTENER_TAB.read().get(broker_name).is_none() {
@@ -396,7 +410,10 @@ pub fn create_http_pid(host: &String, port: u16) {
         let vm = GRAY_MGR.read().vm_instance(0, vids[id]).unwrap();
         let vm_copy = vm.clone();
         let cid = vm.alloc_context_id();
-        debug!("!!!!!!!!!!!!!!create_http_pid 222222222 vid:{:?}", vm.get_vid());
+        debug!(
+            "!!!!!!!!!!!!!!create_http_pid 222222222 vid:{:?}",
+            vm.get_vid()
+        );
         vm.spawn_task(async move {
             let context = vm_copy.new_context(None, cid, None).await.unwrap();
             if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
@@ -478,7 +495,8 @@ impl Handler for InsecureHttpRpcRequstHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
-                let (pid, vm) = get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
+                let (pid, vm) =
+                    get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
                 let vm_copy = vm.clone();
                 // v8上下文环境
                 let context_v8 = ContextHandle(pid.1);
@@ -546,7 +564,8 @@ impl Handler for SecureHttpRpcRequestHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
-                let (pid, vm) = get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
+                let (pid, vm) =
+                    get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
                 let vm_copy = vm.clone();
                 // v8上下文环境
                 let context_v8 = ContextHandle(pid.1);

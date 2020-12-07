@@ -137,6 +137,14 @@ fn main() {
                 .multiple(true)
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("current") // 限流
+                .short("c")
+                .long("current")
+                .value_name("current")
+                .help("mqtt rpc current limit")
+                .takes_value(true),
+        )
         .get_matches();
 
     //初始化V8环境，并启动初始虚拟机
@@ -331,6 +339,8 @@ async fn async_main(
     reg_pi_serv_handle();
     // 注册pi_serv_builtin运行时
     set_pi_serv_main_async_runtime(MAIN_ASYNC_RUNTIME.clone());
+    // 设置env
+    set_env(matches.clone());
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
@@ -534,5 +544,14 @@ fn enable_hotfix() {
         info!("Start listen hotfix...");
         hotfix_listen_backend(String::from("../dst_server"));
         hotfix_listen_frontend();
+    }
+}
+
+// 环境变量设置
+fn set_env(matches: ArgMatches) {
+    if let Some(v) = matches.value_of("current") {
+        env::set_var("current", v);
+    } else {
+        env::set_var("current", "false");
     }
 }
