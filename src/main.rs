@@ -336,6 +336,8 @@ async fn async_main(
     reg_pi_serv_handle();
     // 注册pi_serv_builtin运行时
     set_pi_serv_main_async_runtime(MAIN_ASYNC_RUNTIME.clone());
+    // 设置env
+    set_current_env();
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
@@ -539,5 +541,14 @@ fn enable_hotfix() {
         info!("Start listen hotfix...");
         hotfix_listen_backend(String::from("../dst_server"));
         hotfix_listen_frontend();
+    }
+}
+
+// 环境变量设置
+fn set_current_env() {
+    if env::var("CURRENT_LIMIT").is_ok() {
+        env::set_var("current", "true");
+    } else {
+        env::set_var("current", "false");
     }
 }
