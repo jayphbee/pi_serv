@@ -179,6 +179,10 @@ impl Handler for MqttConnectHandler {
         args: Args<Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H>,
     ) -> Self::HandleResult {
         let connect = unsafe { Arc::from_raw(Arc::into_raw(env) as *const MqttConnectHandle) };
+        let current = match env::var("current").unwrap().as_str() {
+            "true" => true,
+            _ => false,
+        };
         // let connect_id = connect.get_id();
         // let port = connect.get_local_port().unwrap();
         match args {
@@ -210,6 +214,7 @@ impl Handler for MqttConnectHandler {
                 msgs.push(ProcessMsg::Number(socket_id as f64));
                 msgs.push(ProcessMsg::Number(mqtt_connection_ptr as f64));
                 msgs.push(ProcessMsg::String(broker_name));
+                msgs.push(ProcessMsg::Boolean(current));
                 // listenerPID发送消息
                 send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
@@ -258,18 +263,16 @@ impl Handler for MqttRequestHandler {
         let session = connect.get_session().unwrap();
         let context = session.as_ref().get_context();
         // 获取会话中的pid
-        let pid = context.get::<Pid>().unwrap().as_ref().clone();
+        let (pid, current) = context.get::<(Pid, bool)>().unwrap().as_ref().clone();
         // 限流(达到软上限，就限制rpc并发)
-        if let "true" = env::var("current").unwrap().as_str() {
-            {
-                // 获取虚拟机队列长度
-                let vm = GRAY_MGR.read().vm_instance(0, pid.0).unwrap();
-                let vm_queue_len = vm.queue_len();
-                if vm_queue_len > 0 && !connect.is_passive() {
-                    connect.set_passive(true);
-                } else if connect.is_passive() {
-                    connect.set_passive(false);
-                }
+        if current {
+            // 获取虚拟机队列长度
+            let vm = GRAY_MGR.read().vm_instance(0, pid.0).unwrap();
+            let vm_queue_len = vm.queue_len();
+            if vm_queue_len > 0 && !connect.is_passive() {
+                connect.set_passive(true);
+            } else if connect.is_passive() {
+                connect.set_passive(false);
             }
         }
 
