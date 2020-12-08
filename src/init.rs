@@ -8,8 +8,42 @@ use std::env;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-pub async fn init_js(init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches<'static>) {
-    let init_exec_path = matches.value_of("init-file").unwrap().to_string();
+pub async fn read_init_source(init_exec_path: String) -> String {
+    let source = match AsyncFile::open(
+        FILES_ASYNC_RUNTIME.clone(),
+        init_exec_path.clone(),
+        AsyncFileOptions::OnlyRead,
+    )
+    .await
+    {
+        Ok(file) => match file.read(0, file.get_size() as usize).await {
+            Ok(f) => f,
+            Err(e) => {
+                panic!("read init-file path: {:?}, error: {:?}", &init_exec_path, e);
+            }
+        },
+        Err(e) => {
+            panic!(
+                "open init-file failed path: {:?}, error: {:?}",
+                &init_exec_path, e
+            );
+        }
+    };
+
+    match String::from_utf8(source) {
+        Ok(s) => s,
+        Err(e) => {
+            panic!("init-file is not valid utf8 string, error: {:?}", e);
+        }
+    }
+}
+
+pub async fn init_js(is_debug_mode: bool, init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches<'static>) {
+    let init_exec_path = if is_debug_mode {
+        "../dst_server/pi_pt/debug_init.js".to_string()
+    } else {
+        matches.value_of("init-file").unwrap().to_string()
+    };
     let projs = match matches.values_of("projects") {
         Some(p) => p
             .map(|s| s.to_string().replace("\\", "/"))
@@ -51,36 +85,7 @@ pub async fn init_js(init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches
         env::set_var("PROJECT_ROOT", &project_root);
     }
 
-    // let source = match AsyncFile::open(
-    //     FILES_ASYNC_RUNTIME.clone(),
-    //     init_exec_path.clone(),
-    //     AsyncFileOptions::OnlyRead,
-    // )
-    // .await
-    // {
-    //     Ok(file) => match file.read(0, file.get_size() as usize).await {
-    //         Ok(f) => f,
-    //         Err(e) => {
-    //             panic!("read init-file path: {:?}, error: {:?}", &init_exec_path, e);
-    //         }
-    //     },
-    //     Err(e) => {
-    //         panic!(
-    //             "open init-file failed path: {:?}, error: {:?}",
-    //             &init_exec_path, e
-    //         );
-    //     }
-    // };
-
-    // let source = match String::from_utf8(source) {
-    //     Ok(s) => s,
-    //     Err(e) => {
-    //         panic!("init-file is not valid utf8 string, error: {:?}", e);
-    //     }
-    // };
-
-    // TODO: 以后改为异步的
-    let source = read_to_string(&init_exec_path).unwrap();
+    let source = read_init_source(init_exec_path.clone()).await;
 
     if let Err(e) = init_vm
         .execute(handle, &init_exec_path, source.as_str())
