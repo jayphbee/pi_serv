@@ -40,7 +40,7 @@ use vm_builtin::{VmEvent, VmEventHandler, VmEventValue};
 use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
-use pi_serv_builtin::set_pi_serv_main_async_runtime;
+use pi_common_builtin::set_external_async_runtime;
 use pi_serv_ext::register_ext_functions;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
@@ -337,13 +337,19 @@ async fn async_main(
     // 注册pi_serv方法
     reg_pi_serv_handle();
     // 注册pi_serv_builtin运行时
-    set_pi_serv_main_async_runtime(MAIN_ASYNC_RUNTIME.clone());
+    set_external_async_runtime(MAIN_ASYNC_RUNTIME.clone());
     // 设置env
     set_current_env();
 
     let snapshot_context = init_snapshot(&init_vm).await;
 
-    init_js(debug_port.is_some(), init_vm.clone(), snapshot_context.clone(), matches.clone()).await;
+    init_js(
+        debug_port.is_some(),
+        init_vm.clone(),
+        snapshot_context.clone(),
+        matches.clone(),
+    )
+    .await;
     finish_snapshot(&init_vm, snapshot_context).await;
 
     let workers = init_work_vm(
@@ -527,8 +533,11 @@ fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
                         let vm = GRAY_MGR.read().vm_instance(0, vid).unwrap();
                         let vm_copy = vm.clone();
                         vm.spawn_task(async move {
-                            let source = read_init_source("../dst_server/pi_pt/init.js".to_string()).await;
-                            if let Err(e) = vm_copy.execute(context, "init.js", source.as_ref()).await {
+                            let source =
+                                read_init_source("../dst_server/pi_pt/init.js".to_string()).await;
+                            if let Err(e) =
+                                vm_copy.execute(context, "init.js", source.as_ref()).await
+                            {
                                 panic!(e);
                             }
                         });
