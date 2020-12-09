@@ -40,18 +40,21 @@ use vm_builtin::{VmEvent, VmEventHandler, VmEventValue};
 use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
-use pi_common_builtin::set_external_async_runtime;
+use pi_core::{
+    allocator::CounterSystemAllocator, create_snapshot_vm, finish_snapshot, init_snapshot,
+    init_v8_env, init_work_vm,
+};
+use pi_core_builtin::set_external_async_runtime;
+use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
 use pi_serv_lib::set_pi_serv_lib_file_runtime;
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
 
-mod allocator;
 mod hotfix;
 mod init;
 mod js_net;
 
 use crate::js_net::create_listener_pid;
-use allocator::CounterSystemAllocator;
 use hotfix::{hotfix_listen_backend, hotfix_listen_frontend};
 use init::{init_js, read_init_source};
 use js_net::{create_http_pid, reg_pi_serv_handle, start_network_services};
@@ -148,7 +151,13 @@ fn main() {
 
     //初始化V8环境，并启动初始虚拟机
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
-    let mut init_vm = create_init_vm(init_heap_size, max_heap_size, debug_port);
+    let mut init_vm = create_snapshot_vm(
+        init_heap_size,
+        max_heap_size,
+        debug_port,
+        MAIN_RUN_STATUS.clone(),
+        MAIN_CONDVAR.clone(),
+    );
     let init_vm_runner = init_vm.take_runner().unwrap();
     let queue_len_getter = init_vm_runner.get_inner_handler();
 
@@ -207,121 +216,6 @@ fn main() {
     }
 }
 
-//初始化V8环境，如果是调试模式则返回调试端口
-fn init_v8_env(matches: &ArgMatches) -> (usize, usize, Option<u16>) {
-    let mut init_heap_size = 16 * 1024 * 1024; //默认虚拟机初始堆大小为16MB
-    if let Some(size) = matches.value_of("INIT_HEAP_SIZE") {
-        match size.parse::<usize>() {
-            Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
-            Ok(num) => {
-                if num.is_power_of_two() {
-                    init_heap_size = num * 1024 * 1024;
-                }
-            }
-        }
-    }
-
-    let mut max_heap_size = 8096 * 1024 * 1024; //默认虚拟机最大堆大小为8GB
-    if let Some(size) = matches.value_of("MAX_HEAP_SIZE") {
-        match size.parse::<usize>() {
-            Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
-            Ok(num) => {
-                if num.is_power_of_two() {
-                    max_heap_size = num * 1024 * 1024;
-                }
-            }
-        }
-    }
-
-    let mut debug_port: u16 = 0;
-    if let Some(value) = matches.value_of("DEBUG") {
-        match value.parse::<u16>() {
-            Err(e) => {
-                panic!("Bind debug listene port failed, reason: {:?}", e);
-            }
-            Ok(port) => {
-                if port > 1024 {
-                    debug_port = port;
-                } else {
-                    panic!(
-                        "Bind debug listene port failed, port: {}, reason: invalid port",
-                        port
-                    );
-                }
-            }
-        }
-    }
-
-    init_v8(Some(vec![
-        "".to_string(),
-        "--no-wasm-async-compilation".to_string(),
-        "--harmony-top-level-await".to_string(),
-        "--expose-gc".to_string(),
-    ]));
-
-    if debug_port > 0 {
-        //启动虚拟机调试用Websocket服务
-        let ws_server_factory = Arc::new(debug::InspectorWebsocketServerFactory::new::<PathBuf>(
-            "", None,
-        )); // TODO: 浏览器的调试不能指定路径，但是vscode的调试需要指定路径
-        let mut factory = AsyncPortsFactory::<TcpSocket>::new();
-        factory.bind(
-            debug_port,
-            Box::new(
-                WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(ws_server_factory),
-            ),
-        );
-        let mut config = SocketConfig::new("0.0.0.0", factory.bind_ports().as_slice());
-        config.set_option(16384, 16384, 16384, 16);
-        let buffer = WriteBufferPool::new(1000, 10, 3).ok().unwrap();
-        match SocketListener::bind_with_processor(
-            factory,
-            buffer,
-            config,
-            1,
-            1024,
-            2 * 1024 * 1024,
-            1024,
-            Some(10),
-        ) {
-            Err(e) => {
-                panic!(
-                    "Bind debug listene port failed, port: {}, reason: {:?}",
-                    debug_port, e
-                );
-            }
-            Ok(_) => {
-                info!("Bind debug listene port ok, port: {}", debug_port);
-            }
-        }
-    }
-
-    info!("Init v8 env ok");
-    if debug_port == 0 {
-        (init_heap_size, max_heap_size, None)
-    } else {
-        (init_heap_size, max_heap_size, Some(debug_port))
-    }
-}
-
-//创建初始虚拟机
-fn create_init_vm(
-    init_heap_size: usize,
-    max_heap_size: usize,
-    debug_port: Option<u16>,
-) -> vm::UninitedVm {
-    let mut builder = vm::VmBuilder::new().snapshot_template();
-    builder = builder.heap_limit(init_heap_size, max_heap_size);
-
-    if debug_port.is_some() {
-        //允许调试
-        builder = builder.enable_inspect();
-    }
-
-    builder = builder.bind_thread_status(MAIN_RUN_STATUS.clone());
-    builder.bind_condvar_waker(MAIN_CONDVAR.clone()).build()
-}
-
 /*
 * 异步执行入口，退出时不会中止主线程
 */
@@ -337,11 +231,12 @@ async fn async_main(
     register_ext_functions();
 
     // 注册文件异步运行时
+    set_file_async_runtime(FILES_ASYNC_RUNTIME.clone());
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
     // 注册pi_serv方法
     reg_pi_serv_handle();
     // 注册pi_serv_builtin运行时
-    set_external_async_runtime(MAIN_ASYNC_RUNTIME.clone());
+    set_external_async_runtime(AsyncRuntime::Local(MAIN_ASYNC_RUNTIME.clone()));
     // 设置env
     set_current_env();
 
@@ -356,12 +251,33 @@ async fn async_main(
     .await;
     finish_snapshot(&init_vm, snapshot_context).await;
 
+    let mut work_vm_count: usize = 2 * get_physical(); //默认工作虚拟机数量为本地cpu物理核数的2倍
+    if let Some(value) = matches.value_of("WORK_VM_MULTIPLE") {
+        match value.parse::<usize>() {
+            Err(e) => {
+                panic!("Init work vm failed, reason: {:?}", e);
+            }
+            Ok(count) => {
+                work_vm_count = get_physical() * count;
+            }
+        }
+    }
     let workers = init_work_vm(
-        &matches,
         &init_vm,
         init_heap_size,
         max_heap_size,
         debug_port,
+        work_vm_count,
+        "PI-SERV",
+        2,
+        1000,
+        None,
+        move |work_vm_runner: vm::VmRunner| {
+            move || {
+                let run_time = work_vm_runner.run();
+                (work_vm_runner.queue_len() == 0, run_time)
+            }
+        },
     );
 
     let vms: Vec<vm::Vm> = workers.iter().map(|(_, vm)| vm.clone()).collect();
@@ -376,120 +292,6 @@ async fn async_main(
     let _ = start_network_services(16384, 16384, 16384, 100000, 256, 2097152, 10);
 
     enable_hotfix();
-}
-
-//初始化快照
-async fn init_snapshot(init_vm: &vm::Vm) -> ContextHandle {
-    let snapshot_context = init_vm
-        .new_context(None, init_vm.alloc_context_id(), None)
-        .await
-        .unwrap();
-    if let Err(e) = init_vm
-        .execute(
-            snapshot_context,
-            "Init_Vm_Init_module.js",
-            r#"
-                    onerror = function(e) {
-                        if(e.stack) {
-                            print("catch global error, e:", e.stack);
-                        } else {
-                            print("catch global error, e:", e.message);     
-                        }
-                    };
-                "#,
-        )
-        .await
-    {
-        panic!("!!!!!!Init snapshot failed, reason: {:?}", e);
-    }
-    info!("Init snapshot ok");
-
-    snapshot_context
-}
-
-//完成快照
-async fn finish_snapshot(init_vm: &vm::Vm, snapshot_context: ContextHandle) {
-    if let Err(e) = init_vm.snapshot(snapshot_context).await {
-        panic!("!!!!!!Finish snapshot failed, reason: {:?}", e);
-    }
-    info!("Snapshot finish");
-}
-
-//初始化工作虚拟机，返回工作虚拟机
-fn init_work_vm(
-    matches: &ArgMatches,
-    init_vm: &vm::Vm,
-    init_heap_size: usize,
-    max_heap_size: usize,
-    debug_port: Option<u16>,
-) -> Vec<(Arc<AtomicBool>, vm::Vm)> {
-    let mut work_vm_count: usize = 2 * get_physical(); //默认工作虚拟机数量为本地cpu物理核数的2倍
-    if let Some(value) = matches.value_of("WORK_VM_MULTIPLE") {
-        match value.parse::<usize>() {
-            Err(e) => {
-                panic!("Init work vm failed, reason: {:?}", e);
-            }
-            Ok(count) => {
-                work_vm_count = get_physical() * count;
-            }
-        }
-    }
-
-    let mut vec = Vec::with_capacity(work_vm_count);
-    let snapshot = VmStartupSnapshot::Snapshot(init_vm.get_snapshot().unwrap());
-    let snapshot_bytes = snapshot.bytes();
-    for index in 0..work_vm_count {
-        //使用指定快照，创建工作虚拟机
-        let work_vm_snapshot = VmStartupSnapshot::Boxed(snapshot_bytes.to_vec().into_boxed_slice());
-
-        let worker_status = Arc::new(AtomicBool::new(true));
-        let worker_condvar = Arc::new((AtomicBool::new(false), Mutex::new(()), Condvar::new()));
-        let mut builder = vm::VmBuilder::new().startup_snapshot(work_vm_snapshot);
-        builder = builder.heap_limit(init_heap_size, max_heap_size);
-        if debug_port.is_some() {
-            //允许调试
-            builder = builder.enable_inspect();
-        }
-        let mut work_vm = builder
-            .bind_thread_status(worker_status.clone())
-            .bind_condvar_waker(worker_condvar.clone())
-            .build();
-        let work_vm_runner = work_vm.take_runner().unwrap();
-        let queue_len_getter = work_vm_runner.get_inner_handler();
-
-        //启动工作线程，并运行工作虚拟机
-        let worker_name = "PI-SERV-WORKER".to_string() + index.to_string().as_str();
-        info!(
-            "Worker ready, thread: {}, worker: {}",
-            worker_name,
-            "Vm-".to_string() + work_vm_runner.get_vid().to_string().as_str()
-        );
-
-        let worker_handle = spawn_worker_thread(
-            worker_name.as_str(),
-            2 * 1024 * 1024,
-            worker_status,
-            worker_condvar,
-            1000,
-            None,
-            move || {
-                let run_time = work_vm_runner.run();
-                (work_vm_runner.queue_len() == 0, run_time)
-            },
-            move || {
-                if let Some(len) = queue_len_getter.len() {
-                    len
-                } else {
-                    0
-                }
-            },
-        );
-
-        let work_vm = work_vm.init().unwrap();
-        vec.push((worker_handle, work_vm));
-    }
-
-    vec
 }
 
 //初始化默认灰度

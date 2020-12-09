@@ -43,7 +43,6 @@ use vm_builtin::process::{process_close, process_send, process_spawn, Pid, Proce
 use vm_builtin::ContextHandle;
 use vm_core::vm::{send_to_process, JSValue, Vm};
 
-use crate::create_init_vm;
 use crate::FILES_ASYNC_RUNTIME;
 use crate::HTTP_PORTS;
 use crate::MQTT_PORTS;
@@ -65,6 +64,7 @@ use http::static_cache::StaticCache;
 use http::upload::UploadFile;
 use http::virtual_host::VirtualHostPool;
 use http::virtual_host::{VirtualHost, VirtualHostTab};
+use pi_core::create_snapshot_vm;
 use pi_serv_lib::js_gray::GRAY_MGR;
 use pi_serv_lib::js_net::{HttpConnect, HttpHeaders, MqttConnection};
 use pi_serv_lib::{set_pi_serv_handle, PiServNetHandle};

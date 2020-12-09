@@ -27,7 +27,9 @@ tcp = { path = "../pi_net/tcp" }
 ws = { path = "../pi_net/ws" }
 pi_serv_ext = { path = "../pi_serv_ext"}
 pi_serv_lib = { path = "../pi_serv_lib" }
-pi_common_builtin = { path = "../pi_common_builtin" }
+pi_core_builtin = { path = "../pi_core_builtin" }
+pi_core_lib = { path = "../pi_core_lib" }
+pi_core = { path = "../pi_core" }
 
 rusty_v8 = { path = "../rusty_v8" }
 libc = "*"
