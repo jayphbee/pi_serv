@@ -297,7 +297,11 @@ fn init_v8_env(matches: &ArgMatches) -> (usize, usize, Option<u16>) {
     }
 
     info!("Init v8 env ok");
-    (init_heap_size, max_heap_size, Some(debug_port))
+    if debug_port == 0 {
+        (init_heap_size, max_heap_size, None)
+    } else {
+        (init_heap_size, max_heap_size, Some(debug_port))
+    }
 }
 
 //创建初始虚拟机
