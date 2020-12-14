@@ -47,7 +47,7 @@ use pi_core::{
 use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::set_pi_serv_lib_file_runtime;
+use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime};
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
 
 mod hotfix;
@@ -233,6 +233,7 @@ async fn async_main(
     // 注册文件异步运行时
     set_file_async_runtime(FILES_ASYNC_RUNTIME.clone());
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
+    set_pi_serv_lib_main_async_runtime(MAIN_ASYNC_RUNTIME.clone());
     // 注册pi_serv方法
     reg_pi_serv_handle();
     // 注册pi_serv_builtin运行时
