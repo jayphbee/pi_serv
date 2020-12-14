@@ -60,7 +60,7 @@ use init::{init_js, read_init_source};
 use js_net::{create_http_pid, reg_pi_serv_handle, start_network_services};
 
 #[global_allocator]
-static GlobalAllocator: CounterSystemAllocator = CounterSystemAllocator;
+static Global_Allocator: CounterSystemAllocator = CounterSystemAllocator;
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
