@@ -9,6 +9,13 @@ extern crate lazy_static;
 #[macro_use]
 extern crate json;
 
+#[cfg(feature = "default")]
+#[macro_use]
+extern crate pi_core;
+#[cfg(feature = "profiling_heap")]
+#[macro_use]
+extern crate profiling_pi_core;
+
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -40,15 +47,22 @@ use vm_builtin::{VmEvent, VmEventHandler, VmEventValue};
 use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
+#[cfg(feature = "default")]
 use pi_core::{
-    allocator::CounterSystemAllocator, create_snapshot_vm, finish_snapshot, init_snapshot,
-    init_v8_env, init_work_vm,
+    create_snapshot_vm, finish_snapshot, init_snapshot, init_v8_env, init_work_vm,
+    shell::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
 };
 use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime};
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
+use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime};
+#[cfg(feature = "profiling_heap")]
+use profiling_pi_core::{
+    create_snapshot_vm, finish_snapshot, init_snapshot, init_v8_env, init_work_vm,
+    set_default_ctrlc_handler,
+    shell::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
+};
 
 mod hotfix;
 mod init;
@@ -59,8 +73,10 @@ use hotfix::{hotfix_listen_backend, hotfix_listen_frontend};
 use init::{init_js, read_init_source};
 use js_net::{create_http_pid, reg_pi_serv_handle, start_network_services};
 
-#[global_allocator]
-static Global_Allocator: CounterSystemAllocator = CounterSystemAllocator;
+#[cfg(feature = "default")]
+init_global_counter_alloc! {}
+#[cfg(feature = "profiling_heap")]
+init_global_profiling_alloc! {}
 
 lazy_static! {
     //主线程运行状态和线程无条件休眠超时时长
@@ -85,12 +101,19 @@ lazy_static! {
     //Http端口代理映射表
     static ref HTTP_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
     static ref VID_CONTEXTS: Arc<Mutex<XHashMap<usize, Vec<ContextHandle>>>> = Arc::new(Mutex::new(XHashMap::default()));
+
+    //控制台
+    static ref CONSOLE_SHELL: RwLock<Option<ConsoleShell>> = RwLock::new(None);
 }
 
 /*
 * 同步执行入口，退出时会中止主线程
 */
 fn main() {
+    //初始化分析堆内存的堆分配器
+    #[cfg(feature = "profiling_heap")]
+    init_profiling_alloctor();
+
     //初始化日志服务器
     env_logger::init();
 
@@ -103,7 +126,7 @@ fn main() {
                 .short("I")
                 .long("INIT_HEAP_SIZE")
                 .value_name("Mbytes")
-                .help("Set init vm heap size")
+                .help("Sets init vm heap size")
                 .takes_value(true),
         )
         .arg(
@@ -111,7 +134,7 @@ fn main() {
                 .short("H")
                 .long("MAX_HEAP_SIZE")
                 .value_name("Mbytes")
-                .help("Set max vm heap size")
+                .help("Sets max vm heap size")
                 .takes_value(true),
         )
         .arg(
@@ -119,7 +142,7 @@ fn main() {
                 .short("W")
                 .long("WORK_VM_MULTIPLE")
                 .value_name("Multiple")
-                .help("Set multiple of work vm amount")
+                .help("Sets multiple of work vm amount")
                 .takes_value(true),
         )
         .arg(
@@ -129,6 +152,12 @@ fn main() {
                 .value_name("Port")
                 .help("Enable debug work vm on port")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("CONSOLE") //工作虚拟机控制台模式
+                .short("C")
+                .long("CONSOLE")
+                .help("Enable with console for work vm"),
         )
         .arg(
             Arg::with_name("init-file") // pi_pt入口文件
@@ -150,7 +179,51 @@ fn main() {
         .get_matches();
 
     //初始化V8环境，并启动初始虚拟机
-    let (init_heap_size, max_heap_size, debug_port) = init_v8_env(&matches);
+    let mut init_heap_size = 16 * 1024 * 1024; //默认虚拟机初始堆大小为16MB
+    if let Some(size) = matches.value_of("INIT_HEAP_SIZE") {
+        match size.parse::<usize>() {
+            Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
+            Ok(num) => {
+                if num.is_power_of_two() {
+                    init_heap_size = num * 1024 * 1024;
+                }
+            }
+        }
+    }
+
+    let mut max_heap_size = 8096 * 1024 * 1024; //默认虚拟机最大堆大小为8GB
+    if let Some(size) = matches.value_of("MAX_HEAP_SIZE") {
+        match size.parse::<usize>() {
+            Err(e) => panic!("Init v8 env failed, reason: {:?}", e),
+            Ok(num) => {
+                if num.is_power_of_two() {
+                    max_heap_size = num * 1024 * 1024;
+                }
+            }
+        }
+    }
+
+    let mut debug_port: u16 = 0;
+    if let Some(value) = matches.value_of("DEBUG") {
+        match value.parse::<u16>() {
+            Err(e) => {
+                panic!("Bind debug listene port failed, reason: {:?}", e);
+            }
+            Ok(port) => {
+                if port > 1024 {
+                    debug_port = port;
+                } else {
+                    panic!(
+                        "Bind debug listene port failed, port: {}, reason: invalid port",
+                        port
+                    );
+                }
+            }
+        }
+    }
+
+    let (init_heap_size, max_heap_size, debug_port) =
+        init_v8_env(init_heap_size, max_heap_size, debug_port);
     let mut init_vm = create_snapshot_vm(
         init_heap_size,
         max_heap_size,
@@ -167,7 +240,7 @@ fn main() {
         2 * 1024 * 1024,
         MAIN_RUN_STATUS.clone(),
         MAIN_CONDVAR.clone(),
-        1000,
+        10,
         Some(10),
         move || {
             let run_time = init_vm_runner.run();
@@ -271,7 +344,7 @@ async fn async_main(
         work_vm_count,
         "PI-SERV",
         2,
-        1000,
+        10,
         None,
         move |work_vm_runner: vm::VmRunner| {
             move || {
@@ -293,6 +366,36 @@ async fn async_main(
     let _ = start_network_services(16384, 16384, 16384, 100000, 256, 2097152, 10);
 
     enable_hotfix();
+
+    if let Some((worker, worker_context)) =
+        init_console(matches.clone(), MAIN_ASYNC_RUNTIME.clone(), &workers).await
+    {
+        if let Some(console_shell) = CONSOLE_SHELL.read().as_ref() {
+            //启动控制台
+            let vid = worker.get_vid();
+            let cid = worker_context.0;
+            let console_shell = console_shell.clone();
+
+            //设置控制台Ctrl+C的处理器
+            let prompt_prefix = "Pid{".to_string()
+                + vid.to_string().as_str()
+                + ", "
+                + cid.to_string().as_str()
+                + "}";
+            set_console_shell_ctrlc_handler(console_shell.clone(), prompt_prefix.clone());
+
+            console_shell.show_welcome_info(
+                "PiServ",
+                "0.2.0",
+                Some("Workers: ".to_string() + workers.len().to_string().as_str()),
+            );
+            console_shell.wait_input(prompt_prefix);
+        }
+    } else {
+        //不启动控制台，且需要分析堆内存，则设置Ctrl+C的默认处理器
+        #[cfg(feature = "profiling_heap")]
+        set_default_ctrlc_handler();
+    }
 }
 
 //初始化默认灰度
@@ -371,6 +474,36 @@ fn enable_hotfix() {
         hotfix_listen_backend(String::from("../dst_server"));
         hotfix_listen_frontend();
     }
+}
+
+//初始化控制台
+async fn init_console(
+    matches: ArgMatches<'static>,
+    rt: SingleTaskRuntime<()>,
+    workers: &Vec<(Arc<AtomicBool>, vm::Vm)>,
+) -> Option<(vm::Vm, ContextHandle)> {
+    if let None = matches.index_of("CONSOLE") {
+        //不打开控制台，则忽略
+        return None;
+    }
+
+    let (_, worker) = &workers[0];
+    let context = worker
+        .new_context(None, worker.alloc_context_id(), None)
+        .await
+        .unwrap();
+
+    //构建控制台，并注册
+    let console_shell: ConsoleShell =
+        ConsoleShellBuilder::new(AsyncRuntime::Local(rt), worker.clone(), context)
+            .buffer_stdout()
+            .enable_color_stdout()
+            .enable_color_stderr()
+            .set_title("PiServ Console Shell")
+            .build();
+    *CONSOLE_SHELL.write() = Some(console_shell);
+
+    Some((worker.clone(), context))
 }
 
 // 环境变量设置
