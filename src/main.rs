@@ -27,6 +27,7 @@ use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
 use env_logger;
+use json::stringify;
 use num_cpus::get_physical;
 use parking_lot::{Condvar, Mutex, RwLock, WaitTimeoutResult};
 
@@ -71,7 +72,7 @@ mod init;
 mod js_net;
 
 use crate::js_net::create_listener_pid;
-use hotfix::{hotfix_listen_backend, hotfix_listen_frontend};
+use hotfix::{hotfix_listen_backend, hotfix_listen_frontend, HOTFIX_FILES};
 use init::{init_js, read_init_source};
 use js_net::{create_http_pid, reg_pi_serv_handle, start_network_services};
 
@@ -425,6 +426,7 @@ fn init_http_listener_pid() {
 fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
     // 设置虚拟机的事件回调
     for worker in workers {
+        let vm = worker.clone();
         let event_handler = VmEventHandler::new(
             AsyncRuntime::Local(MAIN_ASYNC_RUNTIME.clone()),
             move |event, vid| match event {
@@ -433,6 +435,55 @@ fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
                         "Vm event handler: VmEventValue::CreatedContext, vid = {:?}, cid = {:?}",
                         vid, context.0
                     );
+
+                    // 非调试模式下才需要重新require热更过的文件
+                    if !is_debug_mode {
+                        // 获取已经热更新过的文件
+                        let mut hotfixed_files = HOTFIX_FILES
+                            .lock()
+                            .iter()
+                            .map(|(key, val)| (key.clone(), val.clone()))
+                            .collect::<Vec<(String, usize)>>();
+                        // 按版本号从小到大排序
+                        hotfixed_files.sort_by(|a, b| a.1.cmp(&b.1));
+
+                        for (path, _) in hotfixed_files {
+                            let vm = vm.clone();
+                            let _ = MAIN_ASYNC_RUNTIME.spawn(MAIN_ASYNC_RUNTIME.alloc(), async move {
+                                if let Ok(Some(func)) = vm
+                                    .get_property(context.clone(), "self.Module.require")
+                                    .await
+                                {
+                                    let p = vm
+                                        .to_js_value(context.clone(), stringify(path.clone()))
+                                        .await
+                                        .unwrap()
+                                        .unwrap();
+                                    let dir = vm
+                                        .to_js_value(context.clone(), stringify(""))
+                                        .await
+                                        .unwrap()
+                                        .unwrap();
+                                    let force = vm
+                                        .to_js_value(context.clone(), stringify(true))
+                                        .await
+                                        .unwrap()
+                                        .unwrap();
+                                    if let Err(_e) = vm
+                                        .call(context.clone(), &func, vec![p.clone(), dir, force])
+                                        .await
+                                    {
+                                        warn!("hotfix call require error");
+                                    } else {
+                                        debug!("new context update hotfix file, vid = {:?}, cid = {:?}, path = {:?}", vid, context.0, path);
+                                    }
+                                } else {
+                                    warn!("get Module.require error");
+                                }
+                            });
+                        }
+                    }
+
                     VID_CONTEXTS
                         .lock()
                         .entry(vid)
