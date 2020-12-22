@@ -49,8 +49,9 @@ use ws::server::WebsocketListenerFactory;
 
 #[cfg(feature = "default")]
 use pi_core::{
+    console::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
     create_snapshot_vm, finish_snapshot, init_snapshot, init_v8_env, init_work_vm,
-    shell::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
+    terminal::VmTerminal,
 };
 use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
@@ -59,9 +60,10 @@ use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
 use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime};
 #[cfg(feature = "profiling_heap")]
 use profiling_pi_core::{
+    console::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
     create_snapshot_vm, finish_snapshot, init_snapshot, init_v8_env, init_work_vm,
     set_default_ctrlc_handler,
-    shell::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
+    terminal::VmTerminal,
 };
 
 mod hotfix;
