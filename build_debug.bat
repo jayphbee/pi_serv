@@ -8,4 +8,5 @@ if not defined PI_JS_PROXY_TS_PATH (
 
 cargo clean -p pi_serv
 cargo b
+
 pause;

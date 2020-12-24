@@ -3,5 +3,6 @@
 /Cargo.lock
 .depend
 /.vscode
-copy.bat
+copy_debug.bat
+copy_release.bat
 build_no_warning.bat
