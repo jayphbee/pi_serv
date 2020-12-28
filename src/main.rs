@@ -58,7 +58,7 @@ use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
 use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
-use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime};
+use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime, set_store_runtime};
 #[cfg(feature = "profiling_heap")]
 use profiling_pi_core::{
     console::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
@@ -306,6 +306,7 @@ async fn async_main(
     // 加载native funtion
     register_ext_functions();
 
+    set_store_runtime(FILES_ASYNC_RUNTIME.clone()).await;
     // 注册文件异步运行时
     set_file_async_runtime(FILES_ASYNC_RUNTIME.clone());
     set_pi_serv_lib_file_runtime(FILES_ASYNC_RUNTIME.clone());
