@@ -10,7 +10,7 @@ use js_proxy_gen::{generate_proxy_crate, parse_crates, spawn};
 */
 #[cfg(target_os = "windows")]
 const DEFAULT_PI_JS_PROXY_CRATE_PATH: &str = r#"..\pi_serv_ext"#;
-#[cfg(target_os = "unix")]
+#[cfg(target_os = "linux")]
 const DEFAULT_PI_JS_PROXY_CRATE_PATH: &str = "../pi_serv_ext";
 
 /*
