@@ -419,7 +419,14 @@ pub fn create_http_pid(host: &String, port: u16) {
         );
         vm.spawn_task(async move {
             let context = vm_copy.new_context(None, cid, None).await.unwrap();
-            if let Err(e) = vm_copy.execute(context, "http_session_pid.js", r#""#).await {
+            if let Err(e) = vm_copy
+                .execute(
+                    context,
+                    "http_session_pid.js",
+                    r#"_$http_rpc_set_receive();"#,
+                )
+                .await
+            {
                 panic!(e);
             }
         });
@@ -498,11 +505,8 @@ impl Handler for InsecureHttpRpcRequstHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
-                let (pid, vm) =
+                let (pid, _vm) =
                     get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
-                let vm_copy = vm.clone();
-                // v8上下文环境
-                let context_v8 = ContextHandle(pid.1);
                 //  http连接
                 let mut http_connect = HttpConnect::new(addr);
                 http_connect.set_insecure_resp_handle(handler);
@@ -512,26 +516,14 @@ impl Handler for InsecureHttpRpcRequstHandler {
                 let handlers_ptr = Box::into_raw(Box::new(http_header)) as usize;
                 let msg = HttpMsg(msg);
                 let topic = (*topic).clone();
-                vm.spawn_task(async move {
-                    let headers = vm_copy
-                        .new_js_number(context_v8, handlers_ptr as f64)
-                        .await
-                        .unwrap();
-                    let http_con = vm_copy
-                        .new_js_number(context_v8, con_ptr as f64)
-                        .await
-                        .unwrap();
-                    let topic = vm_copy
-                        .new_js_string(context_v8, Some(topic))
-                        .await
-                        .unwrap();
-                    let data = set_data(&vm_copy, &context_v8, msg).await;
-                    vm_copy.callback(
-                        context_v8,
-                        "_$http_rpc",
-                        vec![http_con, headers, topic, data],
-                    );
-                });
+                let data = set_data(msg);
+                let mut msgs = Vec::with_capacity(4);
+                msgs.push(ProcessMsg::Number(con_ptr as f64));
+                msgs.push(ProcessMsg::Number(handlers_ptr as f64));
+                msgs.push(ProcessMsg::String(topic));
+                msgs.push(ProcessMsg::Array(data));
+                // PID发送消息
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             _ => panic!("invalid HttpRpcRequestHandler handler args"),
         }
@@ -567,11 +559,8 @@ impl Handler for SecureHttpRpcRequestHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
-                let (pid, vm) =
+                let (pid, _vm) =
                     get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
-                let vm_copy = vm.clone();
-                // v8上下文环境
-                let context_v8 = ContextHandle(pid.1);
                 //  http连接
                 let mut http_connect = HttpConnect::new(addr);
                 http_connect.set_secure_resp_handle(handler);
@@ -581,26 +570,14 @@ impl Handler for SecureHttpRpcRequestHandler {
                 let handlers_ptr = Box::into_raw(Box::new(http_header)) as usize;
                 let msg = HttpMsg(msg);
                 let topic = (*topic).clone();
-                vm.spawn_task(async move {
-                    let headers = vm_copy
-                        .new_js_number(context_v8, handlers_ptr as f64)
-                        .await
-                        .unwrap();
-                    let http_con = vm_copy
-                        .new_js_number(context_v8, con_ptr as f64)
-                        .await
-                        .unwrap();
-                    let topic = vm_copy
-                        .new_js_string(context_v8, Some(topic))
-                        .await
-                        .unwrap();
-                    let data = set_data(&vm_copy, &context_v8, msg).await;
-                    vm_copy.callback(
-                        context_v8,
-                        "_$http_rpc",
-                        vec![http_con, headers, topic, data],
-                    );
-                });
+                let data = set_data(msg);
+                let mut msgs = Vec::with_capacity(4);
+                msgs.push(ProcessMsg::Number(con_ptr as f64));
+                msgs.push(ProcessMsg::Number(handlers_ptr as f64));
+                msgs.push(ProcessMsg::String(topic));
+                msgs.push(ProcessMsg::Array(data));
+                // PID发送消息
+                send_to_process(None, pid, ProcessMsg::Array(msgs));
             }
             _ => panic!("invalid HttpRpcRequestHandler handler args"),
         }
@@ -608,10 +585,8 @@ impl Handler for SecureHttpRpcRequestHandler {
 }
 
 // 设置http请求参数
-async fn set_data(vm: &Vm, context: &ContextHandle, msg: HttpMsg) -> JSValue {
-    let vm = vm.clone();
-    let context = context.clone();
-    let data = vm.new_js_object(context).await.unwrap();
+fn set_data(msg: HttpMsg) -> Vec<ProcessMsg> {
+    let mut data = Vec::new();
     let values: Vec<(String, SGenType)> = msg
         .0
         .borrow()
@@ -619,18 +594,14 @@ async fn set_data(vm: &Vm, context: &ContextHandle, msg: HttpMsg) -> JSValue {
         .map(|(key, val)| (key.clone(), val.clone()))
         .collect();
     for (key, val) in values {
+        data.push(ProcessMsg::String(key));
         match val {
             SGenType::Str(s) => {
-                let str = vm.new_js_string(context, Some(s)).await.unwrap();
-                data.set(context, &key, str).await;
+                data.push(ProcessMsg::String(s));
             }
             SGenType::Bin(bin) => {
-                let buf = NativeArrayBuffer::from(bin.into_boxed_slice());
-                let bin = vm
-                    .native_buffer_to_js_array_buffer(context, &buf)
-                    .await
-                    .unwrap();
-                data.set(context, &key, bin).await;
+                let buf = NativeArrayBuffer::with_shared(bin.into_boxed_slice());
+                data.push(ProcessMsg::SharedArrayBuffer(buf));
             }
             _ => {
                 unimplemented!();
