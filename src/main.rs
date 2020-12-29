@@ -365,7 +365,7 @@ async fn async_main(
     init_http_listener_pid();
 
     // 最后启动网络服务
-    let _ = start_network_services(16384, 16384, 16384, 100000, 1024, 2097152, 10);
+    let _ = start_network_services(16384, 16384, 16384, 100000, 2048, 2097152, 10);
 
     enable_hotfix();
 
