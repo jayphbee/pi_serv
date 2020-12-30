@@ -1,11 +1,14 @@
+use std::collections::HashMap;
 use std::env;
 use std::ffi::OsString;
 use std::mem::forget;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use dunce::canonicalize;
 use json::stringify;
+use parking_lot::Mutex;
 
 use atom::Atom;
 use file::fs_monitor::{FSChangeEvent, FSListener, FSMonitor, FSMonitorOptions};
@@ -15,6 +18,12 @@ use vm_builtin::ContextHandle;
 use crate::js_net::HTTP_STATIC_CACHES;
 use crate::MAIN_ASYNC_RUNTIME;
 use crate::VID_CONTEXTS;
+
+lazy_static! {
+    pub static ref HOTFIX_FILES: Arc<Mutex<HashMap<String, usize>>> =
+        Arc::new(Mutex::new(HashMap::new()));
+    static ref HOTFIX_VERSION: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+}
 
 const INIT_FILE: &str = "pi_pt/init.js";
 
@@ -33,6 +42,11 @@ fn module_changed(change_path: PathBuf, prefix: PathBuf) {
         if path == INIT_FILE {
             break;
         }
+
+        // 递增版本号
+        let ver = HOTFIX_VERSION.fetch_add(1, Ordering::Relaxed);
+        // 如果是已经存在的文件，则使用原来的版本号; 新文件则使用新的版本号
+        HOTFIX_FILES.lock().entry(path.clone()).or_insert(ver);
 
         match GRAY_MGR.read().vm_instance(0, vid.clone()) {
             Some(vm) => {

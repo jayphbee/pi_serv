@@ -38,7 +38,12 @@ pub async fn read_init_source(init_exec_path: String) -> String {
     }
 }
 
-pub async fn init_js(is_debug_mode: bool, init_vm: vm::Vm, handle: ContextHandle, matches: ArgMatches<'static>) {
+pub async fn init_js(
+    is_debug_mode: bool,
+    init_vm: vm::Vm,
+    handle: ContextHandle,
+    matches: ArgMatches<'static>,
+) {
     let init_exec_path = if is_debug_mode {
         "../dst_server/pi_pt/debug_init.js".to_string()
     } else {
