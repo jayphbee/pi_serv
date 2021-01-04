@@ -57,7 +57,7 @@ use pi_core::{
 use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::{js_db::global_db_mgr, js_gray::GRAY_MGR};
+use pi_serv_lib::{js_db::global_db_mgr, js_gray::{VID_CONTEXTS, GRAY_MGR}};
 use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime, set_store_runtime};
 #[cfg(feature = "profiling_heap")]
 use profiling_pi_core::{
@@ -103,7 +103,6 @@ lazy_static! {
     static ref MQTT_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
     //Http端口代理映射表
     static ref HTTP_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
-    static ref VID_CONTEXTS: Arc<Mutex<XHashMap<usize, Vec<ContextHandle>>>> = Arc::new(Mutex::new(XHashMap::default()));
 
     //控制台
     static ref CONSOLE_SHELL: RwLock<Option<ConsoleShell>> = RwLock::new(None);
