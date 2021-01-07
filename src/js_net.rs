@@ -403,7 +403,7 @@ pub fn create_http_pid(host: &String, port: u16) {
         "!!!!!!!!!!!!!!create_http_pid host:{:?}, port:{:?}",
         host, port
     );
-    let hostPort = [host, port.to_string().as_str()].join(":") as String;
+    let hostPort = host.to_owned() + ":" + port.to_string().as_str();
     // 判断pid是否存在
     if BUILD_HTTP_LISTENER_TAB.read().get(&hostPort).is_none() {
         debug!("!!!!!!!!!!!!!!create_http_pid 1111111111");
@@ -507,11 +507,10 @@ impl Handler for InsecureHttpRpcRequstHandler {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
                 let host_c = headers.get("host").unwrap().to_str().unwrap();
-                let host = match host_c.split(":").collect::<Vec<&str>>().as_slice() {
-                    [h] => {
-                        [h.clone(), "80"].join(":")
-                    }
-                    _ => host_c.to_string(),
+                let host = if let None = host_c.find(":") {
+                    host_c.to_owned() + ":80"
+                } else {
+                    host_c.to_string()
                 };
                 let (pid, _vm) =
                     get_http_pid(&host);
@@ -568,11 +567,10 @@ impl Handler for SecureHttpRpcRequestHandler {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
                 let host_c = headers.get("host").unwrap().to_str().unwrap();
-                let host = match host_c.split(":").collect::<Vec<&str>>().as_slice() {
-                    [h] => {
-                        [h.clone(), "443"].join(":")
-                    }
-                    _ => host_c.to_string(),
+                let host = if let None = host_c.find(":") {
+                    host_c.to_owned() + ":443"
+                } else {
+                    host_c.to_string()
                 };
 
                 let (pid, _vm) = get_http_pid(&host);
