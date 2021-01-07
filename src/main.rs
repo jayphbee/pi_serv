@@ -16,6 +16,7 @@ extern crate pi_core;
 #[macro_use]
 extern crate profiling_pi_core;
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -57,8 +58,13 @@ use pi_core::{
 use pi_core_builtin::set_external_async_runtime;
 use pi_core_lib::set_file_async_runtime;
 use pi_serv_ext::register_ext_functions;
-use pi_serv_lib::{js_db::global_db_mgr, js_gray::{VID_CONTEXTS, GRAY_MGR}};
-use pi_serv_lib::{set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime, set_store_runtime};
+use pi_serv_lib::{
+    js_db::global_db_mgr,
+    js_gray::{GRAY_MGR, VID_CONTEXTS},
+};
+use pi_serv_lib::{
+    set_pi_serv_lib_file_runtime, set_pi_serv_lib_main_async_runtime, set_store_runtime,
+};
 #[cfg(feature = "profiling_heap")]
 use profiling_pi_core::{
     console::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
@@ -100,7 +106,7 @@ lazy_static! {
         pool.startup(false)
     };
     //Mqtt端口代理映射表
-    static ref MQTT_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
+    static ref MQTT_PORTS: Arc<Mutex<HashSet<(u16, String)>>> = Arc::new(Mutex::new(HashSet::new()));
     //Http端口代理映射表
     static ref HTTP_PORTS: Arc<Mutex<Vec<(u16, String)>>> = Arc::new(Mutex::new(vec![]));
 

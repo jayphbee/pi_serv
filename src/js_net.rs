@@ -440,29 +440,31 @@ pub fn create_http_pid(host: &String, port: u16) {
 
 // 绑定mqtt监听器
 pub fn bind_mqtt_tcp_port(port: u16, use_tls: bool, protocol: String, broker_name: String) {
-    MQTT_PORTS.lock().push((port, broker_name.clone()));
-    let event_handler = Arc::new(MqttConnectHandler::new());
-    let rpc_handler = Arc::new(MqttRequestHandler::new());
-    let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));
-    let service = Arc::new(MqttProxyService::with_handler(Some(rpc_handler)));
-
-    if use_tls {
-        let broker_factory = Arc::new(WssMqttBrokerFactory::new(&protocol, &broker_name, port));
-
-        SECURE_SERVICES.write().push(SecureServices((
-            port.clone(),
-            Box::new(WebsocketListenerFactory::<FTlsSocket>::with_protocol_factory(broker_factory)),
-        )));
-    } else {
-        let broker_factory = Arc::new(WsMqttBrokerFactory::new(&protocol, &broker_name, port));
-
-        INSECURE_SERVICES.write().push(InsecureServices((
-            port.clone(),
-            Box::new(WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(broker_factory)),
-        )));
+    let inserted = MQTT_PORTS.lock().insert((port, broker_name.clone()));
+    if inserted {
+        let event_handler = Arc::new(MqttConnectHandler::new());
+        let rpc_handler = Arc::new(MqttRequestHandler::new());
+        let listener = Arc::new(MqttProxyListener::with_handler(Some(event_handler)));
+        let service = Arc::new(MqttProxyService::with_handler(Some(rpc_handler)));
+    
+        if use_tls {
+            let broker_factory = Arc::new(WssMqttBrokerFactory::new(&protocol, &broker_name, port));
+    
+            SECURE_SERVICES.write().push(SecureServices((
+                port.clone(),
+                Box::new(WebsocketListenerFactory::<FTlsSocket>::with_protocol_factory(broker_factory)),
+            )));
+        } else {
+            let broker_factory = Arc::new(WsMqttBrokerFactory::new(&protocol, &broker_name, port));
+    
+            INSECURE_SERVICES.write().push(InsecureServices((
+                port.clone(),
+                Box::new(WebsocketListenerFactory::<TcpSocket>::with_protocol_factory(broker_factory)),
+            )));
+        }
+        register_listener(&broker_name, listener);
+        register_service(&broker_name, service);
     }
-    register_listener(&broker_name, listener);
-    register_service(&broker_name, service);
 }
 
 // httpMsg包装
