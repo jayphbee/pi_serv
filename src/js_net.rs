@@ -403,8 +403,9 @@ pub fn create_http_pid(host: &String, port: u16) {
         "!!!!!!!!!!!!!!create_http_pid host:{:?}, port:{:?}",
         host, port
     );
+    let hostPort = [host, port.to_string().as_str()].join(":") as String;
     // 判断pid是否存在
-    if BUILD_HTTP_LISTENER_TAB.read().get(host).is_none() {
+    if BUILD_HTTP_LISTENER_TAB.read().get(&hostPort).is_none() {
         debug!("!!!!!!!!!!!!!!create_http_pid 1111111111");
         // 获取基础灰度对应的vm列表
         let vids = GRAY_MGR.read().gray_vids(0).unwrap();
@@ -433,7 +434,7 @@ pub fn create_http_pid(host: &String, port: u16) {
         debug!("!!!!!!!!!!!!!!create_http_pid 333333333333333");
         BUILD_HTTP_LISTENER_TAB
             .write()
-            .insert(host.clone(), (Pid(vm.get_vid(), cid), vm));
+            .insert(hostPort, (Pid(vm.get_vid(), cid), vm));
     }
 }
 
@@ -505,8 +506,15 @@ impl Handler for InsecureHttpRpcRequstHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
+                let host_c = headers.get("host").unwrap().to_str().unwrap();
+                let host = match host_c.split(":").collect::<Vec<&str>>().as_slice() {
+                    [h] => {
+                        [h.clone(), "80"].join(":")
+                    }
+                    _ => host_c.to_string(),
+                };
                 let (pid, _vm) =
-                    get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
+                    get_http_pid(&host);
                 //  http连接
                 let mut http_connect = HttpConnect::new(addr);
                 http_connect.set_insecure_resp_handle(handler);
@@ -559,8 +567,15 @@ impl Handler for SecureHttpRpcRequestHandler {
                 for (key, value) in headers.iter() {
                     debug!("!!!!!!!!!!!!!!headers:{:?}: {:?}", key, value);
                 }
-                let (pid, _vm) =
-                    get_http_pid(&headers.get("host").unwrap().to_str().unwrap().to_string());
+                let host_c = headers.get("host").unwrap().to_str().unwrap();
+                let host = match host_c.split(":").collect::<Vec<&str>>().as_slice() {
+                    [h] => {
+                        [h.clone(), "443"].join(":")
+                    }
+                    _ => host_c.to_string(),
+                };
+
+                let (pid, _vm) = get_http_pid(&host);
                 //  http连接
                 let mut http_connect = HttpConnect::new(addr);
                 http_connect.set_secure_resp_handle(handler);
