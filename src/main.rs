@@ -28,7 +28,7 @@ use std::{env, fs::read_to_string};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
 use env_logger;
-use json::stringify;
+use json::{parse, stringify, array};
 use num_cpus::get_physical;
 use parking_lot::{Condvar, Mutex, RwLock, WaitTimeoutResult};
 
@@ -376,6 +376,8 @@ async fn async_main(
 
     enable_hotfix();
 
+    init_mfa("test/index.js", "sayHello", "", workers[0].clone().1).await;
+
     if let Some((worker, worker_context)) =
         init_console(matches.clone(), MAIN_ASYNC_RUNTIME.clone(), &workers).await
     {
@@ -406,6 +408,26 @@ async fn async_main(
         set_default_ctrlc_handler();
     }
 }
+
+// 执行mfa
+pub async fn init_mfa(module: &str, func: &str, args: &str, worker: vm::Vm) {
+    let file = std::fs::read_to_string("../dst_server/ptconfig.json").unwrap();
+    let json = parse(&file).unwrap();
+    let mfas = &json["MFA"];
+    let mut execs = vec![];
+    for m in mfas.members() {
+        debug!("mfa exec module = {:?}, func = {:?}, args = {:?}", m["module"], m["function"], m["args"]);
+        execs.push(format!(r#"Module.modules["{}"].exports.{}.apply(Module.modules["{}"].exports.{}, {})"#, m["module"], m["function"], m["module"], m["function"], m["args"]));
+    }
+
+    let cid = worker.alloc_context_id();
+    let context = worker.new_context(None, cid, None).await.unwrap();
+
+    for exec in execs {
+        let _  = worker.execute(context, "", &exec).await;
+    }
+}
+    
 
 //初始化默认灰度
 fn init_default_gray(workers: Vec<vm::Vm>) {
