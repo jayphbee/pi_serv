@@ -23,6 +23,11 @@ const DEFAULT_PI_JS_PROXY_CRATE_VERSION: &str = "0.1.0";
 */
 const DEFAULT_PI_JS_PROXY_CRATE_EDITION: &str = "2018";
 
+/*
+* 默认的分析模式为顺序
+*/
+const DEFAULT_PI_JS_PROXY_PARSE_MODE: bool = false;
+
 fn main() {
     let current_dir = env::current_dir().unwrap();
     let opt_level = env::var_os("OPT_LEVEL").unwrap();
@@ -148,10 +153,20 @@ fn main() {
     } else {
         panic!("Require set for PI_JS_PROXY_TS_PATH");
     };
+    let is_concurrent =
+        if let Some(is_concurrent_var) = env::var_os("PI_JS_PROXY_PARSE_IS_CONCURRENT") {
+            is_concurrent_var
+                .to_str()
+                .unwrap()
+                .parse::<bool>()
+                .unwrap_or(DEFAULT_PI_JS_PROXY_PARSE_MODE)
+        } else {
+            DEFAULT_PI_JS_PROXY_PARSE_MODE
+        };
 
     let (sender, receiver) = channel();
     spawn(async move {
-        match parse_crates(ext_crates).await {
+        match parse_crates(ext_crates, is_concurrent).await {
             Err(e) => panic!("Parse ext crates failed, reason: {:#?}", e),
             Ok(crates) => {
                 if let Err(e) = generate_proxy_crate(
@@ -159,6 +174,7 @@ fn main() {
                     ts_path,
                     crate_version.as_str(),
                     crate_edition.as_str(),
+                    is_concurrent,
                     crates,
                 )
                 .await
