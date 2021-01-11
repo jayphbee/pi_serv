@@ -44,13 +44,16 @@ use tcp::{
     driver::SocketConfig,
     server::{AsyncPortsFactory, SocketListener},
 };
-use vm_builtin::{ContextHandle, VmStartupSnapshot};
-use vm_builtin::{VmEvent, VmEventHandler, VmEventValue};
+use vm_builtin::{
+    utils::set_used_rust_heap_size_getter, ContextHandle, VmEvent, VmEventHandler, VmEventValue,
+    VmStartupSnapshot,
+};
 use vm_core::{debug, init_v8, vm};
 use ws::server::WebsocketListenerFactory;
 
 #[cfg(feature = "default")]
 use pi_core::{
+    allocator::alloced_size,
     console::{set_console_shell_ctrlc_handler, ConsoleShell, ConsoleShellBuilder},
     create_snapshot_vm, finish_snapshot, init_snapshot, init_v8_env, init_work_vm,
     terminal::VmTerminal,
@@ -121,6 +124,8 @@ fn main() {
     //初始化分析堆内存的堆分配器
     #[cfg(feature = "profiling_heap")]
     init_profiling_alloctor();
+
+    set_used_rust_heap_size_getter(alloced_size);
 
     //初始化日志服务器
     env_logger::init();
