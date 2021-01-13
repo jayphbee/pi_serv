@@ -425,9 +425,13 @@ pub async fn init_mfa(worker: vm::Vm) {
             m["module"], m["function"], m["args"]
         );
         execs.push(format!(
-            r#" var env = new Object();
-            var m = Module.require('pi_pt/db/mgr');
-            env.dbMgr = new m.Mgr(mgr);
+            r#" 
+            var envMod = Module.require('pi_utils/lang/env');
+            self.env = new envMod.Env();
+            env.other = new Map();
+            var mgrMod = Module.require('pi_pt/db/mgr');
+            if (!env.dbMgr) env.dbMgr = new mgrMod.Mgr(mgr);
+
             var f = Module.modules["{}"].exports.{}.apply(Module.modules["{}"].exports.{}, {});
             if (f instanceof Promise) f.then(() => console.log("mfa init finished")).catch(e => console.log("mfa init failed", e.toString()));"#,
             m["module"], m["function"], m["module"], m["function"], m["args"]
