@@ -173,6 +173,18 @@ fn main() {
                 .help("Enable with console for work vm"),
         )
         .arg(
+            Arg::with_name("PROFILING") //虚拟机剖析模式
+                .short("P")
+                .long("PROFILING")
+                .help("Enable profiling vm"),
+        )
+        .arg(
+            Arg::with_name("JITLESS") //禁止虚拟机jit
+                .short("L")
+                .long("JITLESS")
+                .help("Disable vm jit"),
+        )
+        .arg(
             Arg::with_name("init-file") // pi_pt入口文件
                 .short("i")
                 .long("init-file")
@@ -235,8 +247,25 @@ fn main() {
         }
     }
 
-    let (init_heap_size, max_heap_size, debug_port) =
-        init_v8_env(init_heap_size, max_heap_size, debug_port);
+    let mut is_profiling = false;
+    if let Some(_) = matches.index_of("PROFILING") {
+        //允许剖析虚拟机
+        is_profiling = true;
+    }
+
+    let mut is_jitless = false;
+    if let Some(_) = matches.index_of("JITLESS") {
+        //允许剖析虚拟机
+        is_jitless = true;
+    }
+
+    let (init_heap_size, max_heap_size, debug_port) = init_v8_env(
+        init_heap_size,
+        max_heap_size,
+        debug_port,
+        is_profiling,
+        is_jitless,
+    );
     let mut init_vm = create_snapshot_vm(
         init_heap_size,
         max_heap_size,
