@@ -383,9 +383,7 @@ async fn async_main(
 
     init_mfa(workers[0].clone().1).await;
 
-    if let Some((worker, worker_context)) =
-        init_console(matches.clone(), MAIN_ASYNC_RUNTIME.clone(), &workers).await
-    {
+    if let Some((worker, worker_context)) = init_console(matches.clone(), &workers).await {
         if let Some(console_shell) = CONSOLE_SHELL.read().as_ref() {
             //启动控制台
             let vid = worker.get_vid();
@@ -575,7 +573,6 @@ fn enable_hotfix() {
 //初始化控制台
 async fn init_console(
     matches: ArgMatches<'static>,
-    rt: SingleTaskRuntime<()>,
     workers: &Vec<(Arc<AtomicBool>, vm::Vm)>,
 ) -> Option<(vm::Vm, ContextHandle)> {
     if let None = matches.index_of("CONSOLE") {
@@ -589,14 +586,40 @@ async fn init_console(
         .await
         .unwrap();
 
+    //初始化控制台运行时
+    let console_runner = SingleTaskRunner::new();
+    let console_runtime = console_runner.startup().unwrap();
+    thread::Builder::new()
+        .name("Pi-Exec-Console".to_string())
+        .stack_size(2 * 1024 * 1024)
+        .spawn(move || {
+            loop {
+                //推动控制台异步运行时
+                let start_time = Instant::now();
+                if let Err(e) = console_runner.run() {
+                    panic!("Main loop failed, reason: {:?}", e);
+                }
+                let run_time = Instant::now() - start_time;
+
+                if let Some(remaining_interval) = Duration::from_millis(10).checked_sub(run_time) {
+                    //本次运行少于循环间隔，则休眠剩余的循环间隔，并继续执行任务
+                    thread::sleep(remaining_interval);
+                }
+            }
+        })
+        .unwrap();
+
     //构建控制台，并注册
-    let console_shell: ConsoleShell =
-        ConsoleShellBuilder::new(AsyncRuntime::Local(rt), worker.clone(), context)
-            .buffer_stdout()
-            .enable_color_stdout()
-            .enable_color_stderr()
-            .set_title("PiServ Console Shell")
-            .build();
+    let console_shell: ConsoleShell = ConsoleShellBuilder::new(
+        AsyncRuntime::Local(console_runtime),
+        worker.clone(),
+        context,
+    )
+    .buffer_stdout()
+    .enable_color_stdout()
+    .enable_color_stderr()
+    .set_title("PiServ Console Shell")
+    .build();
     *CONSOLE_SHELL.write() = Some(console_shell);
 
     Some((worker.clone(), context))
