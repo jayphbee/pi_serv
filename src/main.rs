@@ -190,6 +190,11 @@ fn main() {
                 .help("Output in stdout following each garbage collection"),
         )
         .arg(
+            Arg::with_name("trace-gc-detail") //打开gc详细跟踪
+                .long("trace-gc-detail")
+                .help("Output detail info in stdout following each garbage collection"),
+        )
+        .arg(
             Arg::with_name("trace-alloc") //打开分配跟踪
                 .long("trace-alloc")
                 .help("Output in stdout following each allocate"),
@@ -275,6 +280,12 @@ fn main() {
         is_trace_gc = true;
     }
 
+    let mut is_trace_gc_detail = false;
+    if let Some(_) = matches.index_of("trace-gc-detail") {
+        //允许gc跟踪
+        is_trace_gc_detail = true;
+    }
+
     let mut is_trace_alloc = false;
     if let Some(_) = matches.index_of("trace-alloc") {
         //允许分配跟踪
@@ -288,6 +299,7 @@ fn main() {
         is_profiling,
         is_jitless,
         is_trace_gc,
+        is_trace_gc_detail,
         is_trace_alloc,
     );
     let mut init_vm = create_snapshot_vm(
