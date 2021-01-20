@@ -190,8 +190,8 @@ fn main() {
                 .help("Output in stdout following each garbage collection"),
         )
         .arg(
-            Arg::with_name("trace_alloc") //打开分配跟踪
-                .long("trace_alloc")
+            Arg::with_name("trace-alloc") //打开分配跟踪
+                .long("trace-alloc")
                 .help("Output in stdout following each allocate"),
         )
         .arg(
