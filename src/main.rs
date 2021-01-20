@@ -185,6 +185,16 @@ fn main() {
                 .help("Disable vm jit"),
         )
         .arg(
+            Arg::with_name("trace-gc") //打开gc跟踪
+                .long("trace-gc")
+                .help("Output in stdout following each garbage collection"),
+        )
+        .arg(
+            Arg::with_name("trace_alloc") //打开分配跟踪
+                .long("trace_alloc")
+                .help("Output in stdout following each allocate"),
+        )
+        .arg(
             Arg::with_name("init-file") // pi_pt入口文件
                 .short("i")
                 .long("init-file")
@@ -259,12 +269,26 @@ fn main() {
         is_jitless = true;
     }
 
+    let mut is_trace_gc = false;
+    if let Some(_) = matches.index_of("trace-gc") {
+        //允许gc跟踪
+        is_trace_gc = true;
+    }
+
+    let mut is_trace_alloc = false;
+    if let Some(_) = matches.index_of("trace-alloc") {
+        //允许分配跟踪
+        is_trace_alloc = true;
+    }
+
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(
         init_heap_size,
         max_heap_size,
         debug_port,
         is_profiling,
         is_jitless,
+        is_trace_gc,
+        is_trace_alloc,
     );
     let mut init_vm = create_snapshot_vm(
         init_heap_size,
@@ -373,6 +397,9 @@ async fn async_main(
         match value.parse::<usize>() {
             Err(e) => {
                 panic!("Init work vm failed, reason: {:?}", e);
+            }
+            Ok(0) => {
+                work_vm_count = 1;
             }
             Ok(count) => {
                 work_vm_count = get_physical() * count;
