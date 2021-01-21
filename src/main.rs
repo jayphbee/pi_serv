@@ -200,6 +200,11 @@ fn main() {
                 .help("Output in stdout following each allocate"),
         )
         .arg(
+            Arg::with_name("promise-statistics") //打开Promise统计
+                .long("promise-statistics")
+                .help("Enable promise statistics"),
+        )
+        .arg(
             Arg::with_name("init-file") // pi_pt入口文件
                 .short("i")
                 .long("init-file")
@@ -290,6 +295,10 @@ fn main() {
     if let Some(_) = matches.index_of("trace-alloc") {
         //允许分配跟踪
         is_trace_alloc = true;
+    }
+    if let Some(_) = matches.index_of("promise-statistics") {
+        //允许Promise统计
+        vm::enable_global_promise_count();
     }
 
     let (init_heap_size, max_heap_size, debug_port) = init_v8_env(
