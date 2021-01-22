@@ -179,8 +179,14 @@ fn main() {
                 .help("Enable profiling vm"),
         )
         .arg(
-            Arg::with_name("JITLESS") //禁止虚拟机jit
+            Arg::with_name("LITE") //打开虚拟机Lite模式
                 .short("L")
+                .long("LITE")
+                .help("Enable vm lite mode"),
+        )
+        .arg(
+            Arg::with_name("JITLESS") //禁止虚拟机jit
+                .short("J")
                 .long("JITLESS")
                 .help("Disable vm jit"),
         )
@@ -273,6 +279,12 @@ fn main() {
         is_profiling = true;
     }
 
+    let mut is_lite = false;
+    if let Some(_) = matches.index_of("LITE") {
+        //打开虚拟机lite模式
+        is_lite = true;
+    }
+
     let mut is_jitless = false;
     if let Some(_) = matches.index_of("JITLESS") {
         //允许剖析虚拟机
@@ -306,6 +318,7 @@ fn main() {
         max_heap_size,
         debug_port,
         is_profiling,
+        is_lite,
         is_jitless,
         is_trace_gc,
         is_trace_gc_detail,
