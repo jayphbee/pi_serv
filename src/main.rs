@@ -105,7 +105,7 @@ lazy_static! {
 
     //初始化文件异步运行时
     static ref FILES_ASYNC_RUNTIME: MultiTaskRuntime<()> = {
-        let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical() * 2, 2 * 1024 * 1024, 10, Some(10));
+        let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical() * 5, 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
     //Mqtt端口代理映射表
