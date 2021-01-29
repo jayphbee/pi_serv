@@ -19,7 +19,7 @@ extern crate profiling_pi_core;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicUsize, Ordering},
     Arc,
 };
 use std::thread;
@@ -105,7 +105,7 @@ lazy_static! {
 
     //初始化文件异步运行时
     static ref FILES_ASYNC_RUNTIME: MultiTaskRuntime<()> = {
-        let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical() * 2, 2 * 1024 * 1024, 10, Some(10));
+        let pool = MultiTaskPool::new("PI-SERV-FILE".to_string(), get_physical() * 5, 2 * 1024 * 1024, 10, Some(10));
         pool.startup(false)
     };
     //Mqtt端口代理映射表
@@ -115,6 +115,9 @@ lazy_static! {
 
     //控制台
     static ref CONSOLE_SHELL: RwLock<Option<ConsoleShell>> = RwLock::new(None);
+
+    //自动GC
+    static ref AUTO_GC: RwLock<Vec<AtomicUsize>> = RwLock::new(Vec::new());
 }
 
 /*
@@ -473,6 +476,8 @@ async fn async_main(
 
     init_mfa(workers[0].clone().1).await;
 
+    pid_close_count_init(workers.len());
+
     if let Some((worker, worker_context)) = init_console(matches.clone(), &workers).await {
         if let Some(console_shell) = CONSOLE_SHELL.read().as_ref() {
             //启动控制台
@@ -644,6 +649,7 @@ fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
 
                 VmEventValue::RemovedContext(context) => {
                     debug!("Vm event handler: VmEventValue::RemovedContext");
+                    pid_close_count(vid, context);
                     VID_CONTEXTS.lock().entry(vid).and_modify(|v| {
                         v.retain(|ctx| *ctx != context);
                     });
@@ -725,5 +731,38 @@ fn set_current_env() {
         env::set_var("current", "true");
     } else {
         env::set_var("current", "false");
+    }
+}
+
+// 初始化pid关闭计数
+fn pid_close_count_init(vm_count: usize) {
+    let len = vm_count + 1;
+    let start = AUTO_GC.read().len();
+    for _ in start..len {
+        (*AUTO_GC.write()).push(AtomicUsize::new(1));
+    }
+}
+
+/// pid关闭计数
+/// vid 虚拟机ID
+/// context 虚拟机上下文
+fn pid_close_count(vid: usize, context: ContextHandle) {
+    let atom = &(*AUTO_GC.read())[vid];
+    let old = atom.fetch_add(1, Ordering::SeqCst);
+    let mut count = 10;
+    if let Ok(var) = env::var("AUTO_GC_COUNT") {
+        count = var.parse().unwrap_or(10);
+    }
+    // 是否需要GC
+    if old >= count {
+        // 重置计数
+        atom.store(1, Ordering::Relaxed);
+        // 获取虚拟机实例
+        let vm = GRAY_MGR.read().vm_instance(0, vid).unwrap();
+        // gc
+        let vm_copy = vm.clone();
+        vm.spawn_task(async move {
+            let _ = vm_copy.gc(context).await;
+        });
     }
 }
