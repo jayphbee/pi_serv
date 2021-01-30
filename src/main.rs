@@ -746,7 +746,7 @@ fn pid_close_count_init(vm_count: usize) {
 /// pid关闭计数
 /// vid 虚拟机ID
 /// context 虚拟机上下文
-fn pid_close_count(vid: usize, context: ContextHandle) {
+fn pid_close_count(vid: usize, _context: ContextHandle) {
     let atom = &(*AUTO_GC.read())[vid];
     let old = atom.fetch_add(1, Ordering::SeqCst);
     let mut count = 10;
@@ -762,7 +762,14 @@ fn pid_close_count(vid: usize, context: ContextHandle) {
         // gc
         let vm_copy = vm.clone();
         vm.spawn_task(async move {
+            let now = Instant::now();
+            let context = vm_copy
+                .new_context(None, vm_copy.alloc_context_id(), None)
+                .await
+                .unwrap();
             let _ = vm_copy.gc(context).await;
+            let _ = vm_copy.remove_context(context).await;
+            info!("auto gc ok vid:{:?}, time:{:?}", vid, Instant::now() - now);
         });
     }
 }
