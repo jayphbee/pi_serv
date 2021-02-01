@@ -648,7 +648,10 @@ fn reigster_vms_events(workers: &[vm::Vm], is_debug_mode: bool) {
                 }
 
                 VmEventValue::RemovedContext(context) => {
-                    debug!("Vm event handler: VmEventValue::RemovedContext");
+                    debug!(
+                        "Vm event handler: VmEventValue::RemovedContext, vid = {:?}, cid = {:?}",
+                        vid, context.0
+                    );
                     pid_close_count(vid, context);
                     VID_CONTEXTS.lock().entry(vid).and_modify(|v| {
                         v.retain(|ctx| *ctx != context);
